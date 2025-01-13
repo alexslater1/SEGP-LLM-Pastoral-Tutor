@@ -11,6 +11,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+const (
+	chatCompletionModel = "gemini-2.0-flash-exp"
+)
+
 type GeminiLLM struct {
 	client *genai.Client
 }
@@ -24,6 +28,62 @@ func NewGeminiClient(ctx context.Context, apiKey string) (*GeminiLLM, error) {
 	return &GeminiLLM{
 		client: client,
 	}, nil
+}
+
+func (g *GeminiLLM) ChatCompletion(ctx context.Context, prompt string) (*string, error) {
+	model := g.client.GenerativeModel(chatCompletionModel)
+
+	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate content: %v", err)
+	}
+
+	if len(resp.Candidates) == 0 {
+		return nil, fmt.Errorf("no response candidates received")
+	}
+
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
+		return nil, fmt.Errorf("no response parts received")
+	}
+
+	text, ok := resp.Candidates[0].Content.Parts[0].(genai.Text)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert to text")
+	}
+
+	strText := string(text)
+
+	return &strText, nil
+}
+
+func (g *GeminiLLM) StructuredOutputCompletion(ctx context.Context, prompt string, schema interface{}) (*string, error) {
+	model := g.client.GenerativeModel(chatCompletionModel)
+	responseSchema := genaiSchemaFrom(schema)
+
+	if responseSchema != nil {
+		model.ResponseMIMEType = "application/json"
+		model.ResponseSchema = responseSchema
+	}
+
+	resp, err := model.GenerateContent(ctx,
+		genai.Text(prompt),
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate content: %v", err)
+	}
+
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil {
+		return nil, fmt.Errorf("no response candidates received")
+	}
+
+	text, ok := resp.Candidates[0].Content.Parts[0].(genai.Text)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert content to text")
+	}
+
+	strText := string(text)
+	return &strText, nil
 }
 
 func genaiSchemaFrom(schema interface{}) *genai.Schema {
