@@ -6,7 +6,7 @@ from transformers import AutoTokenizer
 def document_chunker(directory_path,
                      model_name,
                      paragraph_separator='\n\n',
-                     chunk_size=510,
+                     chunk_size=100,
                      separator=' ',
                      secondary_chunking_regex=r'\S+?[\.,;!?]',
                      chunk_overlap=0):

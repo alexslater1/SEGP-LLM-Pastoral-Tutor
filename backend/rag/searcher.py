@@ -3,7 +3,7 @@ import numpy as np
 
 
 #string, (text, embedding)
-def search(query, chunks):
+def search(query, chunks, k=5):
     embedded_query = embed(query)
     normalised_embedded_query = np.linalg.norm(embedded_query)
 
@@ -16,5 +16,5 @@ def search(query, chunks):
     
     chunk_scores.sort(reverse=True, key=lambda x: x[0])
 
-    return chunk_scores[0][1]
+    return chunk_scores[:k]
 
