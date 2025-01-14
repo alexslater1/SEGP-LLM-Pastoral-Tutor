@@ -1,6 +1,8 @@
 package llm
 
 import (
+	"context"
+	"os"
 	"testing"
 
 	"github.com/google/generative-ai-go/genai"
@@ -400,4 +402,51 @@ func TestGenaiSchemaFromSliceOfComplex(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, result)
+}
+
+func TestGemini(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+	if err != nil {
+		t.Fatalf("Error creating GeminiLLM: %v", err)
+	}
+
+	prompt := "What is the capital of France?"
+
+	response, err := geminiClient.ChatCompletion(context.Background(), prompt)
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletion: %v", err)
+	}
+
+	t.Logf("Response: %v", *response)
+}
+
+func TestGeminiStructuredOutput(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+	if err != nil {
+		t.Fatalf("Error creating GeminiLLM: %v", err)
+	}
+
+	prompt := "Give me a random address"
+
+	type Address struct {
+		Street  string   `json:"street"`
+		City    string   `json:"city"`
+		ZipCode int      `json:"zip_code"`
+		Tags    []string `json:"tags" description:"Location tags"`
+	}
+
+	response, err := geminiClient.StructuredOutputCompletion(context.Background(), prompt, Address{})
+	if err != nil {
+		t.Fatalf("Error calling StructuredOutputCompletion: %v", err)
+	}
+
+	t.Logf("Response: %v", *response)
 }

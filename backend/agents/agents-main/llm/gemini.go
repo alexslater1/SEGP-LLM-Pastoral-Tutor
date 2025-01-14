@@ -19,7 +19,7 @@ type GeminiLLM struct {
 	client *genai.Client
 }
 
-func NewGeminiClient(ctx context.Context, apiKey string) (*GeminiLLM, error) {
+func NewGeminiLLM(ctx context.Context, apiKey string) (*GeminiLLM, error) {
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %v", err)
