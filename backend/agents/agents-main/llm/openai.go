@@ -29,7 +29,7 @@ func (o *OpenAiLLM) ChatCompletion(ctx context.Context, prompt string) (*string,
 			{Role: openai.ChatMessageRoleUser, Content: prompt},
 		},
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("CreateChatCompletion error: %v", err)
 	}
