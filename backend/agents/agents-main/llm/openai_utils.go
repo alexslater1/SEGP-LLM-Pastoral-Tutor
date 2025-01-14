@@ -17,7 +17,8 @@ const (
 )
 
 type OpenaiToolProperty struct {
-	Type OpenaiToolPropertyType `json:"type"`
+	Type        OpenaiToolPropertyType `json:"type"`
+	Description string                 `json:"description"`
 }
 
 type OpenaiToolParameters struct {
@@ -60,7 +61,8 @@ func openaiParamsFrom(params []tools.Parameter) OpenaiToolParameters {
 	properties := map[string]OpenaiToolProperty{}
 	for _, param := range params {
 		properties[param.Name] = OpenaiToolProperty{
-			Type: openaiToolPropertyTypeFrom(param.Type),
+			Type:        openaiToolPropertyTypeFrom(param.Type),
+			Description: param.Description,
 		}
 	}
 
@@ -79,8 +81,8 @@ func openaiParamsFrom(params []tools.Parameter) OpenaiToolParameters {
 
 func toolCallFromOpenai(toolCall openai.ToolCall) tools.ToolCall {
 	return tools.ToolCall{
-		Type:     tools.ToolTypeFunction,
-		Function: tools.FunctionCall{Name: toolCall.Function.Name, Arguments: toolCall.Function.Arguments},
+		Name:      toolCall.Function.Name,
+		Arguments: toolCall.Function.Arguments,
 	}
 }
 

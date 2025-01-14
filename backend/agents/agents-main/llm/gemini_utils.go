@@ -15,12 +15,10 @@ func genaiToolFrom(tool tools.Tool) *genai.Tool {
 		Name:        tool.Name,
 		Description: tool.Description,
 		Parameters:  genaiParamsFrom(tool.Parameters),
-		
 	}
 
 	return &genai.Tool{
 		FunctionDeclarations: []*genai.FunctionDeclaration{&fn},
-
 	}
 }
 
@@ -43,7 +41,7 @@ func genaiParamsFrom(params []tools.Parameter) *genai.Schema {
 	properties := map[string]*genai.Schema{}
 	for _, param := range params {
 		properties[param.Name] = &genai.Schema{
-			Type: genaiToolPropertyTypeFrom(param.Type),
+			Type:        genaiToolPropertyTypeFrom(param.Type),
 			Description: param.Description,
 		}
 	}
@@ -54,9 +52,9 @@ func genaiParamsFrom(params []tools.Parameter) *genai.Schema {
 	}
 
 	return &genai.Schema{
-		Type:                 genai.TypeObject,
-		Properties:           properties,
-		Required:             required,
+		Type:       genai.TypeObject,
+		Properties: properties,
+		Required:   required,
 	}
 }
 
@@ -69,8 +67,8 @@ func toolCallFromGenai(toolCall genai.FunctionCall) tools.ToolCall {
 	}
 
 	return tools.ToolCall{
-		Type:     tools.ToolTypeFunction,
-		Function: tools.FunctionCall{Name: toolCall.Name, Arguments: string(jsonBytes)},
+		Name:      toolCall.Name,
+		Arguments: string(jsonBytes),
 	}
 }
 

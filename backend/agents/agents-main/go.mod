@@ -3,8 +3,11 @@ module github.com/segp/agents-main
 go 1.23.4
 
 require (
+	github.com/cohesion-org/deepseek-go v0.0.0-20241216210207-8ae1bb3c99dc
 	github.com/google/generative-ai-go v0.19.0
+	github.com/joho/godotenv v1.5.1
 	github.com/sashabaranov/go-openai v1.36.1
+	github.com/stretchr/testify v1.10.0
 	google.golang.org/api v0.216.0
 )
 
@@ -15,7 +18,6 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/longrunning v0.5.7 // indirect
-	github.com/cohesion-org/deepseek-go v0.0.0-20241216210207-8ae1bb3c99dc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -24,9 +26,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.10.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
 	go.opentelemetry.io/otel v1.31.0 // indirect

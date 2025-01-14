@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 	"testing"
+
+	"github.com/segp/agents-main/tools"
 )
 
 func TestDeepSeekLLM(t *testing.T) {
@@ -45,4 +47,21 @@ func TestDeepSeekStructuredOutput(t *testing.T) {
 	}
 
 	t.Logf("Response: %v", *response)
+}
+
+func TestDeepSeekChatCompletionWithTools(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD environment")
+	}
+
+	ocClient := NewDeepSeekLLM(os.Getenv("DEEPSEEK_API_KEY"))
+
+	prompt := "What is the weather in Paris on 2025-01-14?"
+
+	toolCalls, err := ocClient.ChatCompletionWithTools(context.Background(), prompt, []tools.Tool{tools.CheckWeatherTool()})
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletionWithTools: %v", err)
+	}
+
+	t.Logf("Tool calls: %v", toolCalls)
 }

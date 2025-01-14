@@ -9,12 +9,6 @@ const (
 	ParameterTypeArray   ParameterType = "array"
 )
 
-type ToolType string
-
-const (
-	ToolTypeFunction ToolType = "function"
-)
-
 type ToolChoiceType string
 
 const (
@@ -35,17 +29,12 @@ type Tool struct {
 	Parameters  []Parameter
 }
 
-type ToolCall struct {
-	Type     ToolType     `json:"type"`
-	Function FunctionCall `json:"function"`
-}
-
 type ToolChoice struct {
 	Type         ToolChoiceType
 	FunctionName string
 }
 
-type FunctionCall struct {
+type ToolCall struct {
 	Name      string `json:"name,omitempty"`
 	Arguments string `json:"arguments,omitempty"`
 }
