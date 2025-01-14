@@ -107,6 +107,7 @@ func TestGenaiSchemaFrom(t *testing.T) {
 					Type: genai.TypeBoolean,
 				},
 			},
+			Required: []string{"name", "age", "score", "is_active"},
 		}
 
 		assert.Equal(t, expected, result)
@@ -203,6 +204,7 @@ func TestGenaiSchemaFromComplexStructure(t *testing.T) {
 									Description: "Location tags",
 								},
 							},
+							Required: []string{"street", "city", "zip_code", "tags"},
 						},
 						"teams": {
 							Type:  genai.TypeArray,
@@ -227,9 +229,11 @@ func TestGenaiSchemaFromComplexStructure(t *testing.T) {
 										Items: &genai.Schema{Type: genai.TypeString},
 									},
 								},
+								Required: []string{"email", "phone", "preferred_contact_methods"},
 							},
 						},
 					},
+					Required: []string{"name", "location", "teams", "budget", "active", "leads"},
 				},
 			},
 			"head_office": {
@@ -244,6 +248,7 @@ func TestGenaiSchemaFromComplexStructure(t *testing.T) {
 						Description: "Location tags",
 					},
 				},
+				Required: []string{"street", "city", "zip_code", "tags"},
 			},
 			"main_contact": {
 				Type: genai.TypeObject,
@@ -255,8 +260,10 @@ func TestGenaiSchemaFromComplexStructure(t *testing.T) {
 						Items: &genai.Schema{Type: genai.TypeString},
 					},
 				},
+				Required: []string{"email", "phone", "preferred_contact_methods"},
 			},
 		},
+		Required: []string{"name", "founded", "departments", "head_office", "main_contact"},
 	}
 
 	assert.Equal(t, expected, result)
@@ -329,6 +336,7 @@ func TestGenaiSchemaFromSliceOfComplex(t *testing.T) {
 										Description: "Location tags",
 									},
 								},
+								Required: []string{"street", "city", "zip_code", "tags"},
 							},
 							"teams": {
 								Type:  genai.TypeArray,
@@ -353,9 +361,11 @@ func TestGenaiSchemaFromSliceOfComplex(t *testing.T) {
 											Items: &genai.Schema{Type: genai.TypeString},
 										},
 									},
+									Required: []string{"email", "phone", "preferred_contact_methods"},
 								},
 							},
 						},
+						Required: []string{"name", "location", "teams", "budget", "active", "leads"},
 					},
 				},
 				"head_office": {
@@ -370,6 +380,7 @@ func TestGenaiSchemaFromSliceOfComplex(t *testing.T) {
 							Description: "Location tags",
 						},
 					},
+					Required: []string{"street", "city", "zip_code", "tags"},
 				},
 				"main_contact": {
 					Type: genai.TypeObject,
@@ -381,8 +392,10 @@ func TestGenaiSchemaFromSliceOfComplex(t *testing.T) {
 							Items: &genai.Schema{Type: genai.TypeString},
 						},
 					},
+					Required: []string{"email", "phone", "preferred_contact_methods"},
 				},
 			},
+			Required: []string{"name", "founded", "departments", "head_office", "main_contact"},
 		},
 	}
 

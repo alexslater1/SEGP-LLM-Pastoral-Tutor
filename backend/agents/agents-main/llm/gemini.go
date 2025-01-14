@@ -126,6 +126,8 @@ func genaiSchemaFrom(schema interface{}) *genai.Schema {
 			if jsonTag == "" || jsonTag == "-" {
 				continue
 			}
+			s.Required = append(s.Required, jsonTag)
+
 			// Split the json tag to handle options like omitempty
 			tagParts := strings.Split(jsonTag, ",")
 			fieldName := tagParts[0]
