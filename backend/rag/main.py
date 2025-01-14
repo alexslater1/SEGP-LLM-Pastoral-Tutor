@@ -1,5 +1,6 @@
 from transformers import BertTokenizer, BertModel
 import torch
+from chunker import document_chunker
 
 
 #other models can be used
@@ -31,7 +32,7 @@ def embedder(document):
 text = "Hello World!" #placeholder text
 
 #TODO: split text into chunks
-chunks = [text] #placeholder chunk
+chunks = document_chunker("./documents/", "BAAI/bge-small-en-v1.5")
 
 #embed chunks as vectors
 embedded_chunks = []
