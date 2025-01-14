@@ -87,7 +87,7 @@ func (o *OpenAiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, 
 
 	toolCalls := []tools.ToolCall{}
 	for _, toolCall := range resp.Choices[0].Message.ToolCalls {
-		toolCalls = append(toolCalls, toolCallFrom(toolCall))
+		toolCalls = append(toolCalls, toolCallFromOpenai(toolCall))
 	}
 
 	return toolCalls, err

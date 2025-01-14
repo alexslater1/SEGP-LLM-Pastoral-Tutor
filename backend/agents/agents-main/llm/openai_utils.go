@@ -77,7 +77,7 @@ func openaiParamsFrom(params []tools.Parameter) OpenaiToolParameters {
 	}
 }
 
-func toolCallFrom(toolCall openai.ToolCall) tools.ToolCall {
+func toolCallFromOpenai(toolCall openai.ToolCall) tools.ToolCall {
 	return tools.ToolCall{
 		Type:     tools.ToolTypeFunction,
 		Function: tools.FunctionCall{Name: toolCall.Function.Name, Arguments: toolCall.Function.Arguments},

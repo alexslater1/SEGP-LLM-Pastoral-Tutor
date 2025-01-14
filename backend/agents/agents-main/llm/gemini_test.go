@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/generative-ai-go/genai"
+	"github.com/segp/agents-main/tools"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -449,4 +450,26 @@ func TestGeminiStructuredOutput(t *testing.T) {
 	}
 
 	t.Logf("Response: %v", *response)
+}
+
+func TestGeminiChatCompletionWithTools(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+	if err != nil {
+		t.Fatalf("Error creating GeminiLLM: %v", err)
+	}
+
+	prompt := "What is the weather in San Francisco on 10/10/2024 and in New York on 10/10/2024?"
+
+	tool := tools.CheckWeatherTool()
+
+	response, err := geminiClient.ChatCompletionWithTools(context.Background(), prompt, []tools.Tool{tool}, tools.ToolChoice{Type: tools.ToolChoiceTypeAuto})
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletionWithTools: %v", err)
+	}
+
+	t.Logf("Response: %+v", response)
 }

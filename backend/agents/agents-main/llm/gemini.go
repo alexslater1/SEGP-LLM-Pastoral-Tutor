@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/google/generative-ai-go/genai"
+	"github.com/segp/agents-main/tools"
 	"google.golang.org/api/option"
 )
 
@@ -85,6 +86,49 @@ func (g *GeminiLLM) StructuredOutputCompletion(ctx context.Context, prompt strin
 	strText := string(text)
 	return &strText, nil
 }
+
+func (g *GeminiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, ts []tools.Tool, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
+	model := g.client.GenerativeModel(chatCompletionModel)
+
+	genaiTools := []*genai.Tool{}
+	for _, tool := range ts {
+		genaiTools = append(genaiTools, genaiToolFrom(tool))
+	}
+
+	genaiToolConfig := genai.ToolConfig{
+		FunctionCallingConfig: functionCallingConfigFrom(toolChoice),
+	}
+
+	model.Tools = genaiTools
+	model.ToolConfig = &genaiToolConfig
+
+	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate content: %v", err)
+	}
+
+	if len(resp.Candidates) == 0 {
+		return nil, fmt.Errorf("no response candidates received")
+	}
+
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil || len(resp.Candidates[0].Content.Parts) == 0 {
+		return nil, fmt.Errorf("no response parts received")
+	}
+
+	toolCalls := []tools.ToolCall{}
+	for _, part := range resp.Candidates[0].Content.Parts {
+		switch p := part.(type) {
+		case genai.FunctionCall:
+			toolCalls = append(toolCalls, toolCallFromGenai(p))
+		case genai.Text:
+		default:
+			fmt.Printf("Unknown type: %T\n", p)
+		}
+	}
+
+	return toolCalls, nil
+}
+
 
 func genaiSchemaFrom(schema interface{}) *genai.Schema {
 	s := &genai.Schema{}
