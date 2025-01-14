@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/segp/agents-main/tools"
 )
 
 func TestMain(m *testing.M) {
@@ -58,4 +59,23 @@ func TestOpenAIChatCompletionWithSchema(t *testing.T) {
 	}
 
 	t.Logf("Response: %v", *response)
+}
+
+func TestOpenAIChatCompletionWithTools(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	ocClient := NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
+
+	prompt := "What is the weather in San Francisco on 10/10/2024 and in new york on 10/10/2024?"
+
+	tool := tools.CheckWeatherTool()
+
+	response, err := ocClient.ChatCompletionWithTools(context.Background(), prompt, []tools.Tool{tool}, tools.ToolChoice{Type: tools.ToolChoiceTypeAuto})
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletionWithTools: %v", err)
+	}
+
+	t.Logf("Response: %+v", response)
 }

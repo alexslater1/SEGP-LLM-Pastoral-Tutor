@@ -6,6 +6,7 @@ import (
 
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
+	"github.com/segp/agents-main/tools"
 )
 
 const (
@@ -63,4 +64,31 @@ func (o *OpenAiLLM) StructuredOutputCompletion(ctx context.Context, prompt strin
 	}
 
 	return &resp.Choices[0].Message.Content, err
+}
+
+func (o *OpenAiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, ts []tools.Tool, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
+	openaiTools := []openai.Tool{}
+	for _, tool := range ts {
+		openaiTools = append(openaiTools, openaiToolFrom(tool))
+	}
+
+	resp, err := o.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: openaiModel,
+		Messages: []openai.ChatCompletionMessage{
+			{Role: openai.ChatMessageRoleUser, Content: prompt},
+		},
+		Tools:      openaiTools,
+		ToolChoice: openaiToolChoiceFrom(toolChoice),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("CreateChatCompletion error: %v", err)
+	}
+
+	toolCalls := []tools.ToolCall{}
+	for _, toolCall := range resp.Choices[0].Message.ToolCalls {
+		toolCalls = append(toolCalls, toolCallFrom(toolCall))
+	}
+
+	return toolCalls, err
 }

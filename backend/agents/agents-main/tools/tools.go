@@ -9,6 +9,20 @@ const (
 	ParameterTypeArray   ParameterType = "array"
 )
 
+type ToolType string
+
+const (
+	ToolTypeFunction ToolType = "function"
+)
+
+type ToolChoiceType string
+
+const (
+	ToolChoiceTypeAuto      ToolChoiceType = "auto"
+	ToolChoiceTypeRequired  ToolChoiceType = "required"
+	ToolChoiceTypeForcedOne ToolChoiceType = "forced_one"
+)
+
 type Parameter struct {
 	Name        string
 	Description string
@@ -21,9 +35,24 @@ type Tool struct {
 	Parameters  []Parameter
 }
 
-func CheckWeatherTool(tool Tool) Tool {
+type ToolCall struct {
+	Type     ToolType     `json:"type"`
+	Function FunctionCall `json:"function"`
+}
+
+type ToolChoice struct {
+	Type         ToolChoiceType
+	FunctionName string
+}
+
+type FunctionCall struct {
+	Name      string `json:"name,omitempty"`
+	Arguments string `json:"arguments,omitempty"`
+}
+
+func CheckWeatherTool() Tool {
 	return Tool{
-		Name:        "Check Weather",
+		Name:        "check_weather",
 		Description: "Check the weather in a given location",
 		Parameters: []Parameter{
 			{Name: "location", Description: "The location to check the weather for", Type: ParameterTypeString},

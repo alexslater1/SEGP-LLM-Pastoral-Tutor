@@ -48,3 +48,17 @@ func TestOpenaiToolPropertyTypeFrom(t *testing.T) {
 		},
 	})
 }
+
+func TestOpenaiToolChoiceFrom(t *testing.T) {
+	toolChoice := tools.ToolChoice{Type: tools.ToolChoiceTypeForcedOne, FunctionName: "get_weather"}
+	openaiToolChoice := openaiToolChoiceFrom(toolChoice)
+	assert.Equal(t, openaiToolChoice, openai.ToolChoice{Type: "function", Function: openai.ToolFunction{Name: "get_weather"}})
+
+	toolChoice = tools.ToolChoice{Type: tools.ToolChoiceTypeRequired}
+	openaiToolChoice = openaiToolChoiceFrom(toolChoice)
+	assert.Equal(t, openaiToolChoice, "required")
+
+	toolChoice = tools.ToolChoice{Type: tools.ToolChoiceTypeAuto}
+	openaiToolChoice = openaiToolChoiceFrom(toolChoice)
+	assert.Equal(t, openaiToolChoice, "auto")
+}

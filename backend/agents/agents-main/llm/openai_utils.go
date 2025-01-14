@@ -76,3 +76,23 @@ func openaiParamsFrom(params []tools.Parameter) OpenaiToolParameters {
 		AdditionalProperties: false,
 	}
 }
+
+func toolCallFrom(toolCall openai.ToolCall) tools.ToolCall {
+	return tools.ToolCall{
+		Type:     tools.ToolTypeFunction,
+		Function: tools.FunctionCall{Name: toolCall.Function.Name, Arguments: toolCall.Function.Arguments},
+	}
+}
+
+func openaiToolChoiceFrom(toolChoice tools.ToolChoice) any {
+	switch toolChoice.Type {
+	case tools.ToolChoiceTypeAuto:
+		return "auto"
+	case tools.ToolChoiceTypeRequired:
+		return "required"
+	case tools.ToolChoiceTypeForcedOne:
+		return openai.ToolChoice{Type: "function", Function: openai.ToolFunction{Name: toolChoice.FunctionName}}
+	}
+
+	panic(fmt.Sprintf("Invalid tool choice type: %v", toolChoice.Type))
+}
