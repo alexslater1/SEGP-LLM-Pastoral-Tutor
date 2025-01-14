@@ -77,7 +77,25 @@ func deepSeekToolFrom(tool tools.Tool) DeepSeekTool {
 	}
 }
 
-func requestBodyStrFrom(tools []tools.Tool, model string, prompt string) string {
+func toolsChoiceStrFrom(toolChoice tools.ToolChoice) any {
+	switch toolChoice.Type {
+	case tools.ToolChoiceTypeAuto:
+		return fmt.Sprintf("auto")
+	case tools.ToolChoiceTypeRequired:
+		return fmt.Sprintf("required")
+	case tools.ToolChoiceTypeForcedOne:
+		return map[string]interface{}{
+			"type": "function",
+			"function": map[string]string{
+				"name": toolChoice.FunctionName,
+			},
+		}
+	}
+
+	panic(fmt.Sprintf("unknown tool choice type: %v", toolChoice.Type))
+}
+
+func requestBodyStrFrom(tools []tools.Tool, model string, prompt string, toolChoice tools.ToolChoice) string {
 	deepSeekTools := []DeepSeekTool{}
 	for _, tool := range tools {
 		deepSeekTools = append(deepSeekTools, deepSeekToolFrom(tool))
@@ -90,7 +108,8 @@ func requestBodyStrFrom(tools []tools.Tool, model string, prompt string) string 
 			"content": prompt,
 		},
 		},
-		"tools": deepSeekTools,
+		"tools":       deepSeekTools,
+		"tool_choice": toolsChoiceStrFrom(toolChoice),
 	}
 
 	json, err := json.Marshal(requestBody)

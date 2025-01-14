@@ -8,10 +8,10 @@ import (
 
 func TestDeepseekToolFrom(t *testing.T) {
 	prompt := "What is the weather in Paris on 2025-01-14?"
-	tools := []tools.Tool{tools.CheckWeatherTool()}
+	ts := []tools.Tool{tools.CheckWeatherTool()}
 	model := "deepseek-chat"
 
-	requestBodyStr := requestBodyStrFrom(tools, model, prompt)
+	requestBodyStr := requestBodyStrFrom(ts, model, prompt, tools.ToolChoice{Type: tools.ToolChoiceTypeForcedOne, FunctionName: "check_weather"})
 
 	t.Logf("RequestBodyStr: %v", requestBodyStr)
 }

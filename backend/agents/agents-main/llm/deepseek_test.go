@@ -58,7 +58,7 @@ func TestDeepSeekChatCompletionWithTools(t *testing.T) {
 
 	prompt := "What is the weather in Paris on 2025-01-14?"
 
-	toolCalls, err := ocClient.ChatCompletionWithTools(context.Background(), prompt, []tools.Tool{tools.CheckWeatherTool()})
+	toolCalls, err := ocClient.ChatCompletionWithTools(context.Background(), prompt, []tools.Tool{tools.CheckWeatherTool(), tools.CheckBestAnimalNameTool()}, tools.ToolChoice{Type: tools.ToolChoiceTypeAuto})
 	if err != nil {
 		t.Fatalf("Error calling ChatCompletionWithTools: %v", err)
 	}

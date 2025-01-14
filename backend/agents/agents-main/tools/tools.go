@@ -49,3 +49,13 @@ func CheckWeatherTool() Tool {
 		},
 	}
 }
+
+func CheckBestAnimalNameTool() Tool {
+	return Tool{
+		Name:        "check_best_animal_name",
+		Description: "Check the best animal name for a given animal",
+		Parameters: []Parameter{
+			{Name: "animal", Description: "The animal to check the best name for", Type: ParameterTypeString},
+		},
+	}
+}

@@ -59,8 +59,8 @@ func (d *DeepSeekLLM) StructuredOutputCompletion(ctx context.Context, prompt str
 	return &resp.Choices[0].Message.Content, nil
 }
 
-func (d *DeepSeekLLM) ChatCompletionWithTools(ctx context.Context, prompt string, tools []tools.Tool) ([]tools.ToolCall, error) {
-	reqBodyStr := requestBodyStrFrom(tools, deepseek.DeepSeekChat, prompt)
+func (d *DeepSeekLLM) ChatCompletionWithTools(ctx context.Context, prompt string, tools []tools.Tool, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
+	reqBodyStr := requestBodyStrFrom(tools, deepseek.DeepSeekChat, prompt, toolChoice)
 
 	// Create a new HTTP request
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.deepseek.com/chat/completions", strings.NewReader(reqBodyStr))
