@@ -1,6 +1,6 @@
 from transformers import BertTokenizer, BertModel
 import torch
-from chunker import document_chunker
+from chunker import document_chunker, print_chunks
 from pdf_to_text import pdf_to_text
 
 
@@ -34,7 +34,7 @@ pdf_to_text(pdf_path, txt_path)
 
 #TODO: split text into chunks
 chunks = document_chunker("./documents/", "BAAI/bge-small-en-v1.5")
-print(chunks)
+print_chunks(chunks)
 
 #embed chunks as vectors
 embedded_chunks = []

@@ -83,3 +83,10 @@ def document_chunker(directory_path,
             documents[doc_id] = all_chunks
 
     return documents
+
+def print_chunks(chunks):
+    for outer_key, outer_value in chunks.items():
+        for inner_key, inner_value in outer_value.items():
+            print("---------------------------------------------------")
+            print(f"    Text: {inner_value.get('text', 'No text available')}")
+
