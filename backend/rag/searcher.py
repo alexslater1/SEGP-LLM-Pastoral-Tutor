@@ -37,3 +37,19 @@ def search_database(query, k=1):
     chunk_scores.sort(reverse=True, key=lambda x: x[0])
 
     return [entry for (score, entry) in chunk_scores][:k]
+
+def get_doc_ids_from_chunks(chunks):
+    doc_set = set()
+    for entry in chunks:
+        doc_set.add(entry['doc_id'])
+    return doc_set
+
+def get_text_from_chunks(chunks, k=3):
+    blocks = []
+    for entry in chunks:
+        doc_id = entry['doc_id']
+        pos_in_doc = int(entry['pos_in_doc'])
+        response = supabase.table(RAG_TABLE_NAME).select("text").eq('doc_id', doc_id).gte('pos_in_doc', pos_in_doc - k).lte('pos_in_doc', pos_in_doc + k).execute()
+        data = response.data
+        blocks.append("".join([chunk['text'] for chunk in data]))
+    return blocks
