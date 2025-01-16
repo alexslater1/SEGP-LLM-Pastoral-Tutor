@@ -87,7 +87,7 @@ func (g *GeminiLLM) StructuredOutputCompletion(ctx context.Context, prompt strin
 	return &strText, nil
 }
 
-func (g *GeminiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, ts []tools.Tool, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
+func (g *GeminiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, ts []tools.ToolDefinition, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
 	model := g.client.GenerativeModel(chatCompletionModel)
 
 	genaiTools := []*genai.Tool{}
@@ -128,7 +128,6 @@ func (g *GeminiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, 
 
 	return toolCalls, nil
 }
-
 
 func genaiSchemaFrom(schema interface{}) *genai.Schema {
 	s := &genai.Schema{}

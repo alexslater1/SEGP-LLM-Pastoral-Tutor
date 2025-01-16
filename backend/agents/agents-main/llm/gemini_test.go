@@ -466,7 +466,7 @@ func TestGeminiChatCompletionWithTools(t *testing.T) {
 
 	tool := tools.CheckWeatherTool()
 
-	response, err := geminiClient.ChatCompletionWithTools(context.Background(), prompt, []tools.Tool{tool}, tools.ToolChoice{Type: tools.ToolChoiceTypeAuto})
+	response, err := geminiClient.ChatCompletionWithTools(context.Background(), prompt, []tools.ToolDefinition{tool}, tools.ToolChoice{Type: tools.ToolChoiceTypeAuto})
 	if err != nil {
 		t.Fatalf("Error calling ChatCompletionWithTools: %v", err)
 	}

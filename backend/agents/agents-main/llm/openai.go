@@ -66,7 +66,7 @@ func (o *OpenAiLLM) StructuredOutputCompletion(ctx context.Context, prompt strin
 	return &resp.Choices[0].Message.Content, err
 }
 
-func (o *OpenAiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, ts []tools.Tool, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
+func (o *OpenAiLLM) ChatCompletionWithTools(ctx context.Context, prompt string, ts []tools.ToolDefinition, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
 	openaiTools := []openai.Tool{}
 	for _, tool := range ts {
 		openaiTools = append(openaiTools, openaiToolFrom(tool))

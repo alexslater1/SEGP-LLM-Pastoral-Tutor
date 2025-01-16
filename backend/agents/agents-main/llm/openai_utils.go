@@ -28,7 +28,7 @@ type OpenaiToolParameters struct {
 	AdditionalProperties bool                          `json:"additionalProperties"`
 }
 
-func openaiToolFrom(tool tools.Tool) openai.Tool {
+func openaiToolFrom(tool tools.ToolDefinition) openai.Tool {
 	fn := openai.FunctionDefinition{
 		Name:        tool.Name,
 		Description: tool.Description,

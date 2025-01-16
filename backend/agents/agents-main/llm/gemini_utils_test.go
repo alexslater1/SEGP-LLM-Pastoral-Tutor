@@ -10,7 +10,7 @@ import (
 
 func TestGenaiToolPropertyTypeFrom(t *testing.T) {
 	// Define a weather tool with coordinates parameters
-	tool := tools.Tool{
+	tool := tools.ToolDefinition{
 		Name:        "get_weather",
 		Description: "Get current temperature for provided coordinates in celsius.",
 		Parameters: []tools.Parameter{
@@ -35,7 +35,7 @@ func TestGenaiToolPropertyTypeFrom(t *testing.T) {
 			{
 				Name:        "get_weather",
 				Description: "Get current temperature for provided coordinates in celsius.",
-				Parameters:  &genai.Schema{
+				Parameters: &genai.Schema{
 					Type: genai.TypeObject,
 					Properties: map[string]*genai.Schema{
 						"latitude":  {Type: genai.TypeNumber},

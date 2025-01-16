@@ -10,7 +10,7 @@ import (
 
 type GenaiToolPropertyType string
 
-func genaiToolFrom(tool tools.Tool) *genai.Tool {
+func genaiToolFrom(tool tools.ToolDefinition) *genai.Tool {
 	fn := genai.FunctionDeclaration{
 		Name:        tool.Name,
 		Description: tool.Description,

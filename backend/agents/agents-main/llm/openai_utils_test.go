@@ -10,7 +10,7 @@ import (
 
 func TestOpenaiToolPropertyTypeFrom(t *testing.T) {
 	// Define a weather tool with coordinates parameters
-	tool := tools.Tool{
+	tool := tools.ToolDefinition{
 		Name:        "get_weather",
 		Description: "Get current temperature for provided coordinates in celsius.",
 		Parameters: []tools.Parameter{

@@ -51,7 +51,7 @@ type DeepSeekTool struct {
 	Function DeepSeekFunction `json:"function"`
 }
 
-func deepSeekToolFrom(tool tools.Tool) DeepSeekTool {
+func deepSeekToolFrom(tool tools.ToolDefinition) DeepSeekTool {
 
 	required := []string{}
 	properties := map[string]Property{}
@@ -95,7 +95,7 @@ func toolsChoiceStrFrom(toolChoice tools.ToolChoice) any {
 	panic(fmt.Sprintf("unknown tool choice type: %v", toolChoice.Type))
 }
 
-func requestBodyStrFrom(tools []tools.Tool, model string, prompt string, toolChoice tools.ToolChoice) string {
+func requestBodyStrFrom(tools []tools.ToolDefinition, model string, prompt string, toolChoice tools.ToolChoice) string {
 	deepSeekTools := []DeepSeekTool{}
 	for _, tool := range tools {
 		deepSeekTools = append(deepSeekTools, deepSeekToolFrom(tool))

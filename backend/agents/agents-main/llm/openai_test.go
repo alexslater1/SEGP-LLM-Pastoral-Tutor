@@ -72,7 +72,7 @@ func TestOpenAIChatCompletionWithTools(t *testing.T) {
 
 	tool := tools.CheckWeatherTool()
 
-	response, err := ocClient.ChatCompletionWithTools(context.Background(), prompt, []tools.Tool{tool}, tools.ToolChoice{Type: tools.ToolChoiceTypeAuto})
+	response, err := ocClient.ChatCompletionWithTools(context.Background(), prompt, []tools.ToolDefinition{tool}, tools.ToolChoice{Type: tools.ToolChoiceTypeAuto})
 	if err != nil {
 		t.Fatalf("Error calling ChatCompletionWithTools: %v", err)
 	}

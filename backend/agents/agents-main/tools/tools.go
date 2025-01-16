@@ -23,7 +23,7 @@ type Parameter struct {
 	Type        ParameterType
 }
 
-type Tool struct {
+type ToolDefinition struct {
 	Name        string
 	Description string
 	Parameters  []Parameter
@@ -39,8 +39,8 @@ type ToolCall struct {
 	Arguments string `json:"arguments,omitempty"`
 }
 
-func CheckWeatherTool() Tool {
-	return Tool{
+func CheckWeatherTool() ToolDefinition {
+	return ToolDefinition{
 		Name:        "check_weather",
 		Description: "Check the weather in a given location",
 		Parameters: []Parameter{
@@ -50,8 +50,8 @@ func CheckWeatherTool() Tool {
 	}
 }
 
-func CheckBestAnimalNameTool() Tool {
-	return Tool{
+func CheckBestAnimalNameTool() ToolDefinition {
+	return ToolDefinition{
 		Name:        "check_best_animal_name",
 		Description: "Check the best animal name for a given animal",
 		Parameters: []Parameter{
