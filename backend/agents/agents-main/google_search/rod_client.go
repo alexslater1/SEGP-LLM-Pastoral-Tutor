@@ -5,6 +5,18 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
+)
+
+var (
+	// Exclude non-text resources like images, videos, etc.
+	excludeTypes = []proto.NetworkResourceType{
+		proto.NetworkResourceTypeImage,
+		proto.NetworkResourceTypeMedia,
+		proto.NetworkResourceTypeFont,
+		proto.NetworkResourceTypeStylesheet,
+		proto.NetworkResourceTypeScript,
+	}
 )
 
 // TODO: add page pool
@@ -29,27 +41,30 @@ func (r *RodClient) HtmlFromURL(url string) (*string, error) {
 }
 
 func (r *RodClient) htmlFromURL(url string) (*string, error) {
-	page := r.browser.MustPage()
-	defer page.Close()
+	html := ""
+	var error error
+	rod.Try(func() {
+		page := r.browser.MustPage()
+		defer page.Close()
 
-	err := page.Navigate(url)
-	if err != nil {
-		return nil, err
-	}
+		err := page.Navigate(url)
+		if err != nil {
+			error = err
+			return
+		}
 
-	err = page.WaitLoad()
-	if err != nil {
-		return nil, err
-	}
+		// Wait for the page to fully load
+		page.MustWaitLoad()
 
-	err = page.WaitStable(time.Second * 2)
-	if err != nil {
-		return nil, err
-	}
+		page.WaitRequestIdle(time.Second*3, []string{""}, []string{}, excludeTypes)
 
-	html, err := page.HTML()
-	if err != nil {
-		return nil, err
-	}
-	return &html, nil
+		h, err := page.HTML()
+		if err != nil {
+			error = err
+			return
+		}
+
+		html = h
+	})
+	return &html, error
 }
