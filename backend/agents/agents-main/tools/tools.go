@@ -1,5 +1,10 @@
 package tools
 
+type Tool[T any] interface {
+	Call(argsStruct T) (*string, error)
+	Definition() ToolDefinition
+}
+
 type ParameterType string
 
 const (
