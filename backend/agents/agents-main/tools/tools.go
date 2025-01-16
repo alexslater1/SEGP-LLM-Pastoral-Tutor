@@ -64,3 +64,15 @@ func CheckBestAnimalNameTool() ToolDefinition {
 		},
 	}
 }
+
+// Always need to pass this
+func NoTool() ToolDefinition {
+	return ToolDefinition{
+		Name:        "no_tool",
+		Description: "Do not use any tools",
+		Parameters: []Parameter{
+			{Name: "reason", Description: "The reason why no tool was used", Type: ParameterTypeString},
+			{Name: "answer", Description: "The answer to the question", Type: ParameterTypeString},
+		},
+	}
+}
