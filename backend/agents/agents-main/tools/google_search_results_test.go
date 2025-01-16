@@ -36,7 +36,7 @@ func TestCall(t *testing.T) {
 		t.Skip("Skipping test due to CICD")
 	}
 
-	tool := GoogleSearchResutsTool(googleSearch.NewRodClient())
+	tool := NewGoogleSearchResultsTool(googleSearch.NewRodClient())
 	args := GoogleSearchResultsToolArgs{
 		Query: "what imperial computing courses are there",
 	}
