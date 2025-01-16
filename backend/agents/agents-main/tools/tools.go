@@ -1,7 +1,6 @@
 package tools
 
-type Tool[T any] interface {
-	Call(argsStruct T) (*string, error)
+type Tool interface {
 	Definition() ToolDefinition
 }
 

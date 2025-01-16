@@ -57,17 +57,17 @@ Remember:
 
 type ReActAgent struct {
 	Description string
-	Tools       map[string]tools.Tool[any]
+	Tools       map[string]tools.Tool
 	LLM         llm.LLM
 	Memory      memory.Memory[memory.ReActMemorySteps]
 	Storage     storage.Storage
 	Knowledge   knowledge.Knowledge
 }
 
-func NewReActAgent(description string, ts []tools.Tool[any], llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], storage storage.Storage, knowledge knowledge.Knowledge) *ReActAgent {
+func NewReActAgent(description string, ts []tools.Tool, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], storage storage.Storage, knowledge knowledge.Knowledge) *ReActAgent {
 	// TODO: add check for no_tool tool
 
-	toolsMap := make(map[string]tools.Tool[any])
+	toolsMap := make(map[string]tools.Tool)
 	for _, tool := range ts {
 		toolsMap[tool.Definition().Name] = tool
 	}
@@ -83,7 +83,7 @@ func NewReActAgent(description string, ts []tools.Tool[any], llm llm.LLM, memory
 }
 
 func (a *ReActAgent) Run(input string) (string, error) {
-
+	return "", nil
 }
 
 func (a *ReActAgent) think() (*string, error) {
@@ -123,10 +123,10 @@ func (a *ReActAgent) act(toolCall tools.ToolCall) (*string, error) {
 
 	switch tool.(type) {
 	case *tools.GoogleSearchResultsTool:
-		return tool.Call(context.Background(), toolCall.Arguments)
-	case *tools.CheckBestAnimalNameTool:
-		return tool.Call(context.Background(), toolCall.Arguments)
+		//todo:
 	}
+
+	return nil, nil
 }
 
 func (a *ReActAgent) getThinkPrompt() *string {

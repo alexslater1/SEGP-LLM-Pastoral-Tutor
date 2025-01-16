@@ -18,7 +18,7 @@ type GoogleSearchUrlToolArgs struct {
 	URL string
 }
 
-func NewGoogleSearchUrlTool(googleSearchClient googleSearch.GoogleSearchClient) Tool[GoogleSearchUrlToolArgs] {
+func NewGoogleSearchUrlTool(googleSearchClient googleSearch.GoogleSearchClient) *GoogleSearchUrlTool {
 	return &GoogleSearchUrlTool{
 		googleSearchClient: googleSearchClient,
 	}

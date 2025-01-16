@@ -19,7 +19,7 @@ type GoogleSearchResultsToolArgs struct {
 	Query string
 }
 
-func NewGoogleSearchResultsTool(googleSearchClient googleSearch.GoogleSearchClient) Tool[GoogleSearchResultsToolArgs] {
+func NewGoogleSearchResultsTool(googleSearchClient googleSearch.GoogleSearchClient) *GoogleSearchResultsTool {
 
 	return &GoogleSearchResultsTool{
 		googleSearchClient: googleSearchClient,
