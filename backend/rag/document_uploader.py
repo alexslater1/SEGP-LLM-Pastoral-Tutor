@@ -6,6 +6,9 @@ import os
 from config import supabase, DOCUMENTS_BUCKET_NAME, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME
 
 url = "./pdfs/Student_Code_of_Conduct_2023_24.pdf"
+url2 = "./pdfs/Computing-UG-Handbook-2425-v1b.pdf"
+url3 = "./pdfs/Orientation-for-Visiting-(non-degree)-Students-(start-date---beginning-of-the-2024-25-academic-year).pdf"
+
 
 
 def upload(url):
@@ -50,4 +53,6 @@ def upload(url):
 
 
 upload(url)
+upload(url2)
+upload(url3)
     

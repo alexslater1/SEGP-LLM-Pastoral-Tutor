@@ -19,7 +19,7 @@ def search(query, chunks, k=5):
 
     return chunk_scores[:k]
 
-def search_database(query, k=1):
+def search_database(query, k=5):
     embedded_query = embed(query)
     normalised_embedded_query = np.linalg.norm(embedded_query)
 
@@ -44,7 +44,7 @@ def get_doc_ids_from_chunks(chunks):
         doc_set.add(entry['doc_id'])
     return doc_set
 
-def get_text_from_chunks(chunks, k=3):
+def get_text_from_chunks(chunks, k=5):
     blocks = []
     for entry in chunks:
         doc_id = entry['doc_id']
