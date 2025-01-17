@@ -2,7 +2,7 @@ from transformers import BertTokenizer, BertModel
 import torch
 
 #other models can be used
-embedding_model = 'bert-base-uncased'
+embedding_model = 'BAAI/bge-small-en-v1.5'
 tokenizer = BertTokenizer.from_pretrained(embedding_model)
 model = BertModel.from_pretrained(embedding_model)
 

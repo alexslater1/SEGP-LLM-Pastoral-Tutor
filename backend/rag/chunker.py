@@ -68,10 +68,10 @@ def document_chunker2(text, model_name,
 def document_chunker(directory_path,
                      model_name,
                      paragraph_separator='\n\n',
-                     chunk_size=100,
+                     chunk_size=250,
                      separator=' ',
                      secondary_chunking_regex=r'\S+?[\.,;!?]',
-                     chunk_overlap=0):
+                     chunk_overlap=25):
     
     tokenizer = AutoTokenizer.from_pretrained(model_name)  # Load tokenizer for the specified model
     documents = {}  # Initialize dictionary to store results
