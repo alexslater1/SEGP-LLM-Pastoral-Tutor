@@ -1,0 +1,32 @@
+stages:
+  - build
+  - test
+  - deploy
+
+build-project:
+  stage: build
+  variables:
+    VERCEL_ORG_ID: $VERCEL_ORG_ID$
+    VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID$
+  script:
+    - npm install
+    - npx vercel env pull .env.local --yes --environment=production --token=$VERCEL_TOKEN$
+    - npm tsx lib/db/migrate
+    - npm vercel build --token=$VERCEL_TOKEN$
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'master'
+  tags:
+    - shared
+
+deploy-to-vercel:
+  stage: deploy
+  variables:
+    VERCEL_ORG_ID: $VERCEL_ORG_ID$
+    VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID$
+  script:
+    - npm vercel deploy --prebuilt --token=$VERCEL_TOKEN$
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'master'
+  tags:
+    - shared
+
