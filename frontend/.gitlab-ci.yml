@@ -17,7 +17,7 @@ build-project:
     - pnpm install
     - npx vercel env pull .env.local --yes --environment=production --token=$VERCEL_TOKEN
     - pnpm tsx lib/db/migrate
-    - pnpm vercel build --token=$VERCEL_TOKEN
+    - npx vercel build --token=$VERCEL_TOKEN
   rules:
     - if: $CI_COMMIT_BRANCH == 'master'
   tags:
