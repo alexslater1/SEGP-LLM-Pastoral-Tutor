@@ -18,8 +18,8 @@ build-and-deploy-project:
     - npx vercel env pull .env.local --yes --environment=production --token=$VERCEL_TOKEN
     - npx vercel pull --yes --environment=production --token=$VERCEL_TOKEN
     - pnpm tsx lib/db/migrate
-    - npx vercel build --token=$VERCEL_TOKEN
-    - npx vercel deploy --prebuilt --token=$VERCEL_TOKEN
+    - npx vercel build --prod --token=$VERCEL_TOKEN
+    - npx vercel deploy --prod --prebuilt --token=$VERCEL_TOKEN
   rules:
     - if: $CI_COMMIT_BRANCH == 'master'
   tags:
