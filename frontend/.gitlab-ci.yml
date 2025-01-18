@@ -13,6 +13,7 @@ build-project:
     SHELL: "bash"
   script:
     - curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=10.0.0 sh -
+    - source /root/.bashrc
     - pnpm install
     - npx vercel env pull .env.local --yes --environment=production --token=$VERCEL_TOKEN$
     - pnpm tsx lib/db/migrate
