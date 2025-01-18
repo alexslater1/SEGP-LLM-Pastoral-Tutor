@@ -9,10 +9,12 @@ build-project:
     VERCEL_ORG_ID: $VERCEL_ORG_ID$
     VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID$
   script:
-    - npm install
+    - apt install npm
+    - curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=10.0.0 sh -
+    - pnpm install
     - npx vercel env pull .env.local --yes --environment=production --token=$VERCEL_TOKEN$
-    - npm tsx lib/db/migrate
-    - npm vercel build --token=$VERCEL_TOKEN$
+    - pnpm tsx lib/db/migrate
+    - pnpm vercel build --token=$VERCEL_TOKEN$
   rules:
     - if: $CI_COMMIT_BRANCH == 'master'
   tags:
