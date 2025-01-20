@@ -1,13 +1,16 @@
 package tools
 
-import googleSearch "github.com/segp/agents-main/google_search"
 import (
 	"bytes"
 	"fmt"
-	markdown "github.com/JohannesKaufmann/html-to-markdown"
-	"github.com/PuerkitoBio/goquery"
+
+	googleSearch "github.com/segp/agents-main/google_search"
+
 	"net/url"
 	"strings"
+
+	markdown "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/PuerkitoBio/goquery"
 )
 
 type GoogleSearchUrlTool struct {
@@ -23,7 +26,7 @@ func NewGoogleSearchUrlTool(googleSearchClient googleSearch.GoogleSearchClient) 
 func (g *GoogleSearchUrlTool) Definition() ToolDefinition {
 	return ToolDefinition{
 		Name:        "google_search_url",
-		Description: "Returns the scraped content of a specific url. This is useful for getting more information about a specific url.",
+		Description: "Returns the scraped content of a specific url, provided it is not a pdf or xml. This is useful for getting more information about a specific url.",
 		Parameters: []Parameter{
 			{Name: "URL", Type: "string", Description: "The URL to search."},
 		},

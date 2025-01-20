@@ -86,5 +86,12 @@ func parseGoogleSearchResults(html *string) ([]GoogleSearchResult, error) {
 		}
 	})
 
-	return results, nil
+	filteredResults := []GoogleSearchResult{}
+	for _, result := range results {
+		if !strings.HasSuffix(result.URL, ".pdf") && !strings.HasSuffix(result.URL, ".xml") {
+			filteredResults = append(filteredResults, result)
+		}
+	}
+
+	return filteredResults, nil
 }
