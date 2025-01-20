@@ -14,15 +14,15 @@ import (
 )
 
 const (
-	thinkPrompt = `You are a ReAct (Reasoning and Acting) agent tasked with answering the following query:
-
+	thinkPrompt = `%s
+You are tasked with answering the following query:
 Query: "%s"
 
 Your goal is to reason about the query and decide on the best course of action to answer it accurately. You must answer using chain of thought reasoning, so explain your though process before giving the answer. You should start with ## Thoughts 
 and give your thoughts in a detailed manner. Then you should give your answer in 
 ## Answer where you give the answer to the query.
 
-Previous reasoning steps and observations: "%s"
+Previous reasoning steps and observations: "%+v"
 
 Available tools: "%s"
 
@@ -53,10 +53,17 @@ Remember:
 - If you cannot find the necessary information after using available tools, admit that you don't have enough information to answer the query confidently.`
 
 	decidePrompt = `Given the following thought, choose the correct tool to use: %s`
+
+	observerPrompt = `Previously, you thought %s
+	
+	You then decided to call tool %+v
+	For which this was the result: %+v
+	
+	Now,describe thoroughly what can be observed from the result of the tool call, relevant to the given task.`
 )
 
 type ReActAgent struct {
-	Description string
+	Background  string
 	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
 	Memory      memory.Memory[memory.ReActMemorySteps]
@@ -64,11 +71,11 @@ type ReActAgent struct {
 	Knowledge   knowledge.Knowledge
 }
 
-func NewReActAgent(description string, toolHandler *tools.ToolHandler, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], storage storage.Storage, knowledge knowledge.Knowledge) *ReActAgent {
+func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], storage storage.Storage, knowledge knowledge.Knowledge) *ReActAgent {
 	// TODO: add check for no_tool tool
 
 	return &ReActAgent{
-		Description: description,
+		Background:  background,
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Memory:      memory,
@@ -77,12 +84,54 @@ func NewReActAgent(description string, toolHandler *tools.ToolHandler, llm llm.L
 	}
 }
 
-func (a *ReActAgent) Run(input string) (string, error) {
-	return "", nil
+func (a *ReActAgent) Run(query string) (*string, *string, error) {
+	return a.logicLoop(query)
 }
 
-func (a *ReActAgent) think() (*string, error) {
-	prompt := a.getThinkPrompt()
+func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
+
+	for {
+		mem, err := a.Memory.Get()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		thoughts, err := a.think(mem, a.ToolHandler.ToolDefinitions(), query)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		toolCall, err := a.decide(*thoughts)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if toolCall.Name == "no_tool" {
+			return extractAnswerAndReason(toolCall)
+		}
+
+		toolCallResult, err := a.act(*toolCall)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		observation, err := a.observe(toolCallResult, thoughts, *toolCall)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		action := fmt.Sprintf("%+v", toolCall)
+		a.Memory.Add(memory.ReActMemorySteps{
+			Thought:     *thoughts,
+			Action:      action,
+			Observation: *observation,
+		})
+	}
+
+}
+
+func (a *ReActAgent) think(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string) (*string, error) {
+	prompt := a.getThinkPrompt(mem, toolDefinitions, query)
 	if prompt == nil {
 		return nil, errors.New("failed to get think prompt")
 	}
@@ -112,19 +161,20 @@ func (a *ReActAgent) act(toolCall tools.ToolCall) (*string, error) {
 	return a.ToolHandler.Call(toolCall)
 }
 
-func (a *ReActAgent) getThinkPrompt() *string {
-	mem, err := a.Memory.Get()
-	if err != nil {
-		return nil
-	}
+func (a *ReActAgent) observe(toolCallResult *string, thoughts *string, chosenToolCall tools.ToolCall) (*string, error) {
+	prompt := fmt.Sprintf(observerPrompt, *thoughts, chosenToolCall, *toolCallResult)
 
+	return a.LLM.ChatCompletion(context.Background(), prompt)
+}
+
+func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string) *string {
 	memoryStr, err := json.Marshal(mem)
 	if err != nil {
 		return nil
 	}
 
 	toolsStr := ""
-	for _, tool := range a.ToolHandler.ToolDefinitions() {
+	for _, tool := range toolDefinitions {
 		jsonTool, err := json.Marshal(tool)
 		if err != nil {
 			return nil
@@ -132,6 +182,18 @@ func (a *ReActAgent) getThinkPrompt() *string {
 		toolsStr += string(jsonTool) + ", "
 	}
 
-	prompt := fmt.Sprintf(thinkPrompt, a.Description, string(memoryStr), toolsStr)
+	prompt := fmt.Sprintf(thinkPrompt, a.Background, query, memoryStr, toolsStr)
 	return &prompt
+}
+
+func extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *string, error) {
+	var arguments map[string]string
+	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
+		return nil, nil, err
+	}
+
+	reason := arguments["reason"]
+	answer := arguments["answer"]
+
+	return &answer, &reason, nil
 }
