@@ -60,7 +60,20 @@ Remember:
 	You then decided to call tool %+v
 	For which this was the result: %+v
 	
-	Now,describe thoroughly what can be observed from the result of the tool call, relevant to the given task.`
+	Now,describe thoroughly what can be observed from the result of the tool call, relevant to the given task. Make it super specific, as this observation will be used in the next thought iteration. The next thought iteration WILL NOT HAVE ACCESS TO THE TOOL CALL RESULT, ONLY THE OBSERVATION, SO MAKE IT SUPER SPECIFIC.
+	
+	Therefore, if there are specific urls or descriptions which are relevant for the next stage, make sure to include them explicitely in the observation.
+	
+	For example, if a url says https://www.japan-talk.com/jt/new/weather-in-japan and this is relevant, you should include https://www.japan-talk.com/jt/new/weather-in-japan in the observation.
+	
+	
+	Use chain of thought reasoning to think about the observation and decide what to do next. Label your thoughts as 
+	## Thoughts
+	And then give your thoughts in a detailed manner.
+	
+	After that, give your observation in 
+	## Observation
+	And give the observation in a detailed manner.`
 )
 
 type ReActAgent struct {
@@ -91,6 +104,7 @@ func (a *ReActAgent) Run(query string) (*string, *string, error) {
 
 func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 	slog.Info("Starting logic loop for query", "query", query)
+	fmt.Println()
 
 	for {
 		mem, err := a.Memory.Get()
@@ -98,41 +112,37 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 			return nil, nil, err
 		}
 
-		slog.Info("Memory", "memory", mem)
-
 		thoughts, err := a.think(mem, a.ToolHandler.ToolDefinitions(), query)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		slog.Info("Thoughts", "thoughts", *thoughts)
+		logReActStage(*thoughts, ReActAgentStageThinking)
 
 		toolCall, err := a.decide(*thoughts)
 		if err != nil {
 			return nil, nil, err
 		}
 
+		logReActStage(fmt.Sprintf("%+v", *toolCall), ReActAgentStageToolCall)
+
 		if toolCall.Name == "no_tool" {
-			slog.Info("No tool call", "tool call", *toolCall)
 			return extractAnswerAndReason(toolCall)
 		}
-
-		slog.Info("Tool call", "tool call", *toolCall)
 
 		toolCallResult, err := a.act(*toolCall)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		slog.Info("Tool call result", "tool call result", *toolCallResult)
+		logReActStage(*toolCallResult, ReActAgentStageToolCallResult)
 
 		observation, err := a.observe(toolCallResult, thoughts, *toolCall)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		slog.Info("Observation", "observation", *observation)
-
+		logReActStage(*observation, ReActAgentStageObservation)
 		action := fmt.Sprintf("%+v", toolCall)
 		a.Memory.Add(memory.ReActMemorySteps{
 			Thought:     *thoughts,
@@ -140,7 +150,6 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 			Observation: *observation,
 		})
 
-		slog.Info("Memory updated")
 	}
 
 }
@@ -150,6 +159,7 @@ func (a *ReActAgent) think(mem []memory.ReActMemorySteps, toolDefinitions []tool
 	if prompt == nil {
 		return nil, errors.New("failed to get think prompt")
 	}
+
 	return a.LLM.ChatCompletion(context.Background(), *prompt)
 }
 
@@ -183,7 +193,7 @@ func (a *ReActAgent) observe(toolCallResult *string, thoughts *string, chosenToo
 }
 
 func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string) *string {
-	memoryStr, err := json.Marshal(mem)
+	memoryBytes, err := json.Marshal(mem)
 	if err != nil {
 		return nil
 	}
@@ -197,7 +207,7 @@ func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitio
 		toolsStr += string(jsonTool) + ", "
 	}
 
-	prompt := fmt.Sprintf(thinkPrompt, a.Background, query, memoryStr, toolsStr)
+	prompt := fmt.Sprintf(thinkPrompt, a.Background, query, string(memoryBytes), toolsStr)
 	return &prompt
 }
 

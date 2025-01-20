@@ -2,6 +2,7 @@ package tools
 
 import (
 	"encoding/json"
+	"fmt"
 
 	googleSearch "github.com/segp/agents-main/google_search"
 )
@@ -45,9 +46,17 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 
 	switch typedTool := tool.(type) {
 	case *GoogleSearchResultsTool:
-		return typedTool.GoogleSearchResultsFor(parsedArgs["query"].(string))
+		query, ok := parsedArgs["query"]
+		if !ok {
+			return nil, fmt.Errorf("query is required")
+		}
+		return typedTool.GoogleSearchResultsFor(query.(string))
 	case *GoogleSearchUrlTool:
-		return typedTool.PageContentFor(parsedArgs["url"].(string))
+		url, ok := parsedArgs["URL"]
+		if !ok {
+			return nil, fmt.Errorf("URL is required")
+		}
+		return typedTool.PageContentFor(url.(string))
 	}
 
 	return nil, nil

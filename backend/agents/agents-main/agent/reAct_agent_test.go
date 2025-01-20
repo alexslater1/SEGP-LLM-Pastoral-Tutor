@@ -32,7 +32,7 @@ func TestReActAgent(t *testing.T) {
 		agent       = NewReActAgent("You are a ReAct agent", toolHandler, llm, memory, storage, knowledge)
 	)
 
-	response, reasoning, err := agent.Run("What is the weather in Tokyo?")
+	response, reasoning, err := agent.Run("When is Imperial's Queen's Tower restoration set to finish?")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}

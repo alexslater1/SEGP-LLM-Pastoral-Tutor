@@ -1,5 +1,7 @@
 {
   "go.testFlags": [
-    "-v"
-  ]
+    "-v", "-timeout=600s"
+  ],
+  "testing.followRunningTest": true,
+  "terminal.integrated.env.linux": { "TERM": "xterm-256color" }
 }
