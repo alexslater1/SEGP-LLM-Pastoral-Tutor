@@ -13,7 +13,7 @@ func TestCallGoogleSearchUrlTool(t *testing.T) {
 	}
 
 	tool := NewGoogleSearchUrlTool(googleSearch.NewRodClient())
-	result, err := tool.Call("https://www.google.com/search?q=hello&oq=hello&gs_lcrp=EgZjaHJvbWUqDggAEEUYJxg7GIAEGIoFMg4IABBFGCcYOxiABBiKBTITCAEQLhiDARjHARixAxjRAxiABDIKCAIQLhixAxiABDIKCAMQABixAxiABDINCAQQABiDARixAxiABDIKCAUQABixAxiABDIGOAYQRRg8MgYIBxBFGDzSAQgxNDg0ajBqNKgCALACAA&sourceid=chrome&ie=UTF-8")
+	result, err := tool.PageContentFor("https://www.google.com/search?q=hello&oq=hello&gs_lcrp=EgZjaHJvbWUqDggAEEUYJxg7GIAEGIoFMg4IABBFGCcYOxiABBiKBTITCAEQLhiDARjHARixAxjRAxiABDIKCAIQLhixAxiABDIKCAMQABixAxiABDINCAQQABiDARixAxiABDIKCAUQABixAxiABDIGOAYQRRg8MgYIBxBFGDzSAQgxNDg0ajBqNKgCALACAA&sourceid=chrome&ie=UTF-8")
 	if err != nil {
 		t.Fatal(err)
 	}

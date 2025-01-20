@@ -37,7 +37,7 @@ func TestCall(t *testing.T) {
 	}
 
 	tool := NewGoogleSearchResultsTool(googleSearch.NewRodClient())
-	result, err := tool.Call("what imperial computing courses are there")
+	result, err := tool.GoogleSearchResultsFor("what imperial computing courses are there")
 	if err != nil {
 		t.Fatal(err)
 	}

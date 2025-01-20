@@ -30,7 +30,7 @@ func (g *GoogleSearchUrlTool) Definition() ToolDefinition {
 	}
 }
 
-func (g *GoogleSearchUrlTool) Call(url string) (*string, error) {
+func (g *GoogleSearchUrlTool) PageContentFor(url string) (*string, error) {
 	if err := validateURL(url); err != nil {
 		return nil, err
 	}

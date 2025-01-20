@@ -57,24 +57,19 @@ Remember:
 
 type ReActAgent struct {
 	Description string
-	Tools       map[string]tools.Tool
+	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
 	Memory      memory.Memory[memory.ReActMemorySteps]
 	Storage     storage.Storage
 	Knowledge   knowledge.Knowledge
 }
 
-func NewReActAgent(description string, ts []tools.Tool, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], storage storage.Storage, knowledge knowledge.Knowledge) *ReActAgent {
+func NewReActAgent(description string, toolHandler *tools.ToolHandler, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], storage storage.Storage, knowledge knowledge.Knowledge) *ReActAgent {
 	// TODO: add check for no_tool tool
-
-	toolsMap := make(map[string]tools.Tool)
-	for _, tool := range ts {
-		toolsMap[tool.Definition().Name] = tool
-	}
 
 	return &ReActAgent{
 		Description: description,
-		Tools:       toolsMap,
+		ToolHandler: toolHandler,
 		LLM:         llm,
 		Memory:      memory,
 		Storage:     storage,
@@ -97,16 +92,11 @@ func (a *ReActAgent) think() (*string, error) {
 func (a *ReActAgent) decide(thought string) (*tools.ToolCall, error) {
 	prompt := fmt.Sprintf(decidePrompt, thought)
 
-	toolDefinitions := []tools.ToolDefinition{}
-	for _, tool := range a.Tools {
-		toolDefinitions = append(toolDefinitions, tool.Definition())
-	}
-
 	toolChoice := tools.ToolChoice{
 		Type: tools.ToolChoiceTypeAuto,
 	}
 
-	chosenTool, err := a.LLM.ChatCompletionWithTools(context.Background(), prompt, toolDefinitions, toolChoice)
+	chosenTool, err := a.LLM.ChatCompletionWithTools(context.Background(), prompt, a.ToolHandler.ToolDefinitions(), toolChoice)
 	if err != nil {
 		return nil, err
 	}
@@ -119,14 +109,7 @@ func (a *ReActAgent) decide(thought string) (*tools.ToolCall, error) {
 }
 
 func (a *ReActAgent) act(toolCall tools.ToolCall) (*string, error) {
-	tool := a.Tools[toolCall.Name]
-
-	switch tool.(type) {
-	case *tools.GoogleSearchResultsTool:
-		//todo:
-	}
-
-	return nil, nil
+	return a.ToolHandler.Call(toolCall)
 }
 
 func (a *ReActAgent) getThinkPrompt() *string {
@@ -141,8 +124,8 @@ func (a *ReActAgent) getThinkPrompt() *string {
 	}
 
 	toolsStr := ""
-	for _, tool := range a.Tools {
-		jsonTool, err := json.Marshal(tool.Definition())
+	for _, tool := range a.ToolHandler.ToolDefinitions() {
+		jsonTool, err := json.Marshal(tool)
 		if err != nil {
 			return nil
 		}

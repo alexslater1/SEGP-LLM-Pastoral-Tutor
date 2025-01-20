@@ -32,7 +32,7 @@ func (g *GoogleSearchResultsTool) Definition() ToolDefinition {
 	}
 }
 
-func (g *GoogleSearchResultsTool) Call(query string) (*string, error) {
+func (g *GoogleSearchResultsTool) GoogleSearchResultsFor(query string) (*string, error) {
 	html, err := g.googleSearchClient.HtmlFromQuery(query)
 	if err != nil {
 		return nil, err
