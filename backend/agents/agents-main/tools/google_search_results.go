@@ -15,10 +15,6 @@ type GoogleSearchResultsTool struct {
 	googleSearchClient googleSearch.GoogleSearchClient
 }
 
-type GoogleSearchResultsToolArgs struct {
-	Query string
-}
-
 func NewGoogleSearchResultsTool(googleSearchClient googleSearch.GoogleSearchClient) *GoogleSearchResultsTool {
 
 	return &GoogleSearchResultsTool{
@@ -36,8 +32,8 @@ func (g *GoogleSearchResultsTool) Definition() ToolDefinition {
 	}
 }
 
-func (g *GoogleSearchResultsTool) Call(args GoogleSearchResultsToolArgs) (*string, error) {
-	html, err := g.googleSearchClient.HtmlFromQuery(args.Query)
+func (g *GoogleSearchResultsTool) Call(query string) (*string, error) {
+	html, err := g.googleSearchClient.HtmlFromQuery(query)
 	if err != nil {
 		return nil, err
 	}

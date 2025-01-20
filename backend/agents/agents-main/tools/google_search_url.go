@@ -14,10 +14,6 @@ type GoogleSearchUrlTool struct {
 	googleSearchClient googleSearch.GoogleSearchClient
 }
 
-type GoogleSearchUrlToolArgs struct {
-	URL string
-}
-
 func NewGoogleSearchUrlTool(googleSearchClient googleSearch.GoogleSearchClient) *GoogleSearchUrlTool {
 	return &GoogleSearchUrlTool{
 		googleSearchClient: googleSearchClient,
@@ -34,12 +30,12 @@ func (g *GoogleSearchUrlTool) Definition() ToolDefinition {
 	}
 }
 
-func (g *GoogleSearchUrlTool) Call(args GoogleSearchUrlToolArgs) (*string, error) {
-	if err := validateURL(args.URL); err != nil {
+func (g *GoogleSearchUrlTool) Call(url string) (*string, error) {
+	if err := validateURL(url); err != nil {
 		return nil, err
 	}
 
-	html, err := g.googleSearchClient.HtmlFromURL(args.URL)
+	html, err := g.googleSearchClient.HtmlFromURL(url)
 	if err != nil {
 		return nil, err
 	}
