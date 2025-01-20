@@ -25,14 +25,14 @@ func TestMain(m *testing.M) {
 func TestReActAgent(t *testing.T) {
 	var (
 		toolHandler = tools.NewGoogleSearchToolHandler(googleSearch.NewRodClient())
-		llm         = llm.NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
+		llm         = llm.NewDeepSeekLLM(os.Getenv("DEEPSEEK_API_KEY"))
 		memory      = memory.NewReActMemory()
 		storage     = storage.NewLocalStorage()
 		knowledge   = knowledge.NewLocalKnowledge()
 		agent       = NewReActAgent("You are a ReAct agent", toolHandler, llm, memory, storage, knowledge)
 	)
 
-	response, reasoning, err := agent.Run("When is Imperial's Queen's Tower restoration set to finish?")
+	response, reasoning, err := agent.Run("Who is the headmaster of the secondary school which Dillan Scott (imperial college london) attended?")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}

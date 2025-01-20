@@ -10,6 +10,7 @@ import (
 
 	"github.com/cohesion-org/deepseek-go"
 	"github.com/segp/agents-main/tools"
+	"github.com/segp/agents-main/utils"
 )
 
 type DeepSeekLLM struct {
@@ -18,6 +19,7 @@ type DeepSeekLLM struct {
 }
 
 func NewDeepSeekLLM(apiKey string) *DeepSeekLLM {
+	utils.Required(apiKey, "DEEPSEEK_API_KEY")
 	return &DeepSeekLLM{client: deepseek.NewClient(apiKey), apiKey: apiKey}
 }
 
