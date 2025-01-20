@@ -57,6 +57,9 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 			return nil, fmt.Errorf("URL is required")
 		}
 		return typedTool.PageContentFor(url.(string))
+	case *DateTool:
+		date := typedTool.GetCurrentDate()
+		return &date, nil
 	}
 
 	return nil, nil
