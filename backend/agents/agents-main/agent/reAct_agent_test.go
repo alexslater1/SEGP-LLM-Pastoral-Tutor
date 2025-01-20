@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 func TestReActAgent(t *testing.T) {
 	agent := NewDefaultReActAgent()
 
-	response, reasoning, err := agent.Run("Who is the headmaster of the secondary school which Dillan Scott (imperial college london) attended?")
+	response, reasoning, err := agent.Run("What is the date in two days")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}

@@ -11,6 +11,6 @@ func TestGetCurrentDate(t *testing.T) {
 		t.Skip("Skipping test in CICD")
 	}
 
-	date := GetCurrentDate()
+	date := NewDateTool().GetCurrentDate()
 	fmt.Println(date)
 }

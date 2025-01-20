@@ -4,6 +4,10 @@ import "time"
 
 type DateTool struct{}
 
+func NewDateTool() *DateTool {
+	return &DateTool{}
+}
+
 func (d *DateTool) Definition() ToolDefinition {
 	return ToolDefinition{
 		Name:        "date",

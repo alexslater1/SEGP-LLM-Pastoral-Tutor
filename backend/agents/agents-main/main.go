@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load("../.env"); err != nil {
+	if err := godotenv.Load("../../.env"); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
@@ -17,6 +17,6 @@ func main() {
 	flag.Parse()
 
 	server := api.NewServer(*listenAddr)
-	log.Printf("Starting server on %s", *listenAddr)
+	log.Printf("Starting server on http://localhost%s", *listenAddr)
 	log.Fatal(server.Start())
 }
