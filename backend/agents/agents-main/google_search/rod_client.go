@@ -15,7 +15,6 @@ var (
 		proto.NetworkResourceTypeMedia,
 		proto.NetworkResourceTypeFont,
 		proto.NetworkResourceTypeStylesheet,
-		proto.NetworkResourceTypeScript,
 	}
 )
 
@@ -25,6 +24,7 @@ type RodClient struct {
 }
 
 func NewRodClient() *RodClient {
+
 	return &RodClient{
 		browser: rod.New().MustConnect(),
 	}
@@ -32,7 +32,7 @@ func NewRodClient() *RodClient {
 
 func (r *RodClient) HtmlFromQuery(query string) (*string, error) {
 	encodedQuery := url.QueryEscape(query)
-	url := "https://www.google.com/search?q=" + encodedQuery
+	url := "https://www.bing.com/search?form=&q=" + encodedQuery
 	return r.htmlFromURL(url)
 }
 
@@ -43,9 +43,15 @@ func (r *RodClient) HtmlFromURL(url string) (*string, error) {
 func (r *RodClient) htmlFromURL(url string) (*string, error) {
 	html := ""
 	var error error
-	rod.Try(func() {
+	err := rod.Try(func() {
 		page := r.browser.MustPage()
 		defer page.Close()
+
+		// Configure page to look like a regular browser
+		page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{
+			UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+			Platform:  "Windows",
+		})
 
 		err := page.Navigate(url)
 		if err != nil {
@@ -66,5 +72,9 @@ func (r *RodClient) htmlFromURL(url string) (*string, error) {
 
 		html = h
 	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &html, error
 }

@@ -1,9 +1,22 @@
 package tools
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	googleSearch "github.com/segp/agents-main/google_search"
+)
 
 type ToolHandler struct {
 	Tools map[string]Tool
+}
+
+func NewGoogleSearchToolHandler(googleSearch googleSearch.GoogleSearchClient) *ToolHandler {
+	return NewToolHandler(
+		[]Tool{
+			NewGoogleSearchUrlTool(googleSearch),
+			NewGoogleSearchResultsTool(googleSearch),
+		},
+	)
 }
 
 func NewToolHandler(tools []Tool) *ToolHandler {

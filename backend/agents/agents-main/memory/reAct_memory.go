@@ -10,6 +10,12 @@ type ReActMemorySteps struct {
 	Observation string
 }
 
+func NewReActMemory() *ReActMemory {
+	return &ReActMemory{
+		CognitiveCycle: []ReActMemorySteps{},
+	}
+}
+
 func (m *ReActMemory) Add(input ReActMemorySteps) error {
 	m.CognitiveCycle = append(m.CognitiveCycle, input)
 	return nil

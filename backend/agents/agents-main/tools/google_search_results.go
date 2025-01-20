@@ -24,8 +24,8 @@ func NewGoogleSearchResultsTool(googleSearchClient googleSearch.GoogleSearchClie
 
 func (g *GoogleSearchResultsTool) Definition() ToolDefinition {
 	return ToolDefinition{
-		Name:        "Google Search Results",
-		Description: "Get the top google search results (urls and breif descriptions) for a given query.",
+		Name:        "google_search_results",
+		Description: "Get the top google search results (urls and brief descriptions of the page content of that url) for a given query.",
 		Parameters: []Parameter{
 			{Name: "query", Description: "The query to search for top results for", Type: ParameterTypeString},
 		},
@@ -37,6 +37,7 @@ func (g *GoogleSearchResultsTool) GoogleSearchResultsFor(query string) (*string,
 	if err != nil {
 		return nil, err
 	}
+
 	results, err := parseGoogleSearchResults(html)
 	if err != nil {
 		return nil, err
@@ -73,9 +74,10 @@ func parseGoogleSearchResults(html *string) ([]GoogleSearchResult, error) {
 	}
 
 	results := []GoogleSearchResult{}
-	doc.Find("div.MjjYud").Each(func(i int, s *goquery.Selection) {
-		description := s.Find("div.VwiC3b.yXK7lf.p4wth.r025kc.hJNv6b").Text()
-		link, exists := s.Find("a[jsname='UWckNb']").Attr("href")
+	doc.Find("li.b_algo").Each(func(i int, s *goquery.Selection) {
+		description := s.Find("div.b_caption").Text()
+		h2 := s.Find("h2")
+		link, exists := h2.Find("a").Attr("href")
 		if exists {
 			results = append(results, GoogleSearchResult{
 				URL:         link,

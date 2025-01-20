@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
@@ -89,6 +90,7 @@ func (a *ReActAgent) Run(query string) (*string, *string, error) {
 }
 
 func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
+	slog.Info("Starting logic loop for query", "query", query)
 
 	for {
 		mem, err := a.Memory.Get()
@@ -96,10 +98,14 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 			return nil, nil, err
 		}
 
+		slog.Info("Memory", "memory", mem)
+
 		thoughts, err := a.think(mem, a.ToolHandler.ToolDefinitions(), query)
 		if err != nil {
 			return nil, nil, err
 		}
+
+		slog.Info("Thoughts", "thoughts", *thoughts)
 
 		toolCall, err := a.decide(*thoughts)
 		if err != nil {
@@ -107,18 +113,25 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 		}
 
 		if toolCall.Name == "no_tool" {
+			slog.Info("No tool call", "tool call", *toolCall)
 			return extractAnswerAndReason(toolCall)
 		}
+
+		slog.Info("Tool call", "tool call", *toolCall)
 
 		toolCallResult, err := a.act(*toolCall)
 		if err != nil {
 			return nil, nil, err
 		}
 
+		slog.Info("Tool call result", "tool call result", *toolCallResult)
+
 		observation, err := a.observe(toolCallResult, thoughts, *toolCall)
 		if err != nil {
 			return nil, nil, err
 		}
+
+		slog.Info("Observation", "observation", *observation)
 
 		action := fmt.Sprintf("%+v", toolCall)
 		a.Memory.Add(memory.ReActMemorySteps{
@@ -126,6 +139,8 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 			Action:      action,
 			Observation: *observation,
 		})
+
+		slog.Info("Memory updated")
 	}
 
 }

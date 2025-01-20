@@ -22,7 +22,7 @@ func NewGoogleSearchUrlTool(googleSearchClient googleSearch.GoogleSearchClient) 
 
 func (g *GoogleSearchUrlTool) Definition() ToolDefinition {
 	return ToolDefinition{
-		Name:        "Google Search URL",
+		Name:        "google_search_url",
 		Description: "Search a specific url, and return the scraped content of that page",
 		Parameters: []Parameter{
 			{Name: "URL", Type: "string", Description: "The URL to search."},

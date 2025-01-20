@@ -7,6 +7,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 	"github.com/segp/agents-main/tools"
+	"github.com/segp/agents-main/utils"
 )
 
 const (
@@ -18,6 +19,8 @@ type OpenAiLLM struct {
 }
 
 func NewOpenAiLLM(apiKey string) *OpenAiLLM {
+	utils.Required(apiKey, "Openai api key")
+
 	return &OpenAiLLM{
 		client: openai.NewClient(apiKey),
 	}

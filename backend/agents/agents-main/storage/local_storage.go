@@ -4,6 +4,12 @@ type LocalStorage struct {
 	ChatHistory []string
 }
 
+func NewLocalStorage() *LocalStorage {
+	return &LocalStorage{
+		ChatHistory: []string{},
+	}
+}
+
 func (s *LocalStorage) GetChatHistory() ([]string, error) {
 	return s.ChatHistory, nil
 }

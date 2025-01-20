@@ -31,13 +31,22 @@ func TestParseGoogleSearchResults(t *testing.T) {
 	assert.Equal(t, expectedResult, results)
 }
 
+func TestCallGoogleSearchResultsTool(t *testing.T) {
+	tool := NewGoogleSearchResultsTool(googleSearch.NewRodClient())
+	result, err := tool.GoogleSearchResultsFor("what is the weather in japan")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(*result)
+}
+
 func TestCall(t *testing.T) {
 	if os.Getenv("CICD") == "True" {
 		t.Skip("Skipping test due to CICD")
 	}
 
 	tool := NewGoogleSearchResultsTool(googleSearch.NewRodClient())
-	result, err := tool.GoogleSearchResultsFor("what imperial computing courses are there")
+	result, err := tool.GoogleSearchResultsFor("whatt imperial computing courses are there")
 	if err != nil {
 		t.Fatal(err)
 	}
