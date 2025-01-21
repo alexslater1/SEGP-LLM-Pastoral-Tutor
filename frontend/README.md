@@ -14,7 +14,7 @@ You will need to use environment variables in a `.env.local` file to run the pro
 Run
 ```
 export VERCEL_ORG_ID=team_zI0C0C3bsu0Tu6wPEVRr4AnP
-export VERCEL_PROJECT_ID=team_zI0C0C3bsu0Tu6wPEVRr4AnP
+export VERCEL_PROJECT_ID=prj_01uSGLtmf8JwSv2rL7XALtnOVAg6
 npx vercel env pull .env.local --yes --environment=development --token=[VERCEL_TOKEN]
 ```
 Replace `VERCEL_TOKEN` with the Vercel token for the account with access to the project.
