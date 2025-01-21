@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from searcher import get_supabase_rag_chunks
 from openai import OpenAI
 from dotenv import load_dotenv
+from document_uploader import upload_doc
 import os
 
 # Load environment variables from .env file
@@ -46,6 +47,39 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
         retrieved = get_supabase_rag_chunks(query, num_chunks, similarity_threshold)
        
         return {"chunks": retrieved["chunks"], "contacts": retrieved["contacts"]}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag")
+async def upload_rag_document(url: str):
+    # Validate url
+    if not url or url.isspace():
+        raise HTTPException(
+            status_code=400, 
+            detail="Url parameter cannot be empty or only whitespace"
+        )
+
+    if url.strip()[-4:] != ".pdf":
+        raise HTTPException(
+            status_code=400, 
+            detail="Document must be a pdf"
+        )
+    
+    if not url.strip()[:-4]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Document name must exist"
+        )
+    
+    try:
+        # Clean url of extra whitespace
+        url = url.strip()
+        
+        # Embed and upload document chunks to database
+        upload_doc(url)
+       
+        return {"response": "Document uploaded"}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

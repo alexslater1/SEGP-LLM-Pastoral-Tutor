@@ -5,16 +5,8 @@ from supabase import create_client, Client
 import os
 from config import supabase, DOCUMENTS_BUCKET_NAME, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME, CONTACT_TABLE_NAME
 
-url = "./pdfs/Student_Code_of_Conduct_2023_24.pdf"
-url2 = "./pdfs/Computing-UG-Handbook-2425-v1b.pdf"
-url3 = "./pdfs/Orientation-for-Visiting-(non-degree)-Students-(start-date---beginning-of-the-2024-25-academic-year).pdf"
-
-
-
-def upload(url):
+def upload_doc(url):
     file_name = os.path.basename(url)
-    pdf_text = pdf_to_text2(url)
-    print("1")
 
     #upload file to bucket storage
     try:
@@ -24,37 +16,25 @@ def upload(url):
         print(f"An error uploading the file occurred: {str(e)}")
         return None
     public_url = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).get_public_url(file_name)
-    print("2")
 
     #add entry for file in documents table
     response = supabase.table(DOCUMENTS_TABLE_NAME).insert([
             {"name": file_name, "url": public_url}
         ]).execute()
-    print(response)
     doc_id = response.data[0].get('doc_id')
-    print(doc_id)
-    print("3")
 
     #chunk document
-    chunks = document_chunker2(pdf_text, "BAAI/bge-small-en-v1.5")
-    # for chunk in chunks:
-    #     print("-----------------------------------------------------------------")
-    #     print(chunk)
-    #     print('-----------------------------------------------------------------')
+    chunks = document_chunker2(pdf_to_text2(url), "BAAI/bge-small-en-v1.5")
 
-    print("4")
     index = 1
     for text in chunks:
         supabase.table(RAG_TABLE_NAME).insert([
             {"text": text, "doc_id": doc_id, "pos_in_doc": index, "embedding": embed(text).tolist()}
         ]).execute()
-        print(f" - {index}")
         index += 1
-    print("5")
 
     #extract contacts
     contacts = extract_contacts_with_context(pdf_text)
-    print("6")
     contact_index = 1
     for (email, email_context) in contacts[0]:
         supabase.table(CONTACT_TABLE_NAME).insert([
@@ -77,9 +57,4 @@ def upload(url):
         ]).execute()
         print(f" - {contact_index}")
         contact_index += 1
-    print("7")
-
-upload(url)
-upload(url2)
-upload(url3)
     

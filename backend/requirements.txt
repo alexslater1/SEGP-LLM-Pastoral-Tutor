@@ -3,4 +3,6 @@ transformers
 PyMuPDF
 supabase
 openai
-nltk
+fastapi
+uvicorn
+python-dotenv
