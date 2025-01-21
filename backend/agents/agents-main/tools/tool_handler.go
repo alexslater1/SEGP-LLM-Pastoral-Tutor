@@ -5,10 +5,21 @@ import (
 	"fmt"
 
 	googleSearch "github.com/segp/agents-main/google_search"
+	"github.com/segp/agents-main/knowledge"
 )
 
 type ToolHandler struct {
 	Tools map[string]Tool
+}
+
+func NewDefaultToolHandler(googleSearch googleSearch.GoogleSearchClient, knowledge knowledge.Knowledge) *ToolHandler {
+	return NewToolHandler(
+		[]Tool{
+			NewGoogleSearchUrlTool(googleSearch),
+			NewGoogleSearchResultsTool(googleSearch),
+			NewRagTool(knowledge),
+		},
+	)
 }
 
 func NewGoogleSearchToolHandler(googleSearch googleSearch.GoogleSearchClient) *ToolHandler {
@@ -60,9 +71,15 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 	case *DateTool:
 		date := typedTool.GetCurrentDate()
 		return &date, nil
+	case *RagTool:
+		query, ok := parsedArgs["query"]
+		if !ok {
+			return nil, fmt.Errorf("query is required")
+		}
+		return typedTool.SearchRagFor(query.(string))
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("no tool matched the name %s", toolCall.Name)
 }
 
 func (t *ToolHandler) ToolDefinitions() []ToolDefinition {
