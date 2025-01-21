@@ -6,3 +6,4 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 DOCUMENTS_BUCKET_NAME = "document-files"
 DOCUMENTS_TABLE_NAME = "documents"
 RAG_TABLE_NAME = "rag"
+CONTACT_TABLE_NAME = "contacts"
