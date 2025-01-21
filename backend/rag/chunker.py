@@ -5,10 +5,10 @@ from transformers import AutoTokenizer
 
 def document_chunker2(text, model_name,
                      paragraph_separator='\n\n',
-                     chunk_size=100,
+                     chunk_size=250,
                      separator=' ',
                      secondary_chunking_regex=r'\S+?[\.,;!?]',
-                     chunk_overlap=0):
+                     chunk_overlap=25):
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)  # Load tokenizer for the specified model
 
@@ -64,6 +64,37 @@ def document_chunker2(text, model_name,
             all_chunks.append(chunk)
 
     return all_chunks
+
+def extract_contacts_with_context(text, words_before=20, words_after=20):
+    
+    combined_regex = (
+        r'(?P<email>[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|'
+        r'(?P<phone>\b(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?)?\d{3,4}[-.\s]?\d{3,4}[-.\s]?\d{0,4}\b)|'
+        r'(?P<url>\b(?:https?://|www\.)[a-zA-Z0-9._%+-]+\.[a-zA-Z]{2,}(?:/[^\s]*)?\b)'
+    )
+
+    emails_with_context = []
+    phones_with_context = []
+    urls_with_context = []
+
+    for match in re.finditer(combined_regex, text):
+        match_text = match.group()
+        start, end = match.start(), match.end()
+        
+        before_text = text[:start].split()[-words_before:]  # Last 20 words before email
+        after_text = text[end:].split()[:words_after]  # First 20 words after email
+        
+        context = ' '.join(before_text + [match_text] + after_text)
+        
+        if match.group('email'):
+            emails_with_context.append((match_text, context))
+        elif match.group('phone'):
+            phones_with_context.append((match_text, context))
+        elif match.group('url'):
+            urls_with_context.append((match_text, context))
+
+    return [emails_with_context, phones_with_context, urls_with_context]
+
 
 def document_chunker(directory_path,
                      model_name,
@@ -151,4 +182,3 @@ def print_chunks(chunks):
         for inner_key, inner_value in outer_value.items():
             print("---------------------------------------------------")
             print(f"    Text: {inner_value.get('text', 'No text available')}")
-
