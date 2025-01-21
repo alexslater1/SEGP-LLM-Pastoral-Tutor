@@ -53,32 +53,33 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
 
 @app.post("/rag")
 async def upload_rag_document(url: str):
+    # Clean url of extra whitespace
+    url = url.strip()
+
     # Validate url
-    if not url or url.isspace():
+    if not url:
         raise HTTPException(
             status_code=400, 
             detail="Url parameter cannot be empty or only whitespace"
         )
 
-    if url.strip()[-4:] != ".pdf":
+    if not url.endswith((".pdf", ".docx", ".txt", ".pptx")):
         raise HTTPException(
             status_code=400, 
-            detail="Document must be a pdf"
+            detail="Document must be a .pdf, .docx, .txt or .pptx"
         )
     
-    if not url.strip()[:-4]:
+    if not url.rsplit('.', 1)[0]:
         raise HTTPException(
             status_code=400, 
             detail="Document name must exist"
         )
     
     try:
-        # Clean url of extra whitespace
-        url = url.strip()
-        
         # Embed and upload document chunks to database
+        print("A")
         upload_doc(url)
-       
+        print("B")
         return {"response": "Document uploaded"}
     
     except Exception as e:
@@ -93,10 +94,10 @@ async def delete_rag_document(name: str):
             detail="Url parameter cannot be empty or only whitespace"
         )
 
-    if name.strip()[-4:] != ".pdf":
+    if not name.endswith((".pdf", ".docx", ".txt", ".pptx")):
         raise HTTPException(
             status_code=400, 
-            detail="Document must be a pdf"
+            detail="Document must be a .pdf, .docx, .txt or .pptx"
         )
     
     if not name.strip()[:-4]:
