@@ -1,0 +1,1456 @@
+ 
+ 
+ 
+ 
+Faculty of {insert here} 
+Department of {insert here} 
+ 
+Faculty of Engineering 
+Department of Computing 
+BEng/MEng Computing 
+BEng/MEng Mathematics and Computer Science 
+MEng Computing (Artificial Intelligence and Machine Learning) 
+MEng Computing (Visual Computing and Robotics) 
+MEng Computing (International Programme of Study)  
+MEng Computing (Management and Finance) 
+MEng Computing (Software Engineering)  
+MEng Computing (Security and Reliability) 
+Student Handbook 
+2024–25 
+ 
+ 
+ 2 
+ 
+Contents 
+ 
+ 
+ 
+ 
+ 
+Welcome to Imperial ................................................................................................................................................ 4 
+Our Principles ............................................................................................................................................................. 5 
+Introduction from the President of Imperial College Union ........................................................................ 6 
+1. 
+Introduction to the Department ............................................................................................... 7 
+Welcome from Head of Department .................................................................................................................. 7 
+Welcome from the Director of Studies (UG) .................................................................................................... 8 
+Welcome from the Senior Tutor, Computing (UG) ........................................................................................ 9 
+Welcome from the Senior Tutor, Joint Mathematics and Computing (JMC) ..................................... 10 
+Academic and administrative staff .................................................................................................................... 11 
+English language requirement ............................................................................................................................. 11 
+Attendance and absence ...................................................................................................................................... 11 
+Interruption of Studies ........................................................................................................................................... 12 
+Key dates 2024–25 ................................................................................................................................................. 12 
+2. 
+Programme information .......................................................................................................... 14 
+Overview of programme and module content ...............................................................................................14 
+My Imperial Campus ...............................................................................................................................................14 
+Imperial Success Guide .........................................................................................................................................15 
+I-Explore Modules ....................................................................................................................................................15 
+Student Shapers ......................................................................................................................................................15 
+Imperial Award ..........................................................................................................................................................15 
+3. 
+Assessment .............................................................................................................................. 16 
+Instruction to Candidates for Examinations ................................................................................................... 16 
+Academic Integrity and Academic Misconduct ........................................................................................... 16 
+External Examiners ................................................................................................................................................. 18 
+4. 
+Location and facilities ............................................................................................................. 19 
+5. 
+Placements .............................................................................................................................. 21 
+6. 
+Working while studying .......................................................................................................... 22 
+7. 
+Health and Safety .................................................................................................................... 23 
+Imperial Safety Department ................................................................................................................................ 23 
+Occupational Health requirements ................................................................................................................... 24 
+8. 
+University Policies and Procedures ....................................................................................... 25 
+Academic Regulations .......................................................................................................................................... 25 
+Academic Feedback Policy ................................................................................................................................. 25 
+ 
+ 3 
+Provisional Marks Guidance ................................................................................................................................ 25 
+Late Submission Policy ......................................................................................................................................... 25 
+Mitigating Circumstances ................................................................................................................................... 26 
+Academic Misconduct Policy and Procedures ............................................................................................ 26 
+Unsatisfactory Engagement ............................................................................................................................... 27 
+Fitness to Study ...................................................................................................................................................... 27 
+Academic Appeals Procedure ............................................................................................................................ 27 
+Arithmetic Marks Check ....................................................................................................................................... 27 
+Student Complaints ............................................................................................................................................... 27 
+Student Disciplinary Procedure ........................................................................................................................ 28 
+Intellectual Property Rights Policy ................................................................................................................... 28 
+Use of IT Facilities .................................................................................................................................................. 28 
+General Data Protection Regulation (GDPR) ................................................................................................ 28 
+9. 
+Wellbeing, support and advice .............................................................................................. 29 
+In your department ................................................................................................................................................ 29 
+In your hall of residence ....................................................................................................................................... 30 
+Your Union ..................................................................................................................................................................31 
+Student Hub ..............................................................................................................................................................31 
+Student Support Zone .......................................................................................................................................... 32 
+Centre for Academic English .............................................................................................................................. 32 
+Useful support contacts ....................................................................................................................................... 32 
+10. 
+Student Administration .......................................................................................................... 35 
+11. 
+Work-life balance .....................................................................................................................36 
+Imperial College Union ......................................................................................................................................... 36 
+Move Imperial .......................................................................................................................................................... 36 
+12. 
+Student feedback and representation ................................................................................... 37 
+Feedback from students ...................................................................................................................................... 37 
+Student representation ........................................................................................................................................ 37 
+Staff-Student Committee .................................................................................................................................... 37 
+13. 
+Student Surveys ......................................................................................................................38 
+14. 
+And finally ................................................................................................................................39 
+Alumni services ...................................................................................................................................................... 39 
+Opportunities for further study ......................................................................................................................... 39 
+ 
+ 
+ 
+ 4 
+Welcome to Imperial 
+Congratulations on joining Imperial College London, the only university in the UK to focus exclusively 
+on science, medicine, engineering and business.   
+From Fleming’s discovery of Penicillin to Gabor’s invention of holography, Imperial has been 
+changing the world for well over 100 years.  
+You’re now very much a part of this community of discovery and we hope you will take this 
+opportunity to make your own unique contribution. At Imperial, we expect all members of our 
+community, whether students or staff, to share and demonstrate our values of respect, integrity, 
+collaboration, innovation and excellence in all we do and strive to achieve. 
+Imperial provides a dedicated support network and a range of specialist support services to make 
+sure you have access to the appropriate help, whether that’s further training in an academic skill like 
+note taking or simply having someone to talk to. 
+We actively encourage you to seek out help when you need it and try to maintain a healthy work-life 
+balance. Our choice of over 360 clubs, societies and projects is one of the largest of any UK 
+university, making it easy to do something different with your downtime. 
+ 
+ 
+ 
+ 5 
+Our Principles 
+In 2012 Imperial and Imperial College Union agreed ‘Our Principles’. This series of commitments was 
+developed by academic and support staff in partnership with undergraduate and postgraduate 
+students and Imperial College Union.  
+Imperial will provide through its staff:  
+• 
+A world-class education embedded in a research environment.  
+• 
+Advice, guidance and support.  
+• 
+The opportunity for students to contribute to the evaluation and development of 
+programmes and services.  
+ 
+Imperial will provide students with:  
+• 
+Clear programme information and assessment criteria.  
+• 
+Clear and fair academic regulations, policies and procedures.  
+• 
+Details of full programme costs and financial support. 
+• 
+An appropriate and inclusive framework for study, learning and research.  
+ 
+Imperial students should:  
+• 
+Take responsibility for managing their own learning.  
+• 
+Engage with the university to review and enhance provision. 
+• 
+Respect, and contribute to, the Imperial community. 
+ 
+The Imperial College Students' Union will:  
+• 
+Support all students through the provision of independent academic and welfare assistance; 
+• 
+Encourage student participation in all aspects of the university;  
+• 
+Provide a range of clubs, societies, student-led projects and social activities throughout the 
+year; 
+• 
+Represent the interests of students at local, national and international level. 
+ 
+ 
+ 
+ 6 
+Introduction from the President of Imperial College Union 
+Welcome to Imperial! To begin with, a huge congratulations on joining us here 
+at Imperial – this is where you belong! This is a globally renowned institution 
+and offers much more than just the degree you are looking to leave with. You 
+will come across countless opportunities and meet an array of compelling 
+people amongst your peers, accomplished academics and the wider 
+university community. Imperial attracts the best talent from around the world 
+- making it here is already a testament to your academic zeal and ambitious 
+character. Now, what you make of your experience at Imperial has the 
+potential to shape your future. 
+Being located in London is a true perk of being an Imperial student. Right on our west London 
+doorstep are landmark museums and iconic venues, including the Royal Albert Hall which has hosted 
+Imperial graduations for over 60 years. Beyond our campuses, the city has something for everyone; 
+be that the West End, sporting arenas or diverse cuisines. I strongly encourage you to explore where 
+and when you can – London is a fantastic place for your university memories to call home. 
+You will likely have chosen to come to Imperial for its academic reputation as an outstanding 
+university, and it will deliver on this. The facilities for research and your learning are terrific. To 
+accompany this, there are hundreds of student-led societies and events available to you outside of 
+your degree. These are overseen by your students’ union – Imperial College Union. The Union is led 
+by students, for students. The four deputy presidents and I have all been democratically elected to 
+work full time on improving your student experience at Imperial. We have a large team of permanent 
+staff behind us, running the many functions of the Union such as supporting clubs and training 
+student representatives. 
+The Union also runs the Advice Service, where guidance and support can be provided on issues such 
+as life in halls, complaints, and academic appeals. This is a free and confidential service that is 
+independent from the university. You can access this by emailing advice@imperial.ac.uk. 
+University is a new stage of life. For many, this stage presents itself with newfound freedom and 
+control over what you do. As daunting as it may seem, take advantage of it! Immerse yourself in your 
+degree, your extra-curricular activities and in the connections you make. 
+No matter what problems you have or opportunities you’re looking for, we’re here to help. Our office 
+is on Level 2 in Beit Quadrangle, and you can check out our website for more information. 
+Wishing you an incredible year ahead, 
+ 
+Camille Boutrolle, Imperial College Union President 2024-25 
+ 
+union.president@imperial.ac.uk 
+imperialcollegeunion.org 
+ 
+ 
+ 
+ 7 
+1. 
+Introduction to the Department 
+Welcome from Head of Department  
+I am delighted to welcome you to the Department of Computing 
+at Imperial College London, and to congratulate you on gaining 
+admission to Imperial.   
+By coming to study Computing at Imperial, you have made an 
+excellent choice: Imperial is not only an outstanding, global 
+university, Computing is also an exciting subject that is markedly 
+shaping the future world around us; studying Computing at 
+Imperial will give you the skills and experience needed for 
+positively impacting all of our lives, be it in the public or private 
+sector or in industry verticals such as healthcare.   
+The Department of Computing has a long and proud history that 
+goes back to the early days of modern Computer Science. Yet 
+we are focussed on creating the future of this fast-evolving 
+discipline with positive impact on engineering, sciences, business and medicine. At the same time, 
+we believe and invest in people and nurture a culture of diversity, equality and inclusion. We are very 
+pleased that you will be joining our close-knit community of staff and students. During your studies 
+you will be working alongside some of the brightest and most motivated students from around the 
+world, taught by an exceptional group of internationally leading experts and researchers. I hope that 
+you will be energised by the buzz of teaching and research activities within the Department. We will 
+use this energy to educate you into the leaders of tomorrow who will advance the frontiers of 
+knowledge and technology in Computer Science and beyond.  
+Once you arrive you will realise that a key characteristic of our Department, and the College as a 
+whole, is its international outlook and cultural diversity. Coupled with the fact that London is a 
+wonderful place to be a student, I am confident that this will provide a unique and stimulating 
+environment, not only academically but also socially. I hope that you can take full advantage of this 
+exciting environment and will strike a good balance between studying hard to fulfil your potential and 
+enjoying the company of your fellow students and life in London.  
+On behalf of the Department, I wish you all the best during your studies here.  
+ 
+Prof. Alessandra Russo 
+Head of the Department of Computing 
+ 
+a.russo@imperial.ac.uk 
+www.imperial.ac.uk/computing/ 
+ 
+ 
+ 
+ 
+ 8 
+Welcome from the Director of Studies (UG) 
+I would like to take this opportunity to welcome you to Imperial 
+College London and to the Department of Computing.  
+Congratulations on joining us – we appreciate your achievement 
+in gaining a place at Imperial. 
+We are extremely proud of our undergraduate programmes, and 
+work hard to ensure that they are among the best of their kind 
+anywhere in the world. Our programmes provide you with the 
+unique opportunity to study under the guidance of internationally 
+renowned experts in many branches of computing, both in 
+foundations and theory and through hands-on experience of an 
+enormous array of state-of-the-art equipment and software. Our 
+links with industry are also second to none. 
+Our programmes are adapting constantly to reflect the rapidly 
+changing state-of-the-art and to ensure the highest educational standards. We welcome and count 
+upon your active participation in this and attach great importance to the views of the students as we 
+evolve our programmes and teaching methods. Please feel free to approach me, your year 
+coordinators or your lecturers about your own experiences as you progress. All of us appreciate 
+constructive feedback and will do our best to ensure that your voice counts. 
+Our academics and teaching fellows, together with your personal tutor, senior tutor and wellbeing 
+officer will be on hand throughout your studies to provide you with both the academic and the 
+personal, pastoral support you need in order to thrive, both academically and as an individual. If at any 
+point you experience any academic, medical or personal difficulties that you feel are affecting your 
+studies, please contact us as soon as possible so that we can provide the best possible help and 
+support. There is always someone who can help you, so do not be afraid to come forward. You will 
+find relevant contact details later in these notes and in your packs, but you can always ask your 
+personal tutor to help you find what you need. 
+I hope that you will find Imperial College a lively and stimulating environment in which to thrive, both 
+academically and personally. I wish you all the best. 
+ 
+Dr. Matt Collison 
+Director of Studies (UG) 
+m.collison@imperial.ac.uk  
+ 
+ 
+ 
+ 9 
+Welcome from the Senior Tutor, Computing (UG) 
+Firstly, I would like to highlight your great achievement of 
+getting a place in a prestigious Higher Education Institution 
+such as Imperial. You worked hard to get here, and I hope you 
+enjoy your learning experience. This is a unique opportunity to 
+learn not only from talented lecturers and professors and their 
+research. But to learn from your student colleagues and from 
+the extra-curricular activities that Imperial offers.  
+I am your Senior Tutor and I am responsible for your academic 
+and pastoral care in the Department of Computing. In 
+conjunction with your Personal Tutor, we will try to guide you 
+and support you in handling individual problems or queries, and 
+you should contact us if you are uncertain of how to proceed or 
+would value a second opinion.  
+Our well-being has been put under enormous pressure during the last couple of years, which reminds 
+us how important it is to take care of ourselves in order to perform the way we want to perform. In 
+the Department of Computing we are also aware of that, so we have our Well-being Advisor, Caroline 
+Gilchrist, who is here to support you in anything related to well-being matters. 
+These three or four years of studies should be a pleasurable experience with learning as your main 
+goal. Take every change as a nice opportunity of learning something new. Do not be afraid to learn 
+and do not be afraid to be surrounded by talented people as it is the best way to learn. Be curious and 
+ask if you have any questions. 
+I look forward to meeting you and all the best.  
+ 
+Dr. Maria Valera-Espina 
+Senior Tutor (UG) 
+m.valera-espina@imperial.ac.uk 
+ 
+ 
+ 
+ 
+ 10 
+Welcome from the Senior Tutor, Joint Mathematics and Computing (JMC) 
+Hello! I am your Senior Tutor for Joint Mathematics and 
+Computing (JMC), and I am responsible for your academic and 
+pastoral care in the Department of Computing. I work with your 
+Personal Tutors and our well-being advisor, Caroline Gilchrist, 
+to support you with individual problems, queries, or issues 
+which are affecting your studies. 
+I have recently joined Imperial myself, so I look forward to 
+meeting all students for the first time. Congratulations if you 
+have just joined, and well done if you are returning!  
+Imperial is such a fantastic place, but it can feel daunting to join 
+such a prestigious institution - even as a member of staff! 
+Similarly for London, what a fantastic place to complete your 
+studies, but there is a steep learning curve, and culture shock and home-sickness are normal even for 
+the most independent of us.  
+Please do make an effort to get to know your course colleagues, and join clubs and societies that 
+interest you. These can be important sources of support, both academic and pastoral. There is 
+nothing quite like the shared experience of university life, so make sure you enjoy it, and help others 
+out where you can. Putting work out of your mind for a little while can be the best thing to getting 
+back on track.     
+Your studies are highly valuable, and you have all worked exceptionally hard to get here, but there will 
+be other important things, people, or events that will happen in your life during the course of your 
+studies, and things may become unmanageable. That is when you need to speak up, and let either 
+myself or your personal tutor know. Please do reach out to me if you have any questions, concerns or 
+problems. That's what I'm here for - even if you're not sure I can help, I'm happy to listen.   
+Dr. Nick Powell 
+Senior Tutor (JMC) 
+nicholas.powell1@imperial.ac.uk 
+ 
+ 
+ 
+ 
+ 
+ 11 
+Academic and administrative staff 
+Key staff and contacts 
+• 
+Head of Department  
+• 
+Director of Research 
+• 
+Director of Undergraduate Studies 
+• 
+Director of Postgraduate Studies 
+• 
+Joint Maths and Computing (JMC) Director 
+• 
+Senior Tutor 
+• 
+Year Coordinator for First Year 
+• 
+Year Coordinator for Second Year 
+• 
+Year Coordinator for Third & Fourth Years 
+• 
+Department Operations Manager 
+• 
+Undergraduate Admissions 
+ 
+Staff lists 
+• 
+Academic staff 
+• 
+Teaching fellows 
+• 
+Administrative and technical staff 
+ 
+English language requirement  
+If you are not a native English speaker, you must meet the College’s English language requirements. 
+See the Admissions website for details:  
+www.imperial.ac.uk/study/ug/apply/requirements/english 
+For information on English language support available while you’re here, see the entry under the 
+Centre for Academic English. 
+ 
+Attendance and absence 
+The Department monitors the attendance and participation of all students. 
+You must inform your Senior Undergraduate Tutor if you are absent from the university for more 
+than three days during term. If the absence is due to illness, you must produce a medical certificate 
+after seven consecutive days. If you miss an examination or the deadline for any other assessment 
+(including lab work, in class tests and all forms of coursework or presentation) due to illness or other 
+unforeseeable and unavoidable circumstance you must follow the Mitigating Circumstances Policy 
+and Procedure. Please note all claims for mitigation must be submitted within 10 working days of the 
+examination or assessment deadline. If you are unable to provide evidence at the time you must 
+submit the claim and indicate what evidence will follow and when it can be provided. Claims without 
+evidence will normally be rejected. Please see the section on mitigation below. 
+The Registry will be informed of all student non-attendances as the university is obliged to report the 
+non-attendance of students on Student Route visas to the Home Office.  
+If you do not engage satisfactorily with your studies, Imperial will consider what action is necessary 
+to support your continued study under the Unsatisfactory Engagement Policy and Procedure. 
+ 
+ 12 
+www.imperial.ac.uk/media/imperial-college/administration-and-support-
+services/registry/academic-governance/public/regulations/2022x2f23/Unsatisfactory-
+Engagement-Policy-and-Procedure.pdf 
+ 
+Interruption of Studies  
+A student can take an interruption of studies (IoS) from the course, should there be a need to do so. 
+The start and the end of the interruption date must lie within the term time. More information on the 
+interruption is available on the following link:  
+www.imperial.ac.uk/student-support-zone/advice/my-student-status/interrupting-your-
+studies/  
+Here is a step-by-step video explaining the entire process:  
+imperial.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=a261cabe-05ca-4f88-b6ee-
+ad790093419b  
+If you choose to take interruption on medical grounds, you will need evidence to support your 
+request, such as a doctor’s note or a letter from your healthcare provider. During the time of 
+interruption, you will not have access to the departmental learning systems in place. 
+ 
+Key dates 2024–25 
+Term dates  
+Autumn term:  
+ 
+ 
+28 September 2024 – 13 December 2024 
+Spring term:  
+ 
+ 
+ 
+04 January 2025 - 21 March 2025 
+Summer term:  
+ 
+ 
+26 April 2025 – 27 June 2025 
+ 
+Closure dates 
+Christmas/New Year: 
+ 
+ 
+23 December 2024 - 01 January 2025 
+(Imperial reopens on 02 January 2025) 
+Easter Holiday:  
+ 
+ 
+17 April 2025 – 22 April 2025 
+ 
+ 
+ 
+ 
+ 
+(Imperial reopens on 23 April 2025) 
+Early May Bank Holiday:  
+ 
+05 May 2025 
+Spring Bank Holiday: 
+ 
+ 
+26 May 2025 
+Summer Bank Holiday:  
+ 
+25 August 2025 
+ 
+Some students undertake an internship within a company during their vacations to develop skills, 
+gain industrial insights, and earn money. You should only undertake an internship that starts after the 
+formal end of term to ensure there is no clash with academic studies. In addition, if you hold a 
+student visa, the type and amount of work that you can do is restricted. It is essential that you are 
+aware of these restrictions so that you do not breach your student visa conditions.  
+ 
+ 13 
+Please visit the International Student Support webpage for further details and note that only 
+undergraduate students can undertake an internship during the summer vacation. 
+www.imperial.ac.uk/students/international-students/visas-and-immigration/working-in-the-
+uk/work-rules-during-your-studies/ 
+ 
+ 
+ 
+ 
+ 14 
+2. 
+Programme information 
+Overview of programme and module content 
+The structure of our undergraduate degree programmes is very flexible, allowing you to move 
+between the BEng and MEng programmes, and between MEng specialisms, provided you have taken 
+the required compulsory modules. Also, most taught modules in years 3 and 4 of all our programmes 
+are elective, allowing you to focus on the topics that are of most interest to you. There is a central 
+spine of practical engineering work running through all years, with a substantial part of the final year 
+being devoted to an individual project allowing detailed study of a topic relevant to your interests and 
+chosen specialisation. If you are enrolled on one of our MEng programmes you will also undertake an 
+industrial placement between years 3 and 4. 
+The links below provide information on the following aspects of our programmes and module 
+content: 
+• 
+List of courses and regulations for Computing and JMC (includes module aims, learning 
+outcomes, syllabus, teaching methods and reading lists) 
+• 
+Course registration 
+• 
+Projects and prizes 
+ 
+My Imperial Campus 
+An app for students - designed by students! 
+My Imperial Campus is the beginning of a new mobile experience for the Imperial College London 
+community. The app is being designed by Imperial students and alumni and delivered in an iterative 
+way as the team learns more about the experiences that our community want in order to thrive at 
+Imperial. The app is relatively young, and development is continual, please download and explore the 
+app and look out for opportunities to get involved! 
+You can download the app for Android devices from the 'Play Store' or for iOS devices from the App 
+Store. 
+Current feature highlights: 
+• 
+'Search' is an AI chatbot allowing users to chat with information from the university website 
+and other resources. 
+• 
+'Maps' - 2D maps of all campuses and the first 3D map of the South Kensington Campus 
+(White City campus is next). 
+• 
+'Events' - All public events Student Union events and societies can be explored, edit your 
+preferences in the settings to customise the feed. Here you can also find a 'Welcome week' 
+filter to view specific events to enjoy at your welcome week. 
+• 
+'Timetable check-in' - The Business School and a growing list of other departments requires 
+you to check into class if you are physically on site; use this feature to quickly check-in. Here 
+you can also find a link off to view your full timetable in a browser. 
+• 
+‘Internships and Careers’ - Search through the latest internships and job vacancies received 
+by the Careers Service. 
+ 
+ 
+ 15 
+Imperial Success Guide 
+The Imperial Success Guide is an online resource with advice and 
+tips on the transition to university level study. More than just a study 
+guide, it is packed with advice created especially for undergraduate 
+students, including information on support, health and well-being 
+and ideas to help you make the most of London. 
+www.imperial.ac.uk/students/success-guide/ug/ 
+ 
+I-Explore Modules 
+Through I-Explore, you’ll have the chance to expand your knowledge 
+and skills into a brand-new subject area, choosing from a range of for-credit modules built into your 
+degree.  
+Depending on your department, you will either take an I-Explore module in your second or third year 
+of study. 
+www.imperial.ac.uk/centre-for-languages-culture-and-communication/i-explore/   
+ 
+Student Shapers 
+Student Shapers is a chance to actively contribute to improving your learning experience at Imperial. 
+This programme lets you work directly with staff on exciting projects that enhance the curriculum, 
+create innovative teaching methods, and make a real difference in our learning community. The 
+Student Shapers programme is open to all Imperial students across all departments. All 
+opportunities that have been approved are listed in the 'Current Projects' area of the website.  
+www.imperial.ac.uk/students/studentshapers/how-to-get-involved/current-projects/ 
+ 
+Imperial Award 
+The Imperial Award is a programme that fosters personal development through self-reflection on 
+your experiences, formally recognising this on your transcript. This programme is open to all 
+students at Imperial, including UG, PGT, PGR and intercalating students. The Imperial Award aims to 
+help you uncover more about yourself and your potential, and to enhance your ability to articulate the 
+achievements and skills you have developed through activities beyond the lecture hall. For more 
+information, please visit the Imperial Award page. 
+www.imperial.ac.uk/students/imperial-award/  
+ 
+ 
+ 
+ 16 
+3. 
+Assessment 
+Within your programme of study, you will have different types of assessment which may include 
+coursework, examinations, timed-remote assessment, presentations, labs or other forms of practical 
+assessment. 
+• 
+Exams, Assessment and Regulations 
+• 
+Scientia  
+• 
+Noticeboards, with information on tests, labs, projects 
+ 
+Imperial has policies and procedures to the support the setting, sitting, marking and moderation of all 
+assessment. These can be found within the Academic Regulations, Policies and Procedures at: 
+www.imperial.ac.uk/about/governance/academic-governance/regulations/  
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/exams-and-
+assessment/ 
+ 
+Instruction to Candidates for Examinations 
+When taking examinations, students must ensure they follow the relevant instructions and guidance 
+provided to them. In addition to the Instructions for Candidates, they must adhere to the specific 
+instructions for each exam as provided by their programme team. 
+www.imperial.ac.uk/about/governance/academic-governance/regulations/  
+Instructions for exam candidates can be found here:  
+www.imperial.ac.uk/media/imperial-college/administration-and-support-
+services/registry/academic-governance/public/academic-policy/exam-arrangements-and-re-
+sits/Instructions-to-candidates-for-examinations.pdf  
+Academic Integrity and Academic Misconduct 
+As your programme of study continues, you will be taught the concept of academic integrity and 
+how you can ensure that any work that you complete now, or in the future, conforms to these 
+principles. This means that your work acknowledges the ideas and results of others, that it is 
+conducted in an ethical way, and that it is free from plagiarism. Academic integrity is fundamental to 
+learning, teaching and research and it is important to understand what it means for you and the 
+international community of research that you are joining. 
+Academic misconduct is the attempt to gain an academic advantage, whether intentionally or 
+unintentionally, in any piece of assessment submitted to the university. This includes plagiarism, self-
+plagiarism, collusion, exam offences or dishonest practice. Full details of the policy can be found at: 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/exams-and-
+assessment/ 
+Definitions of the main forms of academic misconduct can be found below: 
+Plagiarism 
+Plagiarism is the presentation of another person’s thoughts, words, images, research or diagrams as 
+though they were your own. Another form of plagiarism is self-plagiarism, which involves using your 
+ 
+ 17 
+own prior work without acknowledging its reuse. Plagiarism may be intentional, by deliberately trying 
+to use another person’s work by disguising it or not citing the source, or unintentional where citation 
+and/or referencing is incorrect. 
+Plagiarism must be avoided, with particular care on coursework, essays, reports and projects written 
+in your own time but also in open and closed book written examinations. You can support your 
+understanding of proper referencing and citation by using the resources available from the university 
+such as the Library Services learning support webpages at: 
+www.imperial.ac.uk/admin-services/library/learning-support/plagiarism-awareness/ 
+For group work, all members have responsibility for the integrity of the work submitted. Therefore, if 
+plagiarism (or another form of academic misconduct) is proven, all group members may be liable for 
+any penalty imposed. 
+TurnitinUK is an online text matching service which assists staff in detecting possible plagiarism. The 
+system enables institutions and staff to compare students' work with a vast database of electronic 
+sources. Your programme team will explain how it is used in your programme. 
+www.imperial.ac.uk/admin-services/ict/self-service/digital-education-services/digital-
+education-platforms/turnitin/turnitin-for-students/  
+Collusion 
+This is the term used for work that has been conducted by more than one individual, where this has 
+not been permitted in the assessment brief. Where it is alleged that there has been collusion, all 
+parties will be investigated initially under the Academic Misconduct procedure. Please be aware that 
+this includes working with others in or outside the Imperial community, not just students on your 
+programme. 
+You should note that whilst Imperial encourages students to support each other in their studies, you 
+should be careful to ensure that you do not go beyond the assessment brief with regards to 
+individual work, always acknowledge the contributions of others in your work, and do not leave 
+yourself open to allegations that you have supplied answers to enable another student to commit 
+academic misconduct. 
+Exam offences 
+Exam offences fall into two categories. These are offences that may be disruptive in the exam venue 
+or those that are considered an attempt to gain an academic advantage. Examples of disruptive 
+behaviour includes causing a disturbance in the exam room, having an electronic device that has not 
+been fully turned off or talking in the exam room. Behaviour that may considered an attempt to gain 
+an academic advantage includes bringing unauthorised material into an exam (such as notes, 
+unauthorised books or other material), attempting to communicate with others apart from the 
+invigilator, or trying to remove examination material without permission. You must ensure that you 
+follow all reasonable instructions of the invigilators. 
+Dishonest practice 
+This is the most serious category under the procedure. Examples of dishonest practice include 
+bribery, contact cheating purchasing essays or other material from other sources (which is now 
+illegal in the UK) or other individual to submit as your own, taking an exam for someone else or 
+getting someone else to take an exam for you, attempting to access exam papers before the exam, 
+making a false claim for mitigating circumstances or providing fraudulent evidence, falsifying 
+documentation or signatures in relation to assessment or a claim for mitigating circumstances. 
+ 
+ 18 
+External Examiners  
+An External Examiner is normally an experienced member of academic staff from another Higher 
+Education Institution, that acts as a critical friend to the staff delivering your programme of study. For 
+some programmes, one of the External Examiners could be an industry expert to provide the 
+professional expertise needed to support the programme. External examining is an essential part of 
+Imperial’s quality assurance and enhancement process, ensuring that academic standards are 
+maintained. The knowledgeable and independent views of external examiners are invaluable in 
+certifying that the university’s awards are appropriate, of comparable standard to the rest of the 
+sector, as well as highlighting good practice and/or potential areas of enhancement. 
+During your programme you may be invited to meet your external examiners to discuss how you 
+have found the programme. It is not appropriate however, for you to seek to submit complaints or 
+representations directly to external examiners or to seek to influence them other than by giving 
+feedback in a meeting. Inappropriate communication towards an examiner would make you liable for 
+disciplinary action. If there is a specific issue that needs to be resolved, please see the Student 
+Complaints Policy and Procedure. 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/external-
+examining/  
+ 
+ 
+ 
+ 19 
+4. 
+Location and facilities  
+Imperial has a number of campuses in London and the South-East. All have excellent travel links and 
+are easily accessible via public transport.  
+Your main location of study will be:  
+South Kensington Campus 
+Department of Computing 
+Huxley Building 
+180 Queen's Gate 
+South Kensington Campus 
+Imperial College London 
+London SW7 2AZ 
+ 
+Facilities  
+The Department’s undergraduate office is located at Huxley 370 and open Monday-Friday, 09.00-
+17.00 (closed 13.00-14.00).  
+Details of our computer and printing facilities are available at: 
+www.imperial.ac.uk/computing/about/facilities/ 
+If you notice any facility defects or maintenance issues, please contact the Customer Services 
+Centre (CSC): 
+www.imperial.ac.uk/estates-facilities/customer-services-centre/ 
+ 
+Library Services 
+The Abdus Salam Library at South Kensington is open 24 hours for study space, and further space is 
+available to all students in GoStudy on levels 4 and 5 of the Chemistry Building. Further study space 
+is available on level 3 of the Sherfield Building. 
+Your subject librarian, Ann Brew, will be able to help you find books and online resources for your 
+assignments. Also, don’t forget to check out the library workshops and other campus libraries for 
+access to specialist medicine and life sciences resources. You can borrow up to 40 books and, 
+whether you’re working on or off site, you’ll be able to access e-books, e-journals and databases from 
+their collection of almost 567,000 titles. If they don’t have what you need, they can get it for you, 
+simply ask them to buy it or request a copy through their free Document Delivery service.  
+For any questions library staff will be happy to help, simply chat with them online or contact them via 
+email, phone or social media, just check the website for details: 
+www.imperial.ac.uk/library  
+ 
+Maps 
+Campus maps and travel directions are available at: 
+www.imperial.ac.uk/visit/campuses 
+ 
+ 
+ 
+ 
+ 20 
+Accessibility 
+Information about the accessibility of our South Kensington Campus is available online through the 
+AccessAble access guides: 
+www.accessable.co.uk/organisations/imperial-college-london 
+ 
+Smoke-Free Policy  
+All Imperial campuses and properties are smoke-free. This means that smoking and the use of e-
+cigarettes, including vapes, by staff, students or visitors is not permitted on or within 20 metres of 
+Imperial. The policy covers all university properties, including student accommodation and sports 
+grounds. 
+ 
+www.imperial.ac.uk/smoke-free  
+ 
+SafeZone 
+SafeZone is an Imperial app through which you can quickly and directly 
+contact the Community Safety and Security team whenever you need 
+them. Whether you're in an emergency situation, in need of First Aid or 
+want to report an incident on campus, SafeZone allows you to be 
+immediately put in touch with a member of our Community Safety and 
+Security team and, at the touch of a button, can share your location and 
+personal profile so that they can respond quickly and effectively to your 
+specific needs. It also allows the entire Imperial community to stay 
+informed in the event of a major incident in London or wherever you 
+may be in the world. Safezone also provides information on other services, such as real-time updates 
+on the university shuttle bus.  
+SafeZone is optional to register for and is now available to download on the Apple and Android App 
+stores. Visit www.imperial.ac.uk/admin-services/security/safezone/ for more details about 
+SafeZone. 
+ 
+All existing phone numbers for the Community Safety and Security team are still operational. In the 
+event of an emergency, you can still call 4444 from any internal College phone. In the event of a 
+wider incident in London, you can now also call 0300 131 4444, Imperial’s Emergency Recorded 
+Message Line, which will point you in the direction of up-to-date information and advice. 
+ 
+ 
+ 
+ 21 
+5. 
+Placements 
+Imperial defines a placement as:  
+“work experience, assessed project work, a period of course-based study or a period of 
+research (for which academic credit is awarded and/or where the student remains subject to 
+Imperial student regulations during the relevant period) and where there is a transfer of direct 
+supervision of the student to a third party (i.e. where a member of staff at the third party acts as the 
+day-to-day supervisor/manager) for a period of two weeks or more.” 
+Academic departments are responsible for managing any study placement or work placement which 
+forms part of your degree programme. It is expected that you will contribute to the process of 
+planning your placement.   
+For guidance on this, see the university’s Placement and Learning Policy and associated good 
+practice:  
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/placement-
+learning 
+ 
+Your Departmental Placement Manager:    
+Mr Tom Curtin 
+Huxley 436 
+020 7594 8382 
+t.curtin@imperial.ac.uk  
+ 
+The Careers Service is available to provide students with additional support in sourcing work 
+placement opportunities and preparing to apply for work placement opportunities:  
+Apply:  
+ 
+www.imperial.ac.uk/careers/applications-and-interviews/  
+Sourcing work:  
+www.imperial.ac.uk/careers/jobs-and-experience/work-experience/ 
+Overview:   
+www.imperial.ac.uk/careers/ 
+ 
+For general information on undertaking a study or work placement visit the Placements website:  
+www.imperial.ac.uk/placements  
+If you are considering/planning a placement outside the UK, you should also refer to the Placement 
+Abroad Handbook: 
+www.imperial.ac.uk/placements/information-for-imperial-college-students 
+ 
+ 
+ 
+ 22 
+6. 
+Working while studying 
+If you are studying full-time, Imperial recommends that you do not work part-time during term time. If 
+this is unavoidable, we advise you to work no more than 10–15 hours per week, which should be 
+principally at weekends and not within normal university working hours.  
+Working in excess of these hours could impact adversely on your studies or health.  
+If you are here on a Student Route visa you can work no more than 20 hours a week during term 
+time. Some sponsors may not permit you to take up work outside your studies and others may 
+specify a limit.  
+www.imperial.ac.uk/students/international-students/visas-and-immigration/working-in-the-
+uk/work-rules-during-your-studies/? 
+If you are considering part-time work during term time you are strongly advised to discuss this with 
+your Personal Tutor (see Wellbeing, Support and Advice section for more information). If you are on a 
+Student Route visa you should also seek advice from the International Student Support team 
+regarding visa limitations on employment. 
+The university’s Board of Examiners will not normally consider as mitigating circumstances any 
+negative impact that employment may have had on your performance in examinations or in other 
+assessed work. Examinations or vivas cannot be rescheduled to accommodate your part-time 
+working arrangements. 
+ 
+ 
+ 
+ 23 
+7. 
+Health and Safety  
+Keeping you safe is a top priority for us. Imperial still encourages students to wear face coverings in 
+crowded areas, to get fully vaccinated, to cover your coughs and sneezes, and to respect others’ 
+personal space. All staff and students are advised to stay at home if you are feeling ill or have any 
+symptoms of respiratory disease.  
+The latest Imperial guidance to students can be seen at:  
+www.imperial.ac.uk/about/covid-19/ 
+ 
+The Imperial Health and Safety Policy can be found at: 
+www.imperial.ac.uk/safety/safety-by-topic/safety-management/health-and-safety-policy-
+statement/ 
+Your Departmental safety contact is:  
+Mr Michael Ward 
+Huxley 436 
+020 7594 3304 
+michael.ward@imperial.ac.uk  
+You may be required to complete inductions and attend training sessions to safely complete this 
+course.  
+There is also a wide range of eLearning micro-learning modules focused on specialised topics and 
+designed to raise awareness of hazards and control measures for working safely in hazardous areas 
+(i.e., laboratories and workshops) across the university. 
+Imperial Safety Department 
+The Safety Department offers a range of specialist advice on all aspects of safety. This includes 
+anything which you feel might affect you directly, or which may be associated with teaching, 
+research or support service activities. 
+The university’s activities range from the use of hazardous materials (biological agents, chemicals, 
+cryogens, gases and ionising/non-ionising radiation) to field work, heavy or awkward lifting and 
+driving. 
+All of Imperial’s activities are covered by general health and safety regulations, but higher risk 
+activities will have additional requirements.  
+The Safety Department helps departments and individuals ensure effective safety management 
+systems are in place throughout the university to comply with specific legal requirements.  
+Sometimes the management systems fail, and an accident or a near-miss incident arises; it is 
+important that we learn lessons from such situations to prevent recurrence and the Safety 
+Department can support such investigations. All accidents and incidents should be reported online 
+at: 
+www.imperial.ac.uk/safety/safety-by-topic/accidents--incidents/ 
+ 
+ 
+ 24 
+To report concerns or to ask for advice you should contact your programme director, academic 
+supervisor or departmental safety officer in the first instance. You may also contact the Safety 
+Department directly. 
+Occupational Health requirements 
+Imperial’s Occupational Health Service provides services to: 
+• 
+protect health at work 
+• 
+assess and advise on fitness for work  
+• 
+ensure that health issues are effectively managed 
+ 
+The Service promotes and supports a culture where the physical and psychological health of staff, 
+students and others involved in the university is respected, protected and improved whilst at work. 
+www.imperial.ac.uk/occupational-health 
+ 
+ 
+ 
+ 25 
+8. 
+University Policies and Procedures 
+Academic Regulations  
+All registered students of Imperial are subject to the university Academic Regulations. The relevant 
+set of regulations will depend on your programme and year of entry - please see our Regulations 
+webpage to determine which apply to you: 
+www.imperial.ac.uk/about/governance/academic-governance/regulations 
+www.imperial.ac.uk/students/terms-and-conditions 
+ 
+Academic Feedback Policy 
+We are committed in providing you with timely and appropriate feedback on your academic progress 
+and achievement, enabling you to reflect on your academic progress. During your study you will 
+receive different methods of feedback according to assessment type, discipline, level of study and 
+your individual need. Further guidance on the Policy of Academic Feedback can be found on the 
+Academic Governance website: 
+www.imperial.ac.uk/media/imperial-college/administration-and-support-
+services/registry/academic-governance/public/academic-policy/academic-
+feedback/Academic-feedback-policy-for-taught-programmes.pdf 
+For specific information on how assessment is carried out in the Department of Computing, please 
+consult the relevant Student Noticeboard: 
+www.imperial.ac.uk/computing/current-students/course-admin/noticeboards/ 
+Please note that your examination scripts once completed belong to the university under the General 
+Data Protection Regulations (GDPR). Please see the Imperial GDPR webpages for further 
+information at: 
+www.imperial.ac.uk/admin-services/secretariat/policies-and-guidance/guidance/guide-2---
+exam-records/ 
+ 
+Provisional Marks Guidance 
+Provisional marks are agreed marks that have yet to be ratified by the Board of Examiners. These 
+results are provisional and are subject to change by the Board of Examiners. The release of 
+provisional marks is permitted except in certain circumstances. Further information can be found in 
+the Guidelines for Issuing Provisional Marks to Students on Taught Programmes: 
+www.imperial.ac.uk/media/imperial-college/administration-and-support-
+services/registry/academic-governance/public/academic-policy/marking-and-
+moderation/Guidelines-for-issuing-provisional-marks-to-students-on-taught-programmes.pdf 
+Late Submission Policy 
+You are responsible for ensuring that you submit your assessments (including timed remote 
+assessments) in the correct format and by the published deadline (date and time). Any piece of 
+assessed work which is submitted beyond the published deadline (date and time) would be classed 
+as a late submission and will incur a penalty (a cap at the pass mark, or it is classed as a fail). Further 
+guidance on Late Submission of Assessments can be found on the Academic Governance website: 
+ 
+ 26 
+www.imperial.ac.uk/media/imperial-college/administration-and-support-
+services/registry/academic-governance/public/academic-policy/marking-and-
+moderation/Late-submission-Policy.pdf  
+If you submit late due to mitigating circumstances, the cap on your mark may be lifted if a claim for 
+mitigating circumstances is accepted. Please see below. 
+Mitigating Circumstances 
+During your studies you may be affected by sudden or unforeseen circumstances. You should 
+always contact your Personal Tutor for advice and support. If this happens at the time of, or 
+immediately preceding, your assessments you may be able to make a claim for mitigating 
+circumstances. If successful this claim enables the Board of Examiners when reviewing your marks 
+at the end of the year to have greater discretion with regards to offering repeat attempts (either 
+capped or uncapped), a repeat year, or with your progression or final classification. Please note, the 
+Board are not permitted to amend the marks that you were awarded, only to take your claim into 
+account when making decisions. 
+All claims must be supported by independent evidence and submitted within 10 working days of the 
+assessment deadline. Any claim made after this deadline is likely to be rejected unless there is a 
+good reason (such as you were still unwell) until the point of submitting the claim. Details of the 
+university’s Mitigating Circumstances procedure can be found under the Mitigating Circumstances 
+tab on the page below: 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/exams-and-
+assessment/ 
+ 
+Through the procedure you may also be able to request an extension deadline to some forms of 
+assessment. Wherever possible it is expected that this is used as it will enable to you complete your 
+studies within the same academic year (rather than over the summer holiday or in the next year).  
+The Department of Computing has specific instructions for making a claim for mitigation or for 
+requesting an extension. Details can be found (under the exams and mitigating circumstances tab) 
+at: 
+https://www.imperial.ac.uk/computing/current-students/undergraduate-student-welfare/ 
+Support for ongoing or long-term conditions, or for registered disabilities would not normally fall 
+under the remit of mitigating circumstances and students should be supported through their studies 
+with additional examination arrangements. More details can be found at:  
+www.imperial.ac.uk/disability-advisory-service/current-students/support-
+available/adjustments-and-support/  
+Academic Misconduct Policy and Procedures 
+As has been highlighted under the Academic Integrity section, it is important that you learn how to 
+properly attribute and acknowledge the work, data and ideas of others. Any proven form of academic 
+misconduct is subject to penalties as outlined in the university’s Misconduct Policy and Procedures. 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/exams-and-
+assessment/  
+ 
+ 
+ 27 
+Unsatisfactory Engagement 
+Unfortunately, for a variety of reasons, sometimes students struggle to meet the university’s 
+expectations with regards to their engagement with their studies. Imperial has a process to identify 
+and support students by reaffirming these expectations with an action plan. If a student does not 
+engage satisfactorily with these supportive measures, they can be withdrawn from their studies. The 
+full details of this process, and the appeals procedure relating to it can be found at: 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/complaints-
+appeals-and-discipline 
+Fitness to Study 
+Imperial expects students to participate within the university community, such as by fully engaging 
+and studying to the academic level required and working and living cooperatively. If there are 
+concerns that a student is unable to engage as expected, due to an underlying physical and/or 
+mental health difficulty, the university has a process to ensure that decisions about a students' ability 
+to study are made through a supportive, timely and transparent process which operates in the best 
+interests of the student: 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/complaints-
+appeals-and-discipline 
+Academic Appeals Procedure 
+We have rigorous processes and procedures in place to ensure assessments are conducted with 
+fairness and consistency, claims for mitigating circumstances have been considered reasonably and 
+in line with the regulations of the university, and that the decisions of the Boards of Examiners 
+maintain the integrity of our academic awards. Should you believe that you have grounds to appeal 
+these decisions, we have laid out clear and consistent procedures through which appeals can be 
+investigated and considered:  
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/complaints-
+appeals-and-discipline 
+The ICU Advice service can help you with understanding this policy and supporting you through the 
+process. 
+Arithmetic Marks Check 
+If you consider that there may have been an error in the adding up of your marks, you may request an 
+arithmetic mark check. Please note that this must be requested within 10 working days of the official 
+notification of your results from the Assessment Records team in Registry. You may not request 
+marks check for a previous year of study. Please note that a marks check is not a remark of your 
+work, but an administrative check that the marks have been accurately recorded. 
+The form to request an arithmetic mark check can be found here:  
+https://www.imperial.ac.uk/media/imperial-college/administration-and-support-
+services/registry/academic-governance/public/academic-policy/appeals-by-ug-and-masters-
+students/Arithmetic-mark-check-form.docx 
+Student Complaints 
+Imperial strives to ensure that all students are well supported in their studies and receive a good 
+experience of their programme and the wider university activities. If you feel that your experience 
+ 
+ 28 
+has not lived up to these expectations, Imperial has an agreed Student Complaints process through 
+which your concern can be investigated and considered. 
+If you have any concerns about your experience at Imperial and have been unable to address these 
+informally, you should contact Student Complaints who can provide advice about what is the 
+appropriate way to seek to resolve this at: 
+student.complaints@imperial.ac.uk  
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/complaints-
+appeals-and-discipline 
+Student Disciplinary Procedure 
+Imperial has the right to investigate any allegation of misconduct against a student and may take 
+disciplinary action where it decides, on the balance of probabilities, that a breach of the Student 
+Code of Conduct has been committed. The general principles of the Student Disciplinary Procedure 
+are available on the university website: 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/complaints-
+appeals-and-discipline/ 
+Intellectual Property Rights Policy 
+Imperial’s Intellectual Property (IP) policy governs the ownership and management of universities 
+Intellectual Property and its College’s discretionary Reward to Inventors Scheme.  
+Further guidance on the Imperial Intellectual Property Rights Policy is available on the university 
+website: 
+www.imperial.ac.uk/research-and-innovation/about-imperial-research/research-integrity/ip/    
+Further information about the Imperial Enterprise Lab can be found at: 
+www.imperial.ac.uk/students/enterprising-students/ 
+Use of IT Facilities 
+View the Conditions of Use of IT Facilities: 
+www.imperial.ac.uk/admin-services/ict/self-service/computers-printing/conditions-of-use-of-
+it-resources/ 
+General Data Protection Regulation (GDPR) 
+All staff and students who work with personal data are responsible for complying with GDPR. 
+Imperial will provide support and guidance, but you do have a personal responsibility to comply. 
+In line with the above please see the university’s Privacy Notice for Students which form part of the 
+Terms and Conditions of registration with Imperial. 
+www.imperial.ac.uk/media/imperial-college/administration-and-support-
+services/registry/academic-governance/public/academic-policy/admissions/Privacy-Notice-
+for-Students-and-Prospective-Students.pdf   
+ 
+ 
+ 
+ 29 
+9. 
+Wellbeing, support and advice 
+In your department 
+Your department has a system of academic and pastoral care in place to make sure you have access 
+to the appropriate support throughout your time at Imperial.  
+Your Personal Tutor 
+Your Personal Tutor is your first point of contact for pastoral support and advice. You can arrange to 
+have a meeting with them at any time during your studies (although most Personal Tutors will have 
+set office hours or may require you to make an appointment).  
+If necessary, they will direct you to an appropriate source of support.  
+Senior Tutor 
+The Department of Computing Senior Tutors for undergraduate students are Dr Maria Valera-
+Espina (Computing) and Dr Nick Powell (JMC), who have overall responsibility for the academic 
+and pastoral care of undergraduate students in the department. 
+The Deputy UG Senior Tutor is Dr Thomas Lancaster. 
+Departmental Student Wellbeing Advisor 
+The Student Wellbeing Advisor, Caroline Gilchrist, can provide you with confidential support and 
+advice in any area that may be affecting your wellbeing such as:  
+• 
+Loneliness and homesickness  
+• 
+Anxiety, stress and panic attacks  
+• 
+Low mood 
+• 
+Bereavement and loss  
+• 
+Gender and identity  
+• 
+Time management, procrastination and motivation  
+• 
+Drug and alcohol awareness  
+• 
+Exercise and staying active  
+• 
+Food and healthy living  
+• 
+Sleep hygiene  
+• 
+Self-harm  
+• 
+Suicidal feelings  
+Wellbeing appointments for all students within the department are available by email at 
+c.gilchrist@imperial.ac.uk – these will either be on MS Teams or in person by arrangement in Huxley 
+304a.  
+Faculty Senior Tutor 
+The Faculty Senior Tutor, Dr Lorraine Craig, has responsibility for ensuring the delivery of 
+consistent, high quality support for students in their personal, general academic and professional 
+development. 
+Mums and Dads scheme 
+Imperial College Union’s ‘Mums and Dads’ scheme matches first years with returning students in 
+your department to help you tap into their experience and find peer support available from existing 
+students. 
+www.imperialcollegeunion.org/mums-dads    
+ 
+ 30 
+Departmental Disability Officers 
+Departmental Disability Officers are the first point of contact in your department for issues around 
+disability. They can apply for additional exam arrangements on your behalf and will facilitate support 
+within your department.  
+Your Departmental Disability Officer is: 
+Dr. Thomas Lancaster 
+More information on Departmental Disability Officers is available at:  
+www.imperial.ac.uk/disability-advisory-service/current-students/support-
+available/departmental-disability-officers/  
+More information about how to request additional arrangements for exams if you have a disability is 
+available at: 
+www.imperial.ac.uk/student-records-and-data/for-current-students/undergraduate-and-
+taught-postgraduate/exams-assessments-and-regulations/additional-exam-arrangements-in-
+respect-of-disability  
+Director of Student Experience 
+The main goal of the Department of Computing - Director of Student Experience, Dr Konstantinos 
+Gkoutzis, is to promote and foster a positive, supportive, and inclusive learning environment, 
+ensuring that you have a constructive, enriching, and fulfilling experience during your time at the 
+College. He is here to support your success, wellbeing, and engagement, assuring that you have 
+access to a wide range of services, resources, and activities to further enhance your learning. Please 
+feel free to reach out to him at any time with any questions, feedback, or suggestions. 
+First-Year Small-Group Tutorials 
+A small-group tutorial typically comprises about 8-10 students, a Tutor and an Undergraduate 
+Teaching Assistant (UTA). The UTA will be a Third or Fourth year student who will assist your 
+academic tutor in marking your work and giving feedback during the sessions. The meetings are 
+normally held in the Tutor’s office or in a small meeting room. In most weeks of the Autumn and 
+Spring Terms you will have two such tutorials, but not in the Summer Term or in future years: 
+• 
+one with your Personal Programming Tutor (PPT) 
+• 
+one with your Personal Mathematics Tutor (PMT) 
+Your PPT sessions will go through your Programming lab work assignments, which are also tested 
+electronically. Your PMT sessions will go through the coursework assignments for some of the logic 
+and reasoning modules. The UTAs return this marked work to you in the tutorials and discuss it with 
+you, with a view to resolve any difficulties you are having. Feedback is quite rapid, helping both you 
+and us to monitor your progress. Normally, one of your PPT or PMT will also be your Personal Tutor 
+(PT) throughout your degree programme. 
+There is also another kind of small-group tutorials for Computing students only: MMTs, which provide 
+additional support for Mathematics modules (Calculus and Linear Algebra). 
+In your hall of residence 
+If you’re staying in Imperial accommodation, you will have access to a range of support within your 
+hall. 
+All halls have a Hall Warden team who are responsible for  looking after your wellbeing and 
+maintaining a friendly living environment so that all residents can study, sleep, relax and enjoy 
+ 
+ 31 
+themselves. They are on call every day outside of university business hours to provide support in 
+emergencies occurring in your hall. 
+They also play an important part in the social life of the hall, organising a rolling programme of events 
+to bring everyone together. Your rent includes a contribution towards your halls’ activity fund. 
+The team includes returning students, known as Hall Seniors, who can offer first-hand advice about 
+making the most of life at Imperial. 
+Each hall also has a Hall Supervisor or a Reception team who oversee the day-to-day running of the 
+residence. So, if you have any enquiries or want to report a maintenance issue, there are people on 
+hand to help you. 
+More information and the latest guidance around accommodation can be found at: 
+www.imperial.ac.uk/study/campus-life/accommodation  
+Your Union 
+All Imperial students automatically become members of Imperial College Union when they register at 
+the university. The Union provides a range of independent support. 
+Imperial College Union Advice Service 
+The ICU Advice Service delivers free, confidential, and impartial advice covering academic issues, 
+complaints and disciplinaries, College accommodation, and internal and external signposting. 
+Contact the ICU Advice Service and complete the registration form to speak with a member of the 
+team. 
+www.imperialcollegeunion.org/advice 
+Student representatives 
+Imperial College Union operates two Representation Networks of over 600 elected student 
+representatives – the Academic Representation Network and the Wellbeing Representation 
+Network. Reps represent the voice of students and can direct you to internal and external support 
+services. The Union’s Liberation Officers also work to make sure that the views of under-represented 
+and interest groups are heard at Imperial.   
+If you have any feedback about issues in your department relating to academic or wellbeing issues, 
+you can speak to one of your student representatives. 
+www.imperialcollegeunion.org/your-union/your-representatives/a-to-z 
+Officer Trustees 
+The Union is led by a team of Officer Trustees who are elected every year by the students of Imperial. 
+They take a year out of their studies and work full-time at the Union, representing the voices of 
+students in the Union, the university and the wider community. 
+The Officer Trustees represent students in a variety of roles, including Education, Welfare, Finance & 
+Service and Clubs & Societies. These elected students are here to represent your views as a student 
+body - do make sure you get in touch with them if there’s something you would like to discuss or 
+change.  
+Student Hub 
+The Student Hub brings together information on many of Imperial's key administrative services in 
+one easily accessible place. The staff in the Hub can provide general advice and information on a 
+wide range of aspects of life at Imperial, including your student records and enrolment (letter of 
+ 
+ 32 
+registration for proof of your student status, transcripts and awards), fees and finance, 
+accommodation and international student queries. If your query needs specialist guidance, the Hub 
+team will sign-post you to other university student support services as appropriate. 
+The Hub is on hand to answer your questions in person (at our desks in South Kensington and White 
+City), by email, phone or online through the ASK Student Hub service. 
+www.imperial.ac.uk/student-hub 
+Student Support Zone 
+Student Support Zone has lots of information about the resources available at Imperial and beyond 
+to help you to stay healthy and happy. It’s a great place to start when you’re looking for some support 
+– it covers advice about housing and money, health, wellbeing and maintaining a good work-life 
+balance, and provides the details of who you can contact if you need some extra support.  
+www.imperial.ac.uk/student-support-zone 
+DoCSoc & Student Common Room 
+All Department of Computing students automatically become members of DoCSoc 
+(https://docsoc.co.uk/), a society that arranges social and professional activities to enhance the 
+students' academic journey. DoCSoc host tech talks, industry visits, as well as the annual ICHack. 
+Although tech-centric, they also organise recreational events like ice-skating and cinema nights, 
+aiming for a balanced, rewarding experience at Imperial. As a DoCSoc member, you also have access 
+to the Student Common Room in Huxley 220A, where you can relax and unwind. 
+Centre for Academic English 
+The goal of the Centre for Academic English is to ensure you develop both the ability and the 
+confidence to excel as a communicator on your degree programme as well as in the workplace. 
+From the very beginning of your degree and all the way through, we’re here to help you realise your 
+potential.  
+To achieve this, we’ve designed a flexible academic STEMM communication programme enabling 
+you to create your own personalised learning pathway. As you build your pathway, you’ll have the 
+freedom to select the language resources you need wherever you need them. These resources are 
+the result of close collaborations with departments and so will meet your communication needs for 
+Imperial written and spoken course assignments.  
+To find out more about what is available for you, visit the Centre for Academic English website.  
+Centre for Academic English 
+Level 3, Sherfield Building, South Kensington Campus 
+english@imperial.ac.uk 
+www.imperial.ac.uk/academic-english  
+ 
+Useful support contacts 
+Health and wellbeing 
+If you have moved home to take up your place at Imperial, you will need to register with a new doctor 
+(also known as a General Practitioner or GP) so that you can access NHS healthcare. It’s important 
+that you register with a doctor soon after you arrive – don’t wait until you are sick, as this could delay 
+your access to treatment. 
+ 
+ 33 
+Imperial College Health Centre  
+40 Prince’s Gardens, South Kensington Campus 
+020 7584 6301 
+imperialcollege.hc@nhs.net 
+www.imperialcollegehealthcentre.co.uk 
+ 
+Imperial College Dental Centre 
+Prince’s Gardens, South Kensington Campus 
+020 7589 6623 
+www.imperialcollegedental.co.uk 
+ 
+Student Counselling and Mental Health Advice Service 
+020 7594 9637 
+counselling@imperial.ac.uk 
+www.imperial.ac.uk/counselling 
+ 
+Multi-Faith Chaplaincy Service 
+15 Prince’s Gardens, South Kensington Campus 
+chaplaincy@imperial.ac.uk 
+www.imperial.ac.uk/chaplaincy  
+ 
+ 
+Disability Advisory Service 
+Room 566, Level 5, Sherfield Building, South Kensington Campus 
+020 7594 9755 
+disabilities@imperial.ac.uk 
+www.imperial.ac.uk/disability-advisory-service 
+ 
+International Student Support 
+020 7594 8040 
+www.imperial.ac.uk/students/international-students/ 
+ 
+Careers Service 
+Level 5, Sherfield Building, South Kensington Campus 
+020 7594 8024 
+careers@imperial.ac.uk 
+www.imperial.ac.uk/careers 
+ 
+ 34 
+ 
+ICT and software 
+ICT Service Desk 
+Abdus Salam Library, South Kensington Campus 
+020 7594 9000 
+www.imperial.ac.uk/ict/service-desk 
+ 
+Software shop 
+www.imperial.ac.uk/admin-services/ict/self-service/computers-printing/devices-and-
+software/ 
+ 
+ 
+35 
+ 
+10. 
+Student Administration 
+The Student Administration team are responsible for the administration and maintenance of the 
+student records for all students studying at Imperial. This includes enrolments, programme transfers, 
+interruption of studies, withdrawals and processing of examination entry for research degree 
+students. The team also use this information to fulfil reporting duties to the Student Loans Company 
+and Transport for London, as well as other external bodies. 
+The team are responsible for the processing of student results and awards on the student record 
+system as well as the production and distribution of academic transcripts and certificates of award. 
+The 'My Documents' online portal allows you to access your documents, including proof of 
+enrolment and award documentation. You can then digitally share these documents with third 
+parties such as an employer or university.  
+Each document has a unique QR code with the official University watermark, making it easier for 
+employers and others to verify your credentials. This online document sharing is a legitimate service, 
+introduced and authorised by Imperial.  
+We would like to encourage you to use this online service in place of paper-based documentation. 
+You can access the ‘My Documents’ portal here:  
+www.imperial.ac.uk/student-records-and-data/for-current-students/request-an-official-
+document/  
+Student Records  
++44 (0)20 7594 7268 
+student.records@imperial.ac.uk  
+ 
+Degree Certificates 
++44 (0)20 7594 7267 
+certificates@imperial.ac.uk 
+ 
+ 
+ 
+36 
+ 
+11. 
+Work-life balance 
+The pace and intensity of study at Imperial can be demanding so it’s important to find time for 
+outside interests. 
+Imperial College Union 
+The Union’s range of 360+ student-led clubs, societies and projects is one of the largest of any UK 
+university, opening up lots of ways for you to enjoy your downtime. 
+www.imperialcollegeunion.org/about-us 
+www.imperialcollegeunion.org/activities/a-to-z  
+Move Imperial 
+Imperial has a wide range of sports and activities on offer that cater for all experience levels and 
+abilities. We have a recreational activity offer, competitive sports teams and an elite sport 
+programme. We are dedicated to ensuring we have a diverse, inclusive and exciting offer for all. 
+More information about Imperial student memberships and updates to our services can be found at: 
+www.imperial.ac.uk/ethos/memberships/students/     
+For an annual fee you will get use of the gym and swimming facilities on our campuses. More 
+information about Imperial student memberships and updates to our services can be found at: 
+www.imperial.ac.uk/sport 
+We have a huge collection of online resources, home workout videos, healthy recipes and playlists 
+available to all as part of our Move More campaign, more information can be found at: 
+www.imperial.ac.uk/sport/get-active/move-more-programme/ 
+ 
+ 37 
+ 
+12. 
+Student feedback and representation 
+Feedback from students 
+Imperial and Imperial College Union are committed to continually improving your education and 
+wider experience and a key part of this is your feedback. Feedback is thoroughly discussed by your 
+student representatives and staff.  
+Student representation 
+Student Representatives are recruited from every department to gather feedback from students to 
+discuss with staff.  More information about the role, and instructions on how to become an academic 
+representative, are available on the Imperial College Union website. 
+www.imperialcollegeunion.org/representation/a-to-z  
+For information on a range of topics including timetables, policy and regulations, welfare and key 
+contacts, please consult the relevant Student Noticeboard: 
+www.imperial.ac.uk/computing/current-students/course-admin/noticeboards/ 
+Staff-Student Committee 
+Staff-Student Committees are designed to strengthen understanding and improve the flow of 
+communication between staff and students and, through open dialogue, promote high standards of 
+education and training, in a co-operative and constructive atmosphere. Imperial good practice 
+guidelines for staff-student committees are available here: 
+www.imperial.ac.uk/about/governance/academic-governance/academic-policy/student-
+feedback  
+There are two staff-student committees in the Department of Computing, serving Computing and 
+JMC programmes respectively. Minutes can be accessed from the website at: 
+https://www.imperial.ac.uk/computing/current-students/student-services/ 
+ 
+ 
+ 
+ 38 
+ 
+13. 
+Student Surveys 
+Your feedback is important to your department, the university and Imperial College Union. Whilst 
+there are a variety of ways to provide feedback on your university experience, the following surveys 
+give you regular opportunities to make your voice heard: 
+• 
+Module Evaluation Questionnaire (MEQ) 
+The MEQ is your chance to tell us about the modules you have attended, including your BPES, 
+Horizons and I-Explore modules. The questionnaire is open to students across all years of study and 
+runs at the end of the autumn, spring and summer terms. 
+• 
+Student Experience Survey (SES) 
+The SES is an annual survey which aims to gather feedback on a range of university services and on 
+Imperial College Union. The survey seeks to understand your opinions on life at the university beyond 
+lecture theatres or labs. The survey is open to all non-final year undergraduate students and runs 
+across the autumn and spring terms. 
+• 
+National Student Survey (NSS) 
+The NSS is an annual survey which asks you to rate a range of elements related to your student 
+experience such as academic support, learning resources, and assessment and feedback. The 
+survey is open to final year undergraduates at participating UK institutions and runs in the spring 
+term. Results of this national survey are made publicly available. 
+All surveys are confidential. The more you take part, the more representative the results so please 
+take a few minutes to give your views. 
+If you would like to know more about any of these surveys or see the results from previous surveys, 
+please visit:  
+www.imperial.ac.uk/students/academic-support/student-surveys/ug-student-surveys/   
+ 
+ 
+ 
+ 
+ 39 
+ 
+14. 
+And finally  
+Alumni services 
+When you graduate you will be part of a lifelong community of over 250,000 alumni, with access to a 
+range of exclusive benefits including:  
+• 
+discounts on further study at Imperial and at Imperial College Business School 
+• 
+an alumni email address 
+• 
+networking events 
+• 
+Library membership and access to a bank of online resources, webinars and events via our 
+alumni platform Imperial Plexus 
+• 
+careers support for up to three years after you graduate as well as networking opportunities 
+and professional development events 
+• 
+access to our Alumni Visitor Centre at the South Kensington Campus, a co-working 
+community space with free Wi-Fi, a bookable meeting room and complimentary 
+refreshments 
+Visit the alumni website to find out more about your new community, how to access your benefits, 
+and how to get in touch with fellow alumni around the world. 
+www.imperial.ac.uk/alumni 
+Opportunities for further study 
+After you have completed your course, you may wish to consider UROP, a research opportunities 
+programme available to students from within and outside Imperial: 
+www.imperial.ac.uk/urop 
+ 

@@ -1,0 +1,6 @@
+torch
+transformers
+PyMuPDF
+supabase
+openai
+nltk
