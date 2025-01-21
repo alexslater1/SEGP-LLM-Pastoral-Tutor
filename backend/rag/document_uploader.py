@@ -57,4 +57,16 @@ def upload_doc(url):
         ]).execute()
         print(f" - {contact_index}")
         contact_index += 1
-    
+
+
+def delete_doc(name):
+    try:
+        response = supabase.table(DOCUMENTS_TABLE_NAME).delete().eq("name", name).execute()
+        response2 = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).remove([name])
+
+        if response.status_code == 200 and response2.status_code == 200:
+            print(f"Successfully deleted the file: '{name}'")
+        else:
+            print(f"Error: {response.json()}")  # Show error details if any
+    except Exception as e:
+        print(f"An error occurred: {e}")

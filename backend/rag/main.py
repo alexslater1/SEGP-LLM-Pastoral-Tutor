@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from searcher import get_supabase_rag_chunks
 from openai import OpenAI
 from dotenv import load_dotenv
-from document_uploader import upload_doc
+from document_uploader import upload_doc, delete_doc
 import os
 
 # Load environment variables from .env file
@@ -80,6 +80,39 @@ async def upload_rag_document(url: str):
         upload_doc(url)
        
         return {"response": "Document uploaded"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/rag")
+async def delete_rag_document(name: str):
+    # Validate url
+    if not name or name.isspace():
+        raise HTTPException(
+            status_code=400, 
+            detail="Url parameter cannot be empty or only whitespace"
+        )
+
+    if name.strip()[-4:] != ".pdf":
+        raise HTTPException(
+            status_code=400, 
+            detail="Document must be a pdf"
+        )
+    
+    if not name.strip()[:-4]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Document name must exist"
+        )
+    
+    try:
+        # Clean url of extra whitespace
+        name = name.strip()
+        
+        # Embed and upload document chunks to database
+        delete_doc(name)
+       
+        return {"response": "Document deleted"}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
