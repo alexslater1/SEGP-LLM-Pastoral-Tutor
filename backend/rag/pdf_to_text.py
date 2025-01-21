@@ -1,6 +1,7 @@
 import fitz
 from docx import Document
 from pptx import Presentation
+import pymupdf4llm
 
 # def pdf_to_text(pdf_path, txt_path):
 
@@ -14,17 +15,16 @@ from pptx import Presentation
 #     pdf_document.close()
 
 
-def pdf_to_text(pdf_path):
-    ret = ""
+def pdf_to_text2(pdf_path):
+    # ret = ""
 
-    pdf_document = fitz.open(pdf_path)
-    for page_number in range(len(pdf_document)):
-        page = pdf_document.load_page(page_number)
-        text = page.get_text()
-        ret += text
+    # pdf_document = fitz.open(pdf_path)
+    # for page_number in range(len(pdf_document)):
+    #     page = pdf_document.load_page(page_number)
+    #     text = page.get_text()
+    #     ret += text
         
-    pdf_document.close()
-    return ret
+    return pymupdf4llm.to_markdown(pdf_path)
 
 def docx_to_text(file_path):
     doc = Document(file_path)
@@ -51,7 +51,7 @@ def pptx_to_text(file_path):
 
 def file_to_text(path):
     if path.endswith(".pdf"):
-        return pdf_to_text(path)
+        return pdf_to_text2(path)
     elif path.endswith(".docx"):
         return docx_to_text(path)
     elif path.endswith(".txt"):

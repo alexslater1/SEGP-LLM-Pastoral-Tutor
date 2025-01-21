@@ -3,18 +3,21 @@ from chunker import document_chunker2, extract_contacts_with_context
 from embedder import embed
 from supabase import create_client, Client
 import os
+from pdf_to_text import pdf_to_text2
 from config import supabase, DOCUMENTS_BUCKET_NAME, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME, CONTACT_TABLE_NAME
 
 def upload_doc(url):
     file_name = os.path.basename(url)
     print("1")
+    mkdwn_pdf = pdf_to_text2(url)
+
     #upload file to bucket storage
-    try:
-        with open(url, "rb") as file:
-            response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).upload(file_name, file)
-    except Exception as e:
-        print(f"An error uploading the file occurred: {str(e)}")
-        return None
+    # try:
+    #     with open(url, "rb") as file:
+    #         response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).upload(file_name, file)
+    # except Exception as e:
+    #     print(f"An error uploading the file occurred: {str(e)}")
+    #     return None
     public_url = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).get_public_url(file_name)
     print("2")
     #add entry for file in documents table
@@ -26,7 +29,7 @@ def upload_doc(url):
     text = file_to_text(url)
     print("3")
     #chunk document
-    chunks = document_chunker2(text, "BAAI/bge-small-en-v1.5")
+    chunks = document_chunker2(mkdwn_pdf, "BAAI/bge-small-en-v1.5")
 
     index = 1
     for text in chunks:
@@ -36,7 +39,7 @@ def upload_doc(url):
         index += 1
     print("4")
     #extract contacts
-    contacts = extract_contacts_with_context(text)
+    contacts = extract_contacts_with_context(mkdwn_pdf)
     contact_index = 1
     for (email, email_context) in contacts[0]:
         supabase.table(CONTACT_TABLE_NAME).insert([
@@ -79,3 +82,5 @@ def delete_doc(name):
 
     except Exception as e:
         print(f"An error occurred deleting the document: {e}")
+
+# upload_doc('rag/pdfs/Computing-UG-Handbook-2425-v1b.pdf')
