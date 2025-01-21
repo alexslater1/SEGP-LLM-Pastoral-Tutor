@@ -87,11 +87,11 @@ def extract_contacts_with_context(text, words_before=20, words_after=20):
         context = ' '.join(before_text + [match_text] + after_text)
         
         if match.group('email'):
-            emails_with_context.append(context)
+            emails_with_context.append((match_text, context))
         elif match.group('phone'):
-            phones_with_context.append(context)
+            phones_with_context.append((match_text, context))
         elif match.group('url'):
-            urls_with_context.append(context)
+            urls_with_context.append((match_text, context))
 
     return [emails_with_context, phones_with_context, urls_with_context]
 

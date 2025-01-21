@@ -17,12 +17,12 @@ def upload(url):
     print("1")
 
     #upload file to bucket storage
-    try:
-        with open(url, "rb") as file:
-            response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).upload(file_name, file)
-    except Exception as e:
-        print(f"An error uploading the file occurred: {str(e)}")
-        return None
+    # try:
+    #     with open(url, "rb") as file:
+    #         response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).upload(file_name, file)
+    # except Exception as e:
+    #     print(f"An error uploading the file occurred: {str(e)}")
+    #     return None
     public_url = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).get_public_url(file_name)
     print("2")
 
@@ -56,24 +56,24 @@ def upload(url):
     contacts = extract_contacts_with_context(pdf_text)
     print("6")
     contact_index = 1
-    for email_context in contacts[0]:
+    for (email, email_context) in contacts[0]:
         supabase.table(CONTACT_TABLE_NAME).insert([
             {"context": email_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "email", 
-             "embedding": embed(email_context).tolist()}
+             "embedding": embed(email_context).tolist(), "contact": email}
         ]).execute()
         print(f" - {contact_index}")
         contact_index += 1
-    for phone_context in contacts[1]:
+    for (phone, phone_context) in contacts[1]:
         supabase.table(CONTACT_TABLE_NAME).insert([
             {"context": phone_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "phone number", 
-             "embedding": embed(phone_context).tolist()}
+             "embedding": embed(phone_context).tolist(), "contact": phone}
         ]).execute()
         print(f" - {contact_index}")
         contact_index += 1
-    for url_context in contacts[2]:
+    for (url, url_context) in contacts[2]:
         supabase.table(CONTACT_TABLE_NAME).insert([
             {"context": url_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "url", 
-             "embedding": embed(url_context).tolist()}
+             "embedding": embed(url_context).tolist(), "contact": url}
         ]).execute()
         print(f" - {contact_index}")
         contact_index += 1
