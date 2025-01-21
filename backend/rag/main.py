@@ -1,8 +1,14 @@
+from fastapi import FastAPI, HTTPException
 from chunker import document_chunker, print_chunks
 from embedder import embed
 from searcher import search, search_database, get_text_from_chunks
 from pdf_to_text import pdf_to_text
 from openai import OpenAI
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 # #TODO: get document and convert to text files
 # # pdf_path = "./pdfs/Student_Code_of_Conduct_2023_24.pdf"
@@ -45,15 +51,52 @@ prompt = base_prompt.format(user_query=query, chunks_information="\n".join(get_t
 
 print(prompt)
 
-client = OpenAI(
-    api_key="idk"
-)
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    temperature=0,
-    messages=[
-        {"role": "system", "content": prompt},
-    ],
-)
+app = FastAPI()
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-print(response.choices[0].message.content)
+@app.get("/rag")
+async def get_rag_response(query: str):
+    # Validate query
+    if not query or query.isspace():
+        raise HTTPException(
+            status_code=400, 
+            detail="Query parameter cannot be empty or only whitespace"
+        )
+    
+    if len(query.strip()) < 3:
+        raise HTTPException(
+            status_code=400, 
+            detail="Query must be at least 3 characters long"
+        )
+    
+    try:
+        # Clean query of extra whitespace
+        query = query.strip()
+        
+        # Search chunks based on query
+        retrieved_chunks = search_database(query)
+        
+        # Format prompt with query and retrieved chunks
+        prompt = base_prompt.format(
+            user_query=query, 
+            chunks_information="\n".join(get_text_from_chunks(retrieved_chunks, 1))
+        )
+        
+        # Get response from OpenAI
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0,
+            messages=[
+                {"role": "system", "content": prompt},
+            ],
+        )
+        
+        return {"response": response.choices[0].message.content}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# For local development
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
