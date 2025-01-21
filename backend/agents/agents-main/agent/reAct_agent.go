@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"time"
+
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/memory"
@@ -26,6 +28,8 @@ and give your thoughts in a detailed manner. Then you should give your answer in
 Previous reasoning steps and observations: "%+v"
 
 Available tools: "%s"
+
+Current date and time in YYYY-MM-DD HH:MM format: "%s"
 
 Instructions:
 1. Analyze the query, previous reasoning steps, and observations.
@@ -75,6 +79,10 @@ Remember:
 	## Observation
 	And give the observation in a detailed manner.`
 )
+
+func getCurrentDateTime() string {
+	return time.Now().Format("2006-01-02 15:04")
+}
 
 type ReActAgent struct {
 	Background  string
@@ -207,7 +215,7 @@ func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitio
 		toolsStr += string(jsonTool) + ", "
 	}
 
-	prompt := fmt.Sprintf(thinkPrompt, a.Background, query, string(memoryBytes), toolsStr)
+	prompt := fmt.Sprintf(thinkPrompt, a.Background, query, string(memoryBytes), toolsStr, getCurrentDateTime())
 	return &prompt
 }
 

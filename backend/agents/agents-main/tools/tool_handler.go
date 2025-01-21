@@ -16,7 +16,6 @@ func NewGoogleSearchToolHandler(googleSearch googleSearch.GoogleSearchClient) *T
 		[]Tool{
 			NewGoogleSearchUrlTool(googleSearch),
 			NewGoogleSearchResultsTool(googleSearch),
-			NewDateTool(),
 		},
 	)
 }

@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 func TestReActAgent(t *testing.T) {
 	agent := NewDefaultReActAgent()
 
-	response, reasoning, err := agent.Run("What is the date in two days")
+	response, reasoning, err := agent.Run("How many days until Easter?")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}
