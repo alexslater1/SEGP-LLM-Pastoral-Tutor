@@ -65,26 +65,36 @@ def document_chunker2(text, model_name,
 
     return all_chunks
 
-def extract_emails_with_context(text, words_before=20, words_after=20):
+def extract_contacts_with_context(text, words_before=20, words_after=20):
     
-    # Email regex pattern
-    email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-    
-    results = []
-    
-    # Find all email occurrences in the text
-    for match in re.finditer(email_regex, text):
-        email = match.group()
+    combined_regex = (
+        r'(?P<email>[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|'
+        r'(?P<phone>\b(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?)?\d{3,4}[-.\s]?\d{3,4}[-.\s]?\d{0,4}\b)|'
+        r'(?P<url>\b(?:https?://|www\.)[a-zA-Z0-9._%+-]+\.[a-zA-Z]{2,}(?:/[^\s]*)?\b)'
+    )
+
+    emails_with_context = []
+    phones_with_context = []
+    urls_with_context = []
+
+    for match in re.finditer(combined_regex, text):
+        match_text = match.group()
         start, end = match.start(), match.end()
         
-        # Get words before and after the email
         before_text = text[:start].split()[-words_before:]  # Last 20 words before email
         after_text = text[end:].split()[:words_after]  # First 20 words after email
         
-        context = ' '.join(before_text + [email] + after_text)
-        results.append((email, context))
-    
-    return results
+        context = ' '.join(before_text + [match_text] + after_text)
+        
+        if match.group('email'):
+            emails_with_context.append(context)
+        elif match.group('phone'):
+            phones_with_context.append(context)
+        elif match.group('url'):
+            urls_with_context.append(context)
+
+    return [emails_with_context, phones_with_context, urls_with_context]
+
 
 def document_chunker(directory_path,
                      model_name,
