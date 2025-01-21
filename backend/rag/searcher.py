@@ -19,24 +19,23 @@ def search(query, chunks, k=5):
 
     return chunk_scores[:k]
 
-def search_database(query, k=5):
+def get_supabase_rag_chunks(query, k=5, similarity_threshold=0.5):
     embedded_query = embed(query)
-    normalised_embedded_query = np.linalg.norm(embedded_query)
-
-    response = supabase.table(RAG_TABLE_NAME).select("*").execute()
-    data = response.data
-
-    chunk_scores = []
-    for entry in data:
-        embedded_chunk = np.array(eval(entry['embedding']))
-        normalised_embedded_chunk = np.linalg.norm(embedded_chunk)
-
-        score = np.dot(embedded_query, embedded_chunk) / (normalised_embedded_query * normalised_embedded_chunk)
-        chunk_scores.append((score, entry))
     
-    chunk_scores.sort(reverse=True, key=lambda x: x[0])
-
-    return [entry for (score, entry) in chunk_scores][:k]
+    try:
+        response = supabase.rpc(
+            'match_chunks',
+            {
+                'query_embedding': embedded_query.tolist(),
+                'match_count': k,
+                'match_threshold': similarity_threshold
+            }
+        ).execute()
+        
+        return response.data
+    except Exception as e:
+        print(f"Error in search_database: {e}")
+        return []
 
 def get_doc_ids_from_chunks(chunks):
     doc_set = set()
