@@ -8,7 +8,6 @@ import os
 load_dotenv()
 
 app = FastAPI()
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 @app.get("/rag")
 async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold: float = 0.5):
@@ -44,9 +43,9 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
         query = query.strip()
         
         # Search chunks based on query
-        retrieved_chunks = get_supabase_rag_chunks(query, num_chunks, similarity_threshold)
+        retrieved = get_supabase_rag_chunks(query, num_chunks, similarity_threshold)
        
-        return {"response": retrieved_chunks}
+        return {"chunks": retrieved["chunks"], "contacts": retrieved["contacts"]}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

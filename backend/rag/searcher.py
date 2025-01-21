@@ -23,7 +23,7 @@ def get_supabase_rag_chunks(query, k=5, similarity_threshold=0.5):
     embedded_query = embed(query)
     
     try:
-        response = supabase.rpc(
+        chunks = supabase.rpc(
             'match_chunks',
             {
                 'query_embedding': embedded_query.tolist(),
@@ -31,8 +31,17 @@ def get_supabase_rag_chunks(query, k=5, similarity_threshold=0.5):
                 'match_threshold': similarity_threshold
             }
         ).execute()
+
+        contacts = supabase.rpc(
+            'match_contacts',
+            {
+                'query_embedding': embedded_query.tolist(),
+                'match_count': k,
+                'match_threshold': similarity_threshold
+            }
+        ).execute()
         
-        return response.data
+        return {"chunks": chunks, "contacts": contacts}
     except Exception as e:
         print(f"Error in search_database: {e}")
         return []
