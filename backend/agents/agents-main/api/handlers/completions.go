@@ -1,11 +1,15 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/segp/agents-main/agent"
+	"github.com/segp/agents-main/knowledge"
+	"github.com/segp/agents-main/llm"
 )
 
 type ChatCompletionRequest struct {
@@ -14,7 +18,7 @@ type ChatCompletionRequest struct {
 
 type ChatCompletionResponse struct {
 	Response string `json:"response"`
-	Reason string `json:"reason"`
+	Reason   string `json:"reason"`
 }
 
 func ChatCompletion() http.HandlerFunc {
@@ -24,12 +28,27 @@ func ChatCompletion() http.HandlerFunc {
 			http.Error(w, fmt.Sprintf("error decoding json %v", err.Error()), http.StatusBadRequest)
 			return
 		}
-		
+
 		if req.Query == "" {
 			http.Error(w, "query is required", http.StatusBadRequest)
 			return
 		}
-		
+
+		nextStep, err := handleNextStep(req.Query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if nextStep.Action == NextStepActionReply {
+			res := ChatCompletionResponse{
+				Response: nextStep.OptionalReply,
+				Reason:   "Answered directly from router LLM",
+			}
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
 		agent := agent.NewDefaultReActAgent()
 
 		response, reason, err := agent.Run(req.Query)
@@ -41,9 +60,57 @@ func ChatCompletion() http.HandlerFunc {
 
 		res := ChatCompletionResponse{
 			Response: *response,
-			Reason: *reason,
+			Reason:   *reason,
 		}
 
 		json.NewEncoder(w).Encode(res)
 	}
+}
+
+type NextStepAction string
+
+const (
+	NextStepActionReAct NextStepAction = "reAct"
+	NextStepActionReply NextStepAction = "reply"
+)
+
+type NextStep struct {
+	Action        NextStepAction
+	OptionalReply string
+}
+
+func handleNextStep(query string) (*NextStep, error) {
+	handleNextStepPrompt := `
+	You are a helpful assistant. You are given a query and some context and you need to determine the next step to take.
+
+	If you can answer the query confidently from your own knowledge and the given context, and there are no further actions which should be taken, you must reply with the Action being reply and the OptionalReply being your reply to the user
+
+	If you cannot answer the query confidently from your own knowledge and the given context, you must reply with the Action being reAct and the OptionalReply being an empty string
+
+	The reAct agent has access to a plethora of tools to access and deal with real time data, such as Google Search and interactions with other systems.
+
+	Here is the query: %s
+	Here is the context: %s
+	`
+
+	ragKnowledge := knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+	ragResponseStr, err := ragKnowledge.Get(query)
+	if err != nil {
+		return nil, err
+	}
+
+	prompt := fmt.Sprintf(handleNextStepPrompt, query, *ragResponseStr)
+
+	llm := llm.NewDeepSeekLLM(os.Getenv("DEEPSEEK_API_KEY"))
+	response, err := llm.StructuredOutputCompletion(context.Background(), prompt, NextStep{})
+	if err != nil {
+		return nil, err
+	}
+
+	var parsedResponse NextStep
+	if err := json.Unmarshal([]byte(*response), &parsedResponse); err != nil {
+		return nil, err
+	}
+
+	return &parsedResponse, nil
 }
