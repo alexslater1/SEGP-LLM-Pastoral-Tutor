@@ -1,9 +1,9 @@
 from pdf_to_text import pdf_to_text2
-from chunker import document_chunker2
+from chunker import document_chunker2, extract_contacts_with_context
 from embedder import embed
 from supabase import create_client, Client
 import os
-from config import supabase, DOCUMENTS_BUCKET_NAME, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME
+from config import supabase, DOCUMENTS_BUCKET_NAME, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME, CONTACT_TABLE_NAME
 
 url = "./pdfs/Student_Code_of_Conduct_2023_24.pdf"
 url2 = "./pdfs/Computing-UG-Handbook-2425-v1b.pdf"
@@ -13,6 +13,7 @@ url3 = "./pdfs/Orientation-for-Visiting-(non-degree)-Students-(start-date---begi
 
 def upload(url):
     file_name = os.path.basename(url)
+    pdf_text = pdf_to_text2(url)
     print("1")
 
     #upload file to bucket storage
@@ -35,11 +36,11 @@ def upload(url):
     print("3")
 
     #chunk document
-    chunks = document_chunker2(pdf_to_text2(url), "BAAI/bge-small-en-v1.5")
-    for chunk in chunks:
-        print("-----------------------------------------------------------------")
-        print(chunk)
-        print('-----------------------------------------------------------------')
+    chunks = document_chunker2(pdf_text, "BAAI/bge-small-en-v1.5")
+    # for chunk in chunks:
+    #     print("-----------------------------------------------------------------")
+    #     print(chunk)
+    #     print('-----------------------------------------------------------------')
 
     print("4")
     index = 1
@@ -51,6 +52,32 @@ def upload(url):
         index += 1
     print("5")
 
+    #extract contacts
+    contacts = extract_contacts_with_context(pdf_text)
+    print("6")
+    contact_index = 1
+    for email_context in contacts[0]:
+        supabase.table(CONTACT_TABLE_NAME).insert([
+            {"context": email_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "email", 
+             "embedding": embed(email_context).tolist()}
+        ]).execute()
+        print(f" - {contact_index}")
+        contact_index += 1
+    for phone_context in contacts[1]:
+        supabase.table(CONTACT_TABLE_NAME).insert([
+            {"context": phone_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "phone number", 
+             "embedding": embed(phone_context).tolist()}
+        ]).execute()
+        print(f" - {contact_index}")
+        contact_index += 1
+    for url_context in contacts[2]:
+        supabase.table(CONTACT_TABLE_NAME).insert([
+            {"context": url_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "url", 
+             "embedding": embed(url_context).tolist()}
+        ]).execute()
+        print(f" - {contact_index}")
+        contact_index += 1
+    print("7")
 
 upload(url)
 upload(url2)
