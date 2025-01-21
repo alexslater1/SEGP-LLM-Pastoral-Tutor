@@ -5,10 +5,10 @@ from transformers import AutoTokenizer
 
 def document_chunker2(text, model_name,
                      paragraph_separator='\n\n',
-                     chunk_size=100,
+                     chunk_size=250,
                      separator=' ',
                      secondary_chunking_regex=r'\S+?[\.,;!?]',
-                     chunk_overlap=0):
+                     chunk_overlap=25):
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)  # Load tokenizer for the specified model
 
@@ -64,6 +64,27 @@ def document_chunker2(text, model_name,
             all_chunks.append(chunk)
 
     return all_chunks
+
+def extract_emails_with_context(text, words_before=20, words_after=20):
+    
+    # Email regex pattern
+    email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    
+    results = []
+    
+    # Find all email occurrences in the text
+    for match in re.finditer(email_regex, text):
+        email = match.group()
+        start, end = match.start(), match.end()
+        
+        # Get words before and after the email
+        before_text = text[:start].split()[-words_before:]  # Last 20 words before email
+        after_text = text[end:].split()[:words_after]  # First 20 words after email
+        
+        context = ' '.join(before_text + [email] + after_text)
+        results.append((email, context))
+    
+    return results
 
 def document_chunker(directory_path,
                      model_name,
@@ -151,4 +172,3 @@ def print_chunks(chunks):
         for inner_key, inner_value in outer_value.items():
             print("---------------------------------------------------")
             print(f"    Text: {inner_value.get('text', 'No text available')}")
-
