@@ -76,3 +76,6 @@ typing_extensions==4.12.2
 urllib3==2.3.0
 websockets==13.1
 yarl==1.18.3
+uvicorn
+python-docx
+python-pptx

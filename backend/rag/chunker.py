@@ -4,7 +4,7 @@ import uuid
 from transformers import AutoTokenizer
 
 def document_chunker2(text, model_name,
-                     paragraph_separator='\n\n',
+                     paragraph_separator='\n\n\n',
                      chunk_size=250,
                      separator=' ',
                      secondary_chunking_regex=r'\S+?[\.,;!?]',
@@ -178,7 +178,11 @@ def document_chunker(directory_path,
     return documents
 
 def print_chunks(chunks):
-    for outer_key, outer_value in chunks.items():
-        for inner_key, inner_value in outer_value.items():
-            print("---------------------------------------------------")
-            print(f"    Text: {inner_value.get('text', 'No text available')}")
+    for chunk in chunks:
+        print("---------------------------------------------------")
+        print(f"    Text: {chunk}")
+
+# with open('rag/documents/Computing-UG-Handbook-2425-v1b.txt', 'r') as file:
+#     txt_file = file.read()
+#     chunks = document_chunker2(txt_file, 'BAAI/bge-small-en-v1.5')
+#     print_chunks(chunks)
