@@ -34,21 +34,6 @@ func ChatCompletion() http.HandlerFunc {
 			return
 		}
 
-		nextStep, err := handleNextStep(req.Query)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if nextStep.Action == NextStepActionReply {
-			res := ChatCompletionResponse{
-				Response: nextStep.OptionalReply,
-				Reason:   "Answered directly from router LLM",
-			}
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-
 		agent := agent.NewDefaultReActAgent()
 
 		response, reason, err := agent.Run(req.Query)

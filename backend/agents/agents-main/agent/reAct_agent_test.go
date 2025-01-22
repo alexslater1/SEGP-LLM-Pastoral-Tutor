@@ -9,7 +9,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	if err := godotenv.Load("../../.env"); err != nil {
+	if err := godotenv.Load("../../../.env"); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 func TestReActAgent(t *testing.T) {
 	agent := NewDefaultReActAgent()
 
-	response, reasoning, err := agent.Run("How many days until Easter?")
+	response, reasoning, err := agent.Run("When are the easter holidays at Imperial College London this year?")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}

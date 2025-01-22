@@ -31,6 +31,8 @@ Available tools: "%s"
 
 Current date and time in YYYY-MM-DD HH:MM format: "%s"
 
+Context: "%s"
+
 Instructions:
 1. Analyze the query, previous reasoning steps, and observations.
 2. Decide on the next action: use a tool or provide a final answer.
@@ -114,13 +116,22 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 	slog.Info("Starting logic loop for query", "query", query)
 	fmt.Println()
 
-	for {
+	for i:=0;; i++ {
 		mem, err := a.Memory.Get()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		thoughts, err := a.think(mem, a.ToolHandler.ToolDefinitions(), query)
+		knowledgeContext := ""
+		if i == 0 {
+			kc, err := a.Knowledge.Get(query)
+			if err != nil {
+				return nil, nil, err
+			}
+			knowledgeContext = *kc
+		}
+
+		thoughts, err := a.think(mem, a.ToolHandler.ToolDefinitions(), query, &knowledgeContext)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -162,8 +173,8 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 
 }
 
-func (a *ReActAgent) think(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string) (*string, error) {
-	prompt := a.getThinkPrompt(mem, toolDefinitions, query)
+func (a *ReActAgent) think(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string, knowledgeContext *string) (*string, error) {
+	prompt := a.getThinkPrompt(mem, toolDefinitions, query, knowledgeContext)
 	if prompt == nil {
 		return nil, errors.New("failed to get think prompt")
 	}
@@ -200,7 +211,7 @@ func (a *ReActAgent) observe(toolCallResult *string, thoughts *string, chosenToo
 	return a.LLM.ChatCompletion(context.Background(), prompt)
 }
 
-func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string) *string {
+func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string, context *string) *string {
 	memoryBytes, err := json.Marshal(mem)
 	if err != nil {
 		return nil
@@ -215,7 +226,7 @@ func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitio
 		toolsStr += string(jsonTool) + ", "
 	}
 
-	prompt := fmt.Sprintf(thinkPrompt, a.Background, query, string(memoryBytes), toolsStr, getCurrentDateTime())
+	prompt := fmt.Sprintf(thinkPrompt, a.Background, query, string(memoryBytes), toolsStr, getCurrentDateTime(), *context)
 	return &prompt
 }
 
