@@ -23,6 +23,8 @@ func TestParseGoogleSearchResults(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	t.Logf("%+v", results)
+
 	// Clean the actual results
 	for i := range results {
 		results[i].Description = cleanString(results[i].Description)

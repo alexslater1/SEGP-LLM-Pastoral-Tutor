@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 )
 
@@ -27,6 +28,14 @@ func NewRodClient() *RodClient {
 
 	return &RodClient{
 		browser: rod.New().MustConnect(),
+	}
+}
+
+func NewNonHeadlessRodClient() *RodClient {
+	l := launcher.New().Headless(false)
+
+	return &RodClient{
+		browser: rod.New().ControlURL(l.MustLaunch()).MustConnect(),
 	}
 }
 
@@ -58,6 +67,36 @@ func (r *RodClient) htmlFromURL(url string) (*string, error) {
 			error = err
 			return
 		}
+
+		// Wait for the page to fully load
+		page.MustWaitLoad()
+
+		page.WaitRequestIdle(time.Second*3, []string{""}, []string{}, excludeTypes)
+
+		h, err := page.HTML()
+		if err != nil {
+			error = err
+			return
+		}
+
+		html = h
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &html, error
+}
+
+func (r *RodClient) HtmlFromUrlCloseCookies(url string) (*string, error) {
+	html := ""
+	var error error
+	err := rod.Try(func() {
+		page := r.browser.MustPage(url)
+		defer page.Close()
+
+		button := page.MustElement(".UywwFc-LgbsSe.UywwFc-LgbsSe-OWXEXe-dgl2Hf.XWZjwc")
+		button.MustClick()
 
 		// Wait for the page to fully load
 		page.MustWaitLoad()

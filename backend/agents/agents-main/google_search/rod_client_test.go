@@ -32,3 +32,16 @@ func TestRodClientHtmlFromURL(t *testing.T) {
 	}
 	t.Log(*html)
 }
+
+func TestRodClientHtmlFromUrlCloseCookies(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("skipping test in CI")
+	}
+
+	client := NewNonHeadlessRodClient()
+	html, err := client.HtmlFromUrlCloseCookies("https://www.google.com/maps/search/restaurant+in+new+york")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(*html)
+}
