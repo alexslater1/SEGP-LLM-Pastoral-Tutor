@@ -31,6 +31,10 @@ func (g *GoogleMapsPlaceTool) Definition() ToolDefinition {
 }
 
 func (g *GoogleMapsPlaceTool) PlaceDetailsFor(googleMapsPlaceURL string) (*string, error) {
+	if err := verifyIsGoogleMapsPlaceURL(googleMapsPlaceURL); err != nil {
+		return nil, err
+	}
+
 	placeDetails, err := g.placeDetailsFor(googleMapsPlaceURL)
 	if err != nil {
 		return nil, err
@@ -75,10 +79,6 @@ func (g *GoogleMapsPlaceTool) placeDetailsFor(googleMapsPlaceURL string) (*Place
 }
 
 func (g *GoogleMapsPlaceTool) placeOverviewFor(googleMapsPlaceURL string) (*PlaceOverview, error) {
-	if err := verifyIsGoogleMapsPlaceURL(googleMapsPlaceURL); err != nil {
-		return nil, err
-	}
-
 	actions := []googleSearch.Action{
 		googleSearch.NewWaitElementAction("h1.DUwDvf.lfPIob"),
 	}

@@ -17,17 +17,17 @@ type GoogleMapsResult struct {
 	Tags               string
 }
 
-type GoolgeMapsResultsTool struct {
+type GoogleMapsResultsTool struct {
 	googleSearchClient googleSearch.GoogleSearchClient
 }
 
-func NewGoogleMapsResultsTool(gc googleSearch.GoogleSearchClient) *GoolgeMapsResultsTool {
-	return &GoolgeMapsResultsTool{
+func NewGoogleMapsResultsTool(gc googleSearch.GoogleSearchClient) *GoogleMapsResultsTool {
+	return &GoogleMapsResultsTool{
 		googleSearchClient: gc,
 	}
 }
 
-func (g *GoolgeMapsResultsTool) Definition() ToolDefinition {
+func (g *GoogleMapsResultsTool) Definition() ToolDefinition {
 	return ToolDefinition{
 		Name:        "google_maps_results",
 		Description: "Returns the results of a google maps search. For each place listed, will get the title, rating, PLACES URL and then some info + tags about the place.",
@@ -37,7 +37,7 @@ func (g *GoolgeMapsResultsTool) Definition() ToolDefinition {
 	}
 }
 
-func (g *GoolgeMapsResultsTool) GoogleMapsResultsFor(query string) (*string, error) {
+func (g *GoogleMapsResultsTool) GoogleMapsResultsFor(query string) (*string, error) {
 
 	html, err := g.googleSearchClient.HtmlFromURL("https://www.google.com/maps/search/" + url.QueryEscape(query))
 	if err != nil {
@@ -59,7 +59,7 @@ func (g *GoolgeMapsResultsTool) GoogleMapsResultsFor(query string) (*string, err
 	return &resultsStr, nil
 }
 
-func (g *GoolgeMapsResultsTool) parseGoogleMapsResults(html *string) ([]GoogleMapsResult, error) {
+func (g *GoogleMapsResultsTool) parseGoogleMapsResults(html *string) ([]GoogleMapsResult, error) {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(*html))
 	if err != nil {
 		return nil, err

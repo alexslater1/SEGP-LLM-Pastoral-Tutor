@@ -18,6 +18,8 @@ func NewDefaultToolHandler(googleSearch googleSearch.GoogleSearchClient, knowled
 			NewGoogleSearchUrlTool(googleSearch),
 			NewGoogleSearchResultsTool(googleSearch),
 			NewRagTool(knowledge),
+			NewGoogleMapsResultsTool(googleSearch),
+			NewGoogleMapsPlaceTool(googleSearch),
 		},
 	)
 }
@@ -62,21 +64,38 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 			return nil, fmt.Errorf("query is required")
 		}
 		return typedTool.GoogleSearchResultsFor(query.(string))
+
 	case *GoogleSearchUrlTool:
 		url, ok := parsedArgs["URL"]
 		if !ok {
 			return nil, fmt.Errorf("URL is required")
 		}
 		return typedTool.PageContentFor(url.(string))
+
 	case *DateTool:
 		date := typedTool.GetCurrentDate()
 		return &date, nil
+
 	case *RagTool:
 		query, ok := parsedArgs["query"]
 		if !ok {
 			return nil, fmt.Errorf("query is required")
 		}
 		return typedTool.SearchRagFor(query.(string))
+
+	case *GoogleMapsResultsTool:
+		query, ok := parsedArgs["query"]
+		if !ok {
+			return nil, fmt.Errorf("query is required")
+		}
+		return typedTool.GoogleMapsResultsFor(query.(string))
+
+	case *GoogleMapsPlaceTool:
+		googleMapsPlaceURL, ok := parsedArgs["google_maps_place_url"]
+		if !ok {
+			return nil, fmt.Errorf("google_maps_place_url is required")
+		}
+		return typedTool.PlaceDetailsFor(googleMapsPlaceURL.(string))
 	}
 
 	return nil, fmt.Errorf("no tool matched the name %s", toolCall.Name)
