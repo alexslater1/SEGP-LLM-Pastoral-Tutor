@@ -10,8 +10,9 @@ type GoogleSearchClient interface {
 type ActionType string
 
 const (
-	ActionTypeClick ActionType = "click"
-	ActionTypeWait  ActionType = "wait"
+	ActionTypeClick    ActionType = "click"
+	ActionTypeWait     ActionType = "wait"
+	ActionTypeNavigate ActionType = "navigate"
 )
 
 type Action interface {
@@ -59,4 +60,16 @@ func NewWaitElementAction(element string) *WaitAction {
 
 func (w *WaitAction) Type() ActionType {
 	return ActionTypeWait
+}
+
+type NavigateAction struct {
+	URL string
+}
+
+func (n *NavigateAction) Type() ActionType {
+	return ActionTypeNavigate
+}
+
+func NewNavigateAction(url string) *NavigateAction {
+	return &NavigateAction{URL: url}
 }

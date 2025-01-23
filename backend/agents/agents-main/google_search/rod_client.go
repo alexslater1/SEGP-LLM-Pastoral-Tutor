@@ -84,6 +84,12 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 				if waitAction.Duration != nil {
 					time.Sleep(*waitAction.Duration)
 				}
+
+			case ActionTypeNavigate:
+				navigateAction := action.(*NavigateAction)
+				page.MustNavigate(navigateAction.URL)
+				page.MustWaitNavigation()
+				page.MustWaitLoad()
 			}
 		}
 
