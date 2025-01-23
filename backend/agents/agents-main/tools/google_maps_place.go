@@ -154,7 +154,7 @@ func parsePlaceAbouts(html *string) (*PlaceAbout, error) {
 		s.Find("li.hpLkke").Each(func(i int, s *goquery.Selection) {
 			placeAboutSectionItems = append(placeAboutSectionItems, PlaceAboutSectionItem{
 				Item:        cleanString(s.Find("span").Eq(1).Text()),
-				IsAvailable: s.Find("f5BGzb.google-symbols").HasClass("SwaGS"),
+				IsAvailable: s.Find("span.f5BGzb.google-symbols").HasClass("SwaGS"),
 			})
 		})
 

@@ -58,7 +58,7 @@ func TestVerifyIsGoogleMapsPlaceURL(t *testing.T) {
 func TestParsePlaceDetails(t *testing.T) {
 	tool := NewGoogleMapsPlaceTool(googleSearch.NewNonHeadlessRodClient())
 
-	placeDetails, err := tool.PlaceDetailsFor("https://www.google.com/maps/place/Boucherie+Union+Square/data=!4m7!3m6!1s0x89c259a1ec5f5573:0x2fc6687f46f682d5!8m2!3d40.7372552!4d-73.9882246!16s%2Fg%2F11hbv5rh0_!19sChIJc1Vf7KFZwokR1YL2Rn9oxi8?authuser=0&hl=en&rclk=1")
+	placeDetails, err := tool.PlaceDetailsFor("https://www.google.com/maps/place/OLIO+E+PI%C3%99/data=!4m7!3m6!1s0x89c25996bd0915fd:0x294a27aedc2f4135!8m2!3d40.7338208!4d-73.9997931!16s%2Fg%2F1tjyvj49!19sChIJ_RUJvZZZwokRNUEv3K4nSik?authuser=0\u0026hl=en\u0026rclk=1")
 	if err != nil {
 		t.Errorf("PlaceDetailsFor() error =  %v", err)
 	}
@@ -71,7 +71,7 @@ func TestPlaceAboutsFor(t *testing.T) {
 
 	placeAbout, err := tool.placeAboutFor("https://www.google.com/maps/place/Boucherie+Union+Square/data=!4m7!3m6!1s0x89c259a1ec5f5573:0x2fc6687f46f682d5!8m2!3d40.7372552!4d-73.9882246!16s%2Fg%2F11hbv5rh0_!19sChIJc1Vf7KFZwokR1YL2Rn9oxi8?authuser=0&hl=en&rclk=1")
 	if err != nil {
-		t.Errorf("PlaceDetailsFor() error =   %v", err)
+		t.Errorf("PlaceDetailsFor() error = %v", err)
 	}
 
 	fmt.Printf("%+v\n", *placeAbout)
