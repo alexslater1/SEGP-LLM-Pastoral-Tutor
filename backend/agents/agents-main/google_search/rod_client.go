@@ -1,6 +1,7 @@
 package googleSearch
 
 import (
+	"fmt"
 	"net/url"
 	"time"
 
@@ -61,7 +62,18 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 			switch action.Type() {
 			case ActionTypeClick:
 				clickAction := action.(*ClickAction)
-				page.MustElement(clickAction.Element).MustClick()
+
+				if clickAction.Eq == nil {
+					page.MustElement(clickAction.Element).MustClick()
+					continue
+				}
+
+				elems := page.MustElements(clickAction.Element)
+				if *clickAction.Eq >= len(elems) {
+					error = fmt.Errorf("element not found, len == %d", len(elems))
+					return
+				}
+				elems[*clickAction.Eq].MustClick()
 
 			case ActionTypeWait:
 				waitAction := action.(*WaitAction)

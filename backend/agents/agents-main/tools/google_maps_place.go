@@ -71,6 +71,21 @@ func (g *GoogleMapsPlaceTool) placeOverviewFor(googleMapsPlaceURL string) (*Plac
 	return parsePlaceOverview(html)
 }
 
+func (g *GoogleMapsPlaceTool) placeAboutFor(googleMapsPlaceURL string) (*PlaceAbout, error) {
+	actions := []googleSearch.Action{
+		googleSearch.NewClickActionCloseGoogleCookies(),
+		googleSearch.NewClickAction("button.hh2c6.G7m0Af").Nth(2),
+		googleSearch.NewWaitElementAction("div.m6QErb.DxyBCb.kA9KIf.dS8AEf.XiKgde.d2JYHf"),
+	}
+
+	html, err := g.googleSearchClient.HtmlFromURL(googleMapsPlaceURL, actions...)
+	if err != nil {
+		return nil, err
+	}
+
+	return parsePlaceAbouts(html)
+}
+
 type PlaceDetails struct {
 	Overview PlaceOverview
 	About    PlaceAbout

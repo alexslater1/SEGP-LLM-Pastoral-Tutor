@@ -20,10 +20,16 @@ type Action interface {
 
 type ClickAction struct {
 	Element string
+	Eq      *int
 }
 
 func (c *ClickAction) Type() ActionType {
 	return ActionTypeClick
+}
+
+func (c *ClickAction) Nth(n int) *ClickAction {
+	c.Eq = &n
+	return c
 }
 
 func NewClickAction(element string) *ClickAction {
