@@ -38,7 +38,10 @@ func (g *GoolgeMapsResultsTool) Definition() ToolDefinition {
 }
 
 func (g *GoolgeMapsResultsTool) GoogleMapsResultsFor(query string) (*string, error) {
-	html, err := g.googleSearchClient.HtmlFromUrlCloseCookies("https://www.google.com/maps/search/" + url.QueryEscape(query))
+	actions := []googleSearch.Action{
+		googleSearch.NewClickAction(".UywwFc-LgbsSe.UywwFc-LgbsSe-OWXEXe-dgl2Hf.XWZjwc"),
+	}
+	html, err := g.googleSearchClient.HtmlFromURL("https://www.google.com/maps/search/"+url.QueryEscape(query), actions...)
 	if err != nil {
 		return nil, err
 	}

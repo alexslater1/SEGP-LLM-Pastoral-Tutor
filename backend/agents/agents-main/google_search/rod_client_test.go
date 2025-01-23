@@ -24,22 +24,12 @@ func TestRodClientHtmlFromURL(t *testing.T) {
 		t.Skip("skipping test in CI")
 	}
 
-	url := "https://www.ethanhosier.com/"
-	client := NewRodClient()
-	html, err := client.HtmlFromURL(url)
-	if err != nil {
-		t.Fatal(err)
+	url := "https://www.google.com/maps"
+	actions := []Action{
+		NewClickAction(".UywwFc-LgbsSe.UywwFc-LgbsSe-OWXEXe-dgl2Hf.XWZjwc"),
 	}
-	t.Log(*html)
-}
-
-func TestRodClientHtmlFromUrlCloseCookies(t *testing.T) {
-	if os.Getenv("CICD") == "true" {
-		t.Skip("skipping test in CI")
-	}
-
 	client := NewNonHeadlessRodClient()
-	html, err := client.HtmlFromUrlCloseCookies("https://www.google.com/maps/search/restaurant+in+new+york")
+	html, err := client.HtmlFromURL(url, actions...)
 	if err != nil {
 		t.Fatal(err)
 	}
