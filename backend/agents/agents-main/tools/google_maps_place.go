@@ -59,8 +59,10 @@ func (g *GoogleMapsPlaceTool) placeOverviewFor(googleMapsPlaceURL string) (*Plac
 	}
 
 	actions := []googleSearch.Action{
-		googleSearch.NewClickAction(".UywwFc-LgbsSe.UywwFc-LgbsSe-OWXEXe-dgl2Hf.XWZjwc"),
+		googleSearch.NewClickActionCloseGoogleCookies(),
+		googleSearch.NewWaitElementAction("h1.DUwDvf.lfPIob"),
 	}
+
 	html, err := g.googleSearchClient.HtmlFromURL(googleMapsPlaceURL, actions...)
 	if err != nil {
 		return nil, err

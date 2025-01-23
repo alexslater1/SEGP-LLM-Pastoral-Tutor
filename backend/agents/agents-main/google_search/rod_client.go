@@ -62,6 +62,15 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 			case ActionTypeClick:
 				clickAction := action.(*ClickAction)
 				page.MustElement(clickAction.Element).MustClick()
+
+			case ActionTypeWait:
+				waitAction := action.(*WaitAction)
+				if waitAction.Element != nil {
+					page.MustElement(*waitAction.Element).MustWaitVisible()
+				}
+				if waitAction.Duration != nil {
+					time.Sleep(*waitAction.Duration)
+				}
 			}
 		}
 

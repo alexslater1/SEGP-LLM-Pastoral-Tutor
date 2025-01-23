@@ -24,9 +24,10 @@ func TestRodClientHtmlFromURL(t *testing.T) {
 		t.Skip("skipping test in CI")
 	}
 
-	url := "https://www.google.com/maps"
+	url := "https://www.google.com/maps/place/Boucherie+Union+Square/data=!4m7!3m6!1s0x89c259a1ec5f5573:0x2fc6687f46f682d5!8m2!3d40.7372552!4d-73.9882246!16s%2Fg%2F11hbv5rh0_!19sChIJc1Vf7KFZwokR1YL2Rn9oxi8?authuser=0&hl=en&rclk=1"
 	actions := []Action{
-		NewClickAction(".UywwFc-LgbsSe.UywwFc-LgbsSe-OWXEXe-dgl2Hf.XWZjwc"),
+		NewClickActionCloseGoogleCookies(),
+		NewWaitElementAction("h1.DUwDvf.lfPIob"),
 	}
 	client := NewNonHeadlessRodClient()
 	html, err := client.HtmlFromURL(url, actions...)
