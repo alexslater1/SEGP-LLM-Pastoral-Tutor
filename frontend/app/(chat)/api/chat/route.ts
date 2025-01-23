@@ -93,7 +93,7 @@ export async function POST(request: Request) {
 
   await saveMessages({
     messages: [
-      { ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id },
+      { ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id, annotations: [] },
     ],
   });
 
@@ -547,6 +547,11 @@ export async function POST(request: Request) {
                       chatId: id,
                       role: message.role,
                       content: messageContent,
+                      annotations: [{
+                        messageIdFromServer: messageId,
+                        message: messageContent,
+                        pastMessage: true,
+                      }],
                       createdAt: new Date(),
                     };
                   },

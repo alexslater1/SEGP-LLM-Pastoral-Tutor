@@ -4,6 +4,7 @@ import type {
   CoreToolMessage,
   Message,
   ToolInvocation,
+  JSONValue
 } from 'ai';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -119,6 +120,7 @@ export function convertToUIMessages(
       id: message.id,
       role: message.role as Message['role'],
       content: textContent,
+      annotations: message.annotations as JSONValue[],
       toolInvocations,
     });
 
@@ -230,7 +232,7 @@ export function getMessageAnnotationContent(message: Message) {
       pastMessage: boolean;
     };
     const [{ messageIdFromServer, message: messageContent, pastMessage }] = 
-      message.annotations as MessageObject[] || [{ messageIdFromServer: "", message: "", pastMessage: true }];
+      message.annotations as MessageObject[] || [{ messageIdFromServer: "", message: "", pastMessage: false }];
     if (pastMessage) {
       return message.content;
     } else if (messageIdFromServer == "") {
