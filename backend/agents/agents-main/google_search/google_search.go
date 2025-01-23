@@ -44,6 +44,7 @@ func NewClickActionCloseGoogleCookies() *ClickAction {
 type WaitAction struct {
 	Element  *string
 	Duration *time.Duration
+	Timeout  *time.Duration
 }
 
 func NewWaitAction(element string, duration time.Duration) *WaitAction {
@@ -60,6 +61,11 @@ func NewWaitElementAction(element string) *WaitAction {
 
 func (w *WaitAction) Type() ActionType {
 	return ActionTypeWait
+}
+
+func (w *WaitAction) WithTimeout(timeout time.Duration) *WaitAction {
+	w.Timeout = &timeout
+	return w
 }
 
 type NavigateAction struct {

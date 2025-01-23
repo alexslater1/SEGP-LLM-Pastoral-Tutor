@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	googleSearch "github.com/segp/agents-main/google_search"
+	"github.com/segp/agents-main/utils"
 )
 
 type GoogleMapsPlaceTool struct {
@@ -45,17 +47,26 @@ func (g *GoogleMapsPlaceTool) PlaceDetailsFor(googleMapsPlaceURL string) (*strin
 }
 
 func (g *GoogleMapsPlaceTool) placeDetailsFor(googleMapsPlaceURL string) (*PlaceDetails, error) {
-	placeOverview, err := g.placeOverviewFor(googleMapsPlaceURL)
-	if err != nil {
-		return nil, err
-	}
 
-	placeAbout, err := g.placeAboutFor(googleMapsPlaceURL)
-	if err != nil {
-		return nil, err
-	}
+	placeOverviewTask := utils.DoAsync(func() (*PlaceOverview, error) {
+		return g.placeOverviewFor(googleMapsPlaceURL)
+	})
+
+	placeAboutTask := utils.DoAsync(func() (*PlaceAbout, error) {
+		return g.placeAboutFor(googleMapsPlaceURL)
+	})
 
 	placeReviews, err := g.placeReviewsFor(googleMapsPlaceURL)
+	if err != nil {
+		return nil, err
+	}
+
+	placeOverview, err := utils.GetAsync(placeOverviewTask)
+	if err != nil {
+		return nil, err
+	}
+
+	placeAbout, err := utils.GetAsync(placeAboutTask)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +80,6 @@ func (g *GoogleMapsPlaceTool) placeOverviewFor(googleMapsPlaceURL string) (*Plac
 	}
 
 	actions := []googleSearch.Action{
-		googleSearch.NewClickActionCloseGoogleCookies(),
 		googleSearch.NewWaitElementAction("h1.DUwDvf.lfPIob"),
 	}
 
@@ -245,7 +255,7 @@ func (g *GoogleMapsPlaceTool) placeReviewsFor(googleMapsPlaceURL string) (*Googl
 	actions := []googleSearch.Action{
 		googleSearch.NewWaitElementAction("div.yx21af.lLU2pe.XDi3Bc"),
 		googleSearch.NewClickAction("button.hh2c6").Nth(1),
-		googleSearch.NewWaitElementAction("div.DU9Pgb"),
+		googleSearch.NewWaitElementAction("div.Upo0Ec.vmVquc").WithTimeout(2 * time.Second),
 	}
 
 	html, err := g.googleSearchClient.HtmlFromURL(googleMapsPlaceURL, actions...)

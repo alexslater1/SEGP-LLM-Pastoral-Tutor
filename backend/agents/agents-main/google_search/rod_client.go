@@ -2,6 +2,7 @@ package googleSearch
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"time"
 
@@ -95,7 +96,17 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 			case ActionTypeWait:
 				waitAction := action.(*WaitAction)
 				if waitAction.Element != nil {
-					page.MustElement(*waitAction.Element).MustWaitVisible()
+					err := rod.Try(func() {
+						if waitAction.Timeout == nil {
+							page.MustElement(*waitAction.Element).MustWaitVisible()
+						} else {
+							page.MustElement(*waitAction.Element).Timeout(*waitAction.Timeout).MustWaitVisible()
+						}
+					})
+					if err != nil {
+						log.Println("Warning: timeout waiting for element")
+						continue
+					}
 				}
 				if waitAction.Duration != nil {
 					time.Sleep(*waitAction.Duration)
