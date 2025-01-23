@@ -1,4 +1,6 @@
 import {
+  CoreUserMessage,
+  CoreMessage,
   type Message,
   convertToCoreMessages,
   createDataStreamResponse,
@@ -30,6 +32,7 @@ import {
   generateUUID,
   getMostRecentUserMessage,
   sanitizeResponseMessages,
+  getMessageAnnotationContent,
 } from '@/lib/utils';
 
 import { generateTitleFromUserMessage } from '../../actions';
@@ -94,6 +97,42 @@ export async function POST(request: Request) {
     ],
   });
 
+  async function makeCompletion(previousMessages: Message[], userMessage: CoreUserMessage): Promise<string> {
+  type CompletionResponse = {
+    response: string;
+    reason: string;
+  }
+  try {
+    let query = "Previous messages (oldest to most recent): " + previousMessages.slice(0, -1).map(message => {
+      if (message.role == "user") {
+        return "User: " + message.content;
+      } else {
+        return "Assistant: " + getMessageAnnotationContent(message);
+      }
+    }).join("\n");
+    query += "\nMost recent user message to respond and answer to now: " + userMessage.content;
+
+    const response = await fetch(process.env.BACKEND_URL || "", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: query
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return (await response.json() as CompletionResponse).response;
+  } catch (error) {
+    console.error('Error:', error);
+    return "Error fetching from backend";
+  }
+}
+
   return createDataStreamResponse({
     execute: (dataStream) => {
       dataStream.writeData({
@@ -101,7 +140,7 @@ export async function POST(request: Request) {
         content: userMessageId,
       });
 
-      const result = streamText({
+      /*const result = streamText({
         model: customModel(model.apiIdentifier),
         system: systemPrompt,
         messages: coreMessages,
@@ -466,6 +505,52 @@ export async function POST(request: Request) {
                     };
                   },
                 ),
+              });
+            } catch (error) {
+              console.error('Failed to save chat');
+            }
+          }
+        },
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: 'stream-text',
+        },
+      }); */
+
+      const result = streamText({
+        model: customModel(model.apiIdentifier),
+        system: systemPrompt,
+        messages: coreMessages,
+        onFinish: async ({ response }) => {
+          if (session.user?.id) {
+            try {
+              const responseMessagesWithoutIncompleteToolCalls =
+                sanitizeResponseMessages(response.messages);
+
+              await saveMessages({
+                messages: await Promise.all(responseMessagesWithoutIncompleteToolCalls.map(
+                  async (message) => {
+                    const messageId = generateUUID();
+
+                    let messageContent = await makeCompletion(messages, userMessage);
+
+                    if (message.role === 'assistant') {
+                      dataStream.writeMessageAnnotation({
+                        messageIdFromServer: messageId,
+                        message: messageContent,
+                        pastMessage: false,
+                      });
+                    }
+
+                    return {
+                      id: messageId,
+                      chatId: id,
+                      role: message.role,
+                      content: messageContent,
+                      createdAt: new Date(),
+                    };
+                  },
+                )),
               });
             } catch (error) {
               console.error('Failed to save chat');
