@@ -55,7 +55,12 @@ func (g *GoogleMapsPlaceTool) placeDetailsFor(googleMapsPlaceURL string) (*Place
 		return nil, err
 	}
 
-	return &PlaceDetails{Overview: *placeOverview, About: *placeAbout}, nil
+	placeReviews, err := g.placeReviewsFor(googleMapsPlaceURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PlaceDetails{Overview: *placeOverview, About: *placeAbout, Reviews: *placeReviews}, nil
 }
 
 func (g *GoogleMapsPlaceTool) placeOverviewFor(googleMapsPlaceURL string) (*PlaceOverview, error) {
@@ -93,6 +98,7 @@ func (g *GoogleMapsPlaceTool) placeAboutFor(googleMapsPlaceURL string) (*PlaceAb
 type PlaceDetails struct {
 	Overview PlaceOverview
 	About    PlaceAbout
+	Reviews  GoogleMapsPlaceReviews
 }
 
 type PlaceAbout struct {
@@ -215,4 +221,66 @@ func verifyIsGoogleMapsPlaceURL(URL string) error {
 	}
 
 	return nil
+}
+
+type GoogleMapsPlaceReviews struct {
+	Rating     string
+	NumReviews string
+	Tags       []GoogleMapsPlaceReviewsTag
+	Reviews    []GoogleMapsPlaceReviewsReview
+}
+
+type GoogleMapsPlaceReviewsTag struct {
+	Tag   string
+	Count string
+}
+
+type GoogleMapsPlaceReviewsReview struct {
+	TimeAgo     string
+	Description string
+}
+
+func (g *GoogleMapsPlaceTool) placeReviewsFor(googleMapsPlaceURL string) (*GoogleMapsPlaceReviews, error) {
+	actions := []googleSearch.Action{
+		googleSearch.NewWaitElementAction("div.yx21af.lLU2pe.XDi3Bc"),
+		googleSearch.NewClickAction("button.hh2c6").Nth(1),
+		googleSearch.NewWaitElementAction("div.DU9Pgb"),
+	}
+
+	html, err := g.googleSearchClient.HtmlFromURL(googleMapsPlaceURL, actions...)
+	if err != nil {
+		return nil, err
+	}
+
+	return parsePlaceReviews(html)
+}
+
+func parsePlaceReviews(html *string) (*GoogleMapsPlaceReviews, error) {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(*html))
+	if err != nil {
+		return nil, err
+	}
+
+	tags := []GoogleMapsPlaceReviewsTag{}
+	doc.Find("div.KNfEk.aUjao").Each(func(i int, s *goquery.Selection) {
+		tags = append(tags, GoogleMapsPlaceReviewsTag{
+			Tag:   cleanString(s.Find("span.uEubGf.fontBodyMedium").Text()),
+			Count: cleanString(s.Find("span.bC3Nkc.fontBodySmall").Text()),
+		})
+	})
+
+	reviews := []GoogleMapsPlaceReviewsReview{}
+	doc.Find("div.GHT2ce").Each(func(i int, s *goquery.Selection) {
+		reviews = append(reviews, GoogleMapsPlaceReviewsReview{
+			TimeAgo:     cleanString(s.Find("span.rsqaWe").Text()),
+			Description: cleanString(s.Find("div.MyEned").Text()),
+		})
+	})
+
+	return &GoogleMapsPlaceReviews{
+		Rating:     cleanString(doc.Find("div.jANrlb div.fontDisplayLarge").Text()),
+		NumReviews: cleanString(doc.Find("div.F7nice span").First().Text()),
+		Tags:       tags,
+		Reviews:    reviews,
+	}, nil
 }
