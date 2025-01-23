@@ -50,7 +50,12 @@ func (g *GoogleMapsPlaceTool) placeDetailsFor(googleMapsPlaceURL string) (*Place
 		return nil, err
 	}
 
-	return &PlaceDetails{Overview: *placeOverview}, nil
+	placeAbout, err := g.placeAboutFor(googleMapsPlaceURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PlaceDetails{Overview: *placeOverview, About: *placeAbout}, nil
 }
 
 func (g *GoogleMapsPlaceTool) placeOverviewFor(googleMapsPlaceURL string) (*PlaceOverview, error) {
@@ -73,9 +78,8 @@ func (g *GoogleMapsPlaceTool) placeOverviewFor(googleMapsPlaceURL string) (*Plac
 
 func (g *GoogleMapsPlaceTool) placeAboutFor(googleMapsPlaceURL string) (*PlaceAbout, error) {
 	actions := []googleSearch.Action{
-		googleSearch.NewClickActionCloseGoogleCookies(),
-		googleSearch.NewClickAction("button.hh2c6.G7m0Af").Nth(2),
-		googleSearch.NewWaitElementAction("div.m6QErb.DxyBCb.kA9KIf.dS8AEf.XiKgde.d2JYHf"),
+		googleSearch.NewWaitElementAction("div.yx21af.lLU2pe.XDi3Bc"),
+		googleSearch.NewClickAction("button.hh2c6").Nth(2),
 	}
 
 	html, err := g.googleSearchClient.HtmlFromURL(googleMapsPlaceURL, actions...)

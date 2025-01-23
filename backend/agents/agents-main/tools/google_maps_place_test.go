@@ -65,3 +65,14 @@ func TestParsePlaceDetails(t *testing.T) {
 
 	fmt.Println(*placeDetails)
 }
+
+func TestPlaceAboutsFor(t *testing.T) {
+	tool := NewGoogleMapsPlaceTool(googleSearch.NewNonHeadlessRodClient())
+
+	placeAbout, err := tool.placeAboutFor("https://www.google.com/maps/place/Boucherie+Union+Square/data=!4m7!3m6!1s0x89c259a1ec5f5573:0x2fc6687f46f682d5!8m2!3d40.7372552!4d-73.9882246!16s%2Fg%2F11hbv5rh0_!19sChIJc1Vf7KFZwokR1YL2Rn9oxi8?authuser=0&hl=en&rclk=1")
+	if err != nil {
+		t.Errorf("PlaceDetailsFor() error = %v", err)
+	}
+
+	fmt.Printf("%+v\n", *placeAbout)
+}

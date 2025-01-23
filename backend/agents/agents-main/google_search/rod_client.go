@@ -59,6 +59,7 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 		defer page.Close()
 
 		for _, action := range actions {
+			fmt.Printf("action: %+v\n", action)
 			switch action.Type() {
 			case ActionTypeClick:
 				clickAction := action.(*ClickAction)
