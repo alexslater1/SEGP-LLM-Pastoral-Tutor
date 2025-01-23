@@ -85,6 +85,7 @@ func (g *GoogleMapsPlaceTool) placeAboutFor(googleMapsPlaceURL string) (*PlaceAb
 	actions := []googleSearch.Action{
 		googleSearch.NewWaitElementAction("div.yx21af.lLU2pe.XDi3Bc"),
 		googleSearch.NewClickAction("button.hh2c6").Nth(2),
+		googleSearch.NewWaitElementAction("div.iP2t7d.fontBodyMedium"),
 	}
 
 	html, err := g.googleSearchClient.HtmlFromURL(googleMapsPlaceURL, actions...)

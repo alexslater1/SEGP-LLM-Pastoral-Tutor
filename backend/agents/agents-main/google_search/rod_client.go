@@ -25,19 +25,35 @@ type RodClient struct {
 	browser *rod.Browser
 }
 
-func NewRodClient() *RodClient {
-
-	return &RodClient{
-		browser: rod.New().MustConnect(),
+func NewRodClient(browser ...*rod.Browser) *RodClient {
+	var b *rod.Browser
+	if len(browser) > 0 {
+		b = browser[0]
+	} else {
+		b = rod.New().MustConnect()
 	}
+
+	rc := &RodClient{
+		browser: b,
+	}
+
+	err := rc.setup()
+	if err != nil {
+		panic(err)
+	}
+
+	return rc
+}
+
+func (r *RodClient) setup() error {
+	_, err := r.htmlFromURL("https://www.google.com/maps", NewClickActionCloseGoogleCookies())
+	return err
 }
 
 func NewNonHeadlessRodClient() *RodClient {
 	l := launcher.New().Headless(false)
 
-	return &RodClient{
-		browser: rod.New().ControlURL(l.MustLaunch()).MustConnect(),
-	}
+	return NewRodClient(rod.New().ControlURL(l.MustLaunch()).MustConnect())
 }
 
 func (r *RodClient) HtmlFromQuery(query string) (*string, error) {
