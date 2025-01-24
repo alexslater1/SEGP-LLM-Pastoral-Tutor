@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 type StorageTableName string
@@ -18,18 +20,26 @@ type Storage interface {
 	getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error)
 }
 
-func Get[T StorageType](storage Storage, id string) (T, error) {
+func Get[T StorageType](storage Storage, id string) (*T, error) {
 	var t T
+
 	data, err := storage.get(t.TableName(), id)
 	if err != nil {
-		return t, err
+		return nil, err
 	}
 
-	resultT, ok := data.(T)
-	if !ok {
-		return t, fmt.Errorf("failed to convert result to required type")
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal data to JSON: %v", err)
 	}
-	return resultT, nil
+
+	ret := new(T)
+	err = json.Unmarshal(jsonData, ret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
+	}
+
+	return ret, nil
 }
 
 func GetAll[T StorageType](storage Storage, matchingFields map[string]string) ([]T, error) {
@@ -39,52 +49,72 @@ func GetAll[T StorageType](storage Storage, matchingFields map[string]string) ([
 		return nil, err
 	}
 
-	result := make([]T, len(data))
+	ret := make([]T, len(data))
 	for i, d := range data {
-		resultT, ok := d.(T)
-		if !ok {
-			return nil, fmt.Errorf("failed to convert result to required type")
+		jsonData, err := json.Marshal(d)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal data to JSON: %v", err)
 		}
-		result[i] = resultT
+
+		err = json.Unmarshal(jsonData, &ret[i])
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
+		}
 	}
 
-	return result, nil
+	return ret, nil
 }
 
-func Store[T StorageType](storage Storage, data T) (T, error) {
+func Store[T StorageType](storage Storage, data T) (*T, error) {
 	var t T
-	result, err := storage.store(t.TableName(), data)
-	if err != nil {
-		return t, err
-	}
 
-	resultT, ok := result.(T)
-	if !ok {
-		return t, fmt.Errorf("failed to convert result to required type")
-	}
-
-	return resultT, nil
-}
-
-func StoreAll[T StorageType](storage Storage, data []T) ([]T, error) {
-	var t T
-	interfaceSlice := make([]interface{}, len(data))
-	for i, v := range data {
-		interfaceSlice[i] = v
-	}
-	result, err := storage.storeAll(t.TableName(), interfaceSlice)
+	d, err := storage.store(t.TableName(), data)
 	if err != nil {
 		return nil, err
 	}
 
-	resultT := make([]T, len(result))
-	for i, r := range result {
-		rt, ok := r.(T)
-		if !ok {
-			return nil, fmt.Errorf("failed to convert result to required type")
-		}
-		resultT[i] = rt
+	jsonData, err := json.Marshal(d)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal data to JSON: %v", err)
 	}
 
-	return resultT, nil
+	ret := new(T)
+	err = json.Unmarshal(jsonData, ret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
+	}
+
+	return ret, nil
+}
+
+func StoreAll[T StorageType](storage Storage, data ...T) ([]T, error) {
+	var t T
+
+	table := t.TableName()
+
+	// Convert []T to []interface{}
+	converted := make([]interface{}, len(data))
+	for i, v := range data {
+		converted[i] = v
+	}
+
+	ds, err := storage.storeAll(table, converted)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]T, len(ds))
+	for i, d := range ds {
+		jsonData, err := json.Marshal(d)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal data to JSON: %v", err)
+		}
+
+		err = json.Unmarshal(jsonData, &ret[i])
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
+		}
+	}
+
+	return ret, nil
 }

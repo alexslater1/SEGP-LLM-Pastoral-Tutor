@@ -1,227 +1,156 @@
 package storage
 
 import (
+	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type TestStruct struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+func parseResult[T StorageType](result interface{}) (*T, error) {
+	jsonResult, err := json.Marshal(result)
+	if err != nil {
+		return nil, err
+	}
+
+	var res T
+	err = json.Unmarshal(jsonResult, &res)
+	return &res, err
 }
 
-type TestStructWithDifferentTag struct {
-	ID   string `json:"id"`
-	Name string `json:"different_name"`
-}
-
-type TestStructWithoutTags struct {
-	ID   string
-	Name string
-}
-
-func TestMemoryStorage(t *testing.T) {
+func TestMemoryStorage_Store(t *testing.T) {
 	storage := NewMemoryStorage()
 
-	t.Run("store and get single item", func(t *testing.T) {
-		data := map[string]interface{}{
-			"id":   "1",
-			"name": "test",
+	t.Run("stores data with existing ID", func(t *testing.T) {
+		req := AgentRequest{
+			ID:       "test-id",
+			Endpoint: "test-endpoint",
 		}
 
-		// Test store
-		_, err := storage.store(StorageTableNameAgentRequests, data)
-		if err != nil {
-			t.Errorf("Failed to store: %v", err)
-		}
+		result, err := storage.store(req.TableName(), req)
+		assert.NoError(t, err)
 
-		// Test get
-		retrieved, err := storage.get(StorageTableNameAgentRequests, "1")
-		if err != nil {
-			t.Errorf("Failed to get: %v", err)
-		}
-
-		retrievedMap := retrieved.(map[string]interface{})
-		if retrievedMap["id"] != "1" || retrievedMap["name"] != "test" {
-			t.Errorf("Retrieved data doesn't match stored data")
-		}
+		res, err := parseResult[AgentRequest](result)
+		assert.NoError(t, err)
+		assert.Equal(t, req.ID, res.ID)
+		assert.Equal(t, req.Endpoint, res.Endpoint)
 	})
 
-	t.Run("store and get multiple items", func(t *testing.T) {
-		data := []interface{}{
-			map[string]interface{}{
-				"id":   "2",
-				"name": "test2",
-			},
-			map[string]interface{}{
-				"id":   "3",
-				"name": "test3",
-			},
+	t.Run("generates ID when none provided", func(t *testing.T) {
+		req := AgentRequest{
+			Endpoint: "test-endpoint",
 		}
 
-		// Test storeAll
-		stored, err := storage.storeAll(StorageTableNameAgentRequests, data)
-		if err != nil {
-			t.Errorf("Failed to store multiple: %v", err)
-		}
-		if len(stored) != 2 {
-			t.Errorf("Expected 2 items stored, got %d", len(stored))
-		}
+		result, err := storage.store(req.TableName(), req)
+		assert.NoError(t, err)
 
-		// Test getAll with no filter
-		retrieved, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{})
-		if err != nil {
-			t.Errorf("Failed to get all: %v", err)
-		}
-		if len(retrieved) != 3 { // Including the previous test's item
-			t.Errorf("Expected 3 items retrieved, got %d", len(retrieved))
-		}
+		res, err := parseResult[AgentRequest](result)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.ID) // ID should be generated
+		assert.Equal(t, req.Endpoint, res.Endpoint)
 	})
 
-	t.Run("getAll with filter", func(t *testing.T) {
-		retrieved, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{"name": "test2"})
-		if err != nil {
-			t.Errorf("Failed to get filtered: %v", err)
-		}
-		if len(retrieved) != 1 {
-			t.Errorf("Expected 1 filtered item, got %d", len(retrieved))
-		}
-
-		retrievedMap := retrieved[0].(map[string]interface{})
-		if retrievedMap["name"] != "test2" {
-			t.Errorf("Retrieved filtered data doesn't match expected")
-		}
-	})
-
-	t.Run("get non-existent item", func(t *testing.T) {
-		_, err := storage.get(StorageTableNameAgentRequests, "nonexistent")
-		if err == nil {
-			t.Error("Expected error when getting non-existent item")
-		}
-	})
-
-	t.Run("store invalid data", func(t *testing.T) {
-		invalidData := map[string]interface{}{
-			"name": "test", // Missing ID
-		}
-		_, err := storage.store(StorageTableNameAgentRequests, invalidData)
-		if err == nil {
-			t.Error("Expected error when storing data without ID")
-		}
+	t.Run("handles nil data", func(t *testing.T) {
+		_, err := storage.store(StorageTableNameAgentRequests, nil)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "data cannot be nil")
 	})
 }
 
-func TestMemoryStorageWithStructs(t *testing.T) {
+func TestMemoryStorage_Get(t *testing.T) {
 	storage := NewMemoryStorage()
 
-	t.Run("store and get struct", func(t *testing.T) {
-		data := TestStruct{
-			ID:   "struct1",
-			Name: "test struct",
+	t.Run("retrieves stored data", func(t *testing.T) {
+		req := AgentRequest{
+			ID:       "test-id",
+			Endpoint: "test-endpoint",
 		}
 
-		// Test store
-		_, err := storage.store(StorageTableNameAgentRequests, data)
-		if err != nil {
-			t.Errorf("Failed to store struct: %v", err)
+		// Store the data first
+		_, err := storage.store(req.TableName(), req)
+		assert.NoError(t, err)
+
+		// Retrieve the data
+		result, err := storage.get(req.TableName(), req.ID)
+		assert.NoError(t, err)
+
+		res, err := parseResult[AgentRequest](result)
+		assert.NoError(t, err)
+
+		assert.Equal(t, req.ID, res.ID)
+		assert.Equal(t, req.Endpoint, res.Endpoint)
+	})
+
+	t.Run("returns error for non-existent ID", func(t *testing.T) {
+		_, err := storage.get(StorageTableNameAgentRequests, "non-existent-id")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "item not found")
+	})
+}
+
+func TestMemoryStorage_StoreAll(t *testing.T) {
+	storage := NewMemoryStorage()
+
+	t.Run("stores multiple items", func(t *testing.T) {
+		reqs := []interface{}{
+			AgentRequest{ID: "id1", Endpoint: "endpoint1"},
+			AgentRequest{Endpoint: "endpoint2"}, // No ID, should be generated
 		}
 
-		// Test get
-		retrieved, err := storage.get(StorageTableNameAgentRequests, "struct1")
-		if err != nil {
-			t.Errorf("Failed to get struct: %v", err)
+		results, err := storage.storeAll(StorageTableNameAgentRequests, reqs)
+		assert.NoError(t, err)
+		assert.Len(t, results, 2)
+
+		var parsedResults []*AgentRequest
+
+		for _, result := range results {
+			res, err := parseResult[AgentRequest](result)
+			assert.NoError(t, err)
+			parsedResults = append(parsedResults, res)
 		}
 
-		// Convert retrieved data to map for comparison
-		retrievedMap, err := structToMap(retrieved)
-		if err != nil {
-			t.Errorf("Failed to convert retrieved data to map: %v", err)
-		}
+		assert.Equal(t, "id1", parsedResults[0].ID)
+		assert.Equal(t, "endpoint1", parsedResults[0].Endpoint)
+		assert.NotEmpty(t, parsedResults[1].ID)
+		assert.Equal(t, "endpoint2", parsedResults[1].Endpoint)
+	})
 
-		if retrievedMap["id"] != "struct1" || retrievedMap["name"] != "test struct" {
-			t.Errorf("Retrieved struct data doesn't match stored data")
+}
+
+func TestMemoryStorage_GetAll(t *testing.T) {
+	storage := NewMemoryStorage()
+
+	// Store some test data
+	reqs := []AgentRequest{
+		{ID: "id1", Endpoint: "endpoint1"},
+		{ID: "id2", Endpoint: "endpoint2"},
+		{ID: "id3", Endpoint: "endpoint1"},
+	}
+
+	for _, req := range reqs {
+		_, err := storage.store(req.TableName(), req)
+		assert.NoError(t, err)
+	}
+
+	t.Run("retrieves all matching records", func(t *testing.T) {
+		results, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{
+			"endpoint": "endpoint1",
+		})
+		assert.NoError(t, err)
+		assert.Len(t, results, 2) // Should find two records with endpoint1
+
+		for _, result := range results {
+			res, err := parseResult[AgentRequest](result)
+			assert.NoError(t, err)
+			assert.Equal(t, "endpoint1", res.Endpoint)
 		}
 	})
 
-	t.Run("store and get multiple structs", func(t *testing.T) {
-		data := []interface{}{
-			TestStruct{
-				ID:   "struct2",
-				Name: "test struct 2",
-			},
-			TestStruct{
-				ID:   "struct3",
-				Name: "test struct 3",
-			},
-		}
-
-		// Test storeAll
-		stored, err := storage.storeAll(StorageTableNameAgentRequests, data)
-		if err != nil {
-			t.Errorf("Failed to store multiple structs: %v", err)
-		}
-		if len(stored) != 2 {
-			t.Errorf("Expected 2 structs stored, got %d", len(stored))
-		}
-
-		// Test getAll with name filter
-		retrieved, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{"name": "test struct 2"})
-		if err != nil {
-			t.Errorf("Failed to get filtered structs: %v", err)
-		}
-		if len(retrieved) != 1 {
-			t.Errorf("Expected 1 filtered struct, got %d", len(retrieved))
-		}
-	})
-
-	t.Run("store struct with different json tags", func(t *testing.T) {
-		data := TestStructWithDifferentTag{
-			ID:   "struct4",
-			Name: "test different tags",
-		}
-
-		// Test store
-		_, err := storage.store(StorageTableNameAgentRequests, data)
-		if err != nil {
-			t.Errorf("Failed to store struct with different tags: %v", err)
-		}
-
-		// Test get and verify the field mapping
-		retrieved, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{"different_name": "test different tags"})
-		if err != nil {
-			t.Errorf("Failed to get struct with different tags: %v", err)
-		}
-		if len(retrieved) != 1 {
-			t.Errorf("Expected 1 struct with matching different_name, got %d", len(retrieved))
-		}
-	})
-
-	t.Run("store struct without json tags", func(t *testing.T) {
-		data := TestStructWithoutTags{
-			ID:   "struct5",
-			Name: "test no tags",
-		}
-
-		// Test store - we expect this to fail
-		_, err := storage.store(StorageTableNameAgentRequests, data)
-		if err == nil {
-			t.Error("Expected error when storing struct without JSON tags")
-		}
-
-		// Since store should fail, we don't need to test retrieval
-	})
-
-	t.Run("store invalid struct without ID", func(t *testing.T) {
-		type InvalidStruct struct {
-			Name string `json:"name"`
-		}
-
-		data := InvalidStruct{
-			Name: "test invalid",
-		}
-
-		_, err := storage.store(StorageTableNameAgentRequests, data)
-		if err == nil {
-			t.Error("Expected error when storing struct without ID field")
-		}
+	t.Run("returns empty slice for no matches", func(t *testing.T) {
+		results, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{
+			"endpoint": "non-existent",
+		})
+		assert.NoError(t, err)
+		assert.Empty(t, results)
 	})
 }
