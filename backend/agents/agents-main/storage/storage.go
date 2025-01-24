@@ -4,10 +4,6 @@ import (
 	"fmt"
 )
 
-type StorageType interface {
-	TableName() TableName
-}
-
 type TableName string
 
 const (
