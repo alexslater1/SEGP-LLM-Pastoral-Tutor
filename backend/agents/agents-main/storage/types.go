@@ -1,5 +1,10 @@
 package storage
 
 type StorageType interface {
-	TableName() TableName
+	TableName() StorageTableName
+}
+
+type AgentRequest struct {
+	ID       *string `json:"id,omitempty"`
+	Endpoint string  `json:"endpoint"`
 }

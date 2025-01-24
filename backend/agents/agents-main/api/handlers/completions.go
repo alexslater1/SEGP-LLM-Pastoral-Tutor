@@ -21,7 +21,7 @@ type ChatCompletionResponse struct {
 	Reason   string `json:"reason"`
 }
 
-func ChatCompletion() http.HandlerFunc {
+func ChatCompletion(agent agent.Agent) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -33,8 +33,6 @@ func ChatCompletion() http.HandlerFunc {
 			http.Error(w, "query is required", http.StatusBadRequest)
 			return
 		}
-
-		agent := agent.NewDefaultReActAgent()
 
 		response, reason, err := agent.Run(req.Query)
 

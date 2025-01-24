@@ -95,14 +95,14 @@ type ReActAgent struct {
 	Knowledge   knowledge.Knowledge
 }
 
-func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], history history.History, knowledge knowledge.Knowledge) *ReActAgent {
+func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, mem memory.Memory[memory.ReActMemorySteps], history history.History, knowledge knowledge.Knowledge) *ReActAgent {
 	// TODO: add check for no_tool tool
 
 	return &ReActAgent{
 		Background:  background,
 		ToolHandler: toolHandler,
 		LLM:         llm,
-		Memory:      memory,
+		Memory:      memory.NewReActMemory(), // TODO: use the one passed in
 		History:     history,
 		Knowledge:   knowledge,
 	}

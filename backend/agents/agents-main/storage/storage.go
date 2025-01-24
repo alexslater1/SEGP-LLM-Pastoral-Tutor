@@ -4,18 +4,18 @@ import (
 	"fmt"
 )
 
-type TableName string
+type StorageTableName string
 
 const (
-	TableNameAgents TableName = "agents"
+	StorageTableNameAgentRequests StorageTableName = "agent_requests"
 )
 
 type Storage interface {
-	store(table TableName, data interface{}) (interface{}, error)
-	storeAll(table TableName, data []interface{}) ([]interface{}, error)
+	store(table StorageTableName, data interface{}) (interface{}, error)
+	storeAll(table StorageTableName, data []interface{}) ([]interface{}, error)
 
-	get(table TableName, id string) (interface{}, error)
-	getAll(table TableName, matchingFields map[string]string) ([]interface{}, error)
+	get(table StorageTableName, id string) (interface{}, error)
+	getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error)
 }
 
 func Get[T StorageType](storage Storage, id string) (T, error) {

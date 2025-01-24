@@ -17,7 +17,7 @@ func NewSupabaseStorage(supabaseUrl, supabaseServiceKey string) *SupabaseStorage
 	}
 }
 
-func (s *SupabaseStorage) store(table TableName, data interface{}) (interface{}, error) {
+func (s *SupabaseStorage) store(table StorageTableName, data interface{}) (interface{}, error) {
 	var result []interface{}
 	err := s.client.DB.From(string(table)).Insert(data).Execute(&result)
 
@@ -28,7 +28,7 @@ func (s *SupabaseStorage) store(table TableName, data interface{}) (interface{},
 	return result, nil
 }
 
-func (s *SupabaseStorage) storeAll(table TableName, data []interface{}) ([]interface{}, error) {
+func (s *SupabaseStorage) storeAll(table StorageTableName, data []interface{}) ([]interface{}, error) {
 	var result []interface{}
 	err := s.client.DB.From(string(table)).Insert(data).Execute(&result)
 
@@ -39,7 +39,7 @@ func (s *SupabaseStorage) storeAll(table TableName, data []interface{}) ([]inter
 	return result, nil
 }
 
-func (s *SupabaseStorage) get(table TableName, id string) (interface{}, error) {
+func (s *SupabaseStorage) get(table StorageTableName, id string) (interface{}, error) {
 	var result []interface{}
 	err := s.client.DB.From(string(table)).Select("*").Eq("id", id).Execute(&result)
 
@@ -50,7 +50,7 @@ func (s *SupabaseStorage) get(table TableName, id string) (interface{}, error) {
 	return result, nil
 }
 
-func (s *SupabaseStorage) getAll(table TableName, matchingFields map[string]string) ([]interface{}, error) {
+func (s *SupabaseStorage) getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error) {
 	var results []interface{}
 
 	query := s.client.DB.From(string(table)).Select("*")

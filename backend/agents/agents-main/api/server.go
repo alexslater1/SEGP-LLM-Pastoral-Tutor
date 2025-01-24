@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api/handlers"
 )
 
@@ -24,9 +25,9 @@ func NewServer(listenAddr string) *Server {
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Allow CORS
-		w.Header().Set("Access-Control-Allow-Origin", "*") // Frontend URL
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")                              // Allowed methods
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")                            // Include Authorization header
+		w.Header().Set("Access-Control-Allow-Origin", "*")                            // Frontend URL
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")   // Allowed methods
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization") // Include Authorization header
 
 		if r.Method == http.MethodOptions {
 			// Respond to preflight requests
@@ -39,7 +40,7 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 }
 
 func (s *Server) routes() {
-	s.router.HandleFunc("POST /completion", handlers.ChatCompletion())
+	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent.NewDefaultReActAgent()))
 }
 
 func (s *Server) Start() error {
