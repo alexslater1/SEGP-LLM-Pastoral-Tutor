@@ -45,7 +45,7 @@ func DoAsyncList[T any, U any](items []T, fn func(T) (U, error)) []*Task[U] {
 	return tasks
 }
 
-func GetAsync[T any](task *Task[T]) (T, error) {
+func (task *Task[T]) Get() (T, error) {
 	var zero T // This will initialize `zero` to the zero value for type T
 	select {
 	case result := <-task.ch:
@@ -59,7 +59,7 @@ func GetAsyncList[T any](tasks []*Task[T]) ([]T, error) {
 	results := make([]T, len(tasks))
 
 	for i, task := range tasks {
-		result, err := GetAsync(task)
+		result, err := task.Get()
 		if err != nil {
 			return nil, err
 		}

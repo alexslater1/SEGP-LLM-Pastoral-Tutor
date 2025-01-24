@@ -65,12 +65,12 @@ func (g *GoogleMapsPlaceTool) placeDetailsFor(googleMapsPlaceURL string) (*Place
 		return nil, err
 	}
 
-	placeOverview, err := utils.GetAsync(placeOverviewTask)
+	placeOverview, err := placeOverviewTask.Get()
 	if err != nil {
 		return nil, err
 	}
 
-	placeAbout, err := utils.GetAsync(placeAboutTask)
+	placeAbout, err := placeAboutTask.Get()
 	if err != nil {
 		return nil, err
 	}
