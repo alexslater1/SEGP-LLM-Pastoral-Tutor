@@ -20,6 +20,7 @@ const (
 	AgentCompletionRequestEventTypeAct     AgentCompletionRequestEventType = "Act"
 	AgentCompletionRequestEventTypeObserve AgentCompletionRequestEventType = "Observe"
 	AgentCompletionRequestEventTypeError   AgentCompletionRequestEventType = "Error"
+	AgentCompletionRequestEventTypeSuccess AgentCompletionRequestEventType = "Success"
 )
 
 type AgentCompletionRequestEvent struct {

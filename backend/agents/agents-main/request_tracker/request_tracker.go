@@ -90,6 +90,24 @@ func (rt *RequestTracker) NewCompletionErrorEvent(agentRequestsId string, err er
 	return data.ID, nil
 }
 
+func (rt *RequestTracker) NewCompletionSuccessEvent(agentRequestsId string, response *string, reason *string) (string, error) {
+	event := storage.AgentCompletionRequestEvent{
+		AgentRequestID: agentRequestsId,
+		Type:           storage.AgentCompletionRequestEventTypeError,
+		LLMResponse:    *response,
+		Metadata: map[string]interface{}{
+			"reason": *reason,
+		},
+	}
+
+	data, err := storage.Store(rt.store, event)
+	if err != nil {
+		return "", err
+	}
+
+	return data.ID, nil
+}
+
 func (rt *RequestTracker) LatestCompletionObservationEventFor(agentRequestId string) (*storage.AgentCompletionRequestEvent, error) {
 	panic("todo")
 }
