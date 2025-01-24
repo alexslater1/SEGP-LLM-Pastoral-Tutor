@@ -4,10 +4,10 @@ import (
 	"os"
 
 	googleSearch "github.com/segp/agents-main/google_search"
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/memory"
-	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
 )
 
@@ -20,9 +20,9 @@ func NewDefaultReActAgent() Agent {
 		toolHandler = tools.NewDefaultToolHandler(googleSearch.NewRodClient(), knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL")))
 		llm         = llm.NewDeepSeekLLM(os.Getenv("DEEPSEEK_API_KEY"))
 		memory      = memory.NewReActMemory()
-		storage     = storage.NewLocalStorage()
+		history     = history.NewLocalHistory()
 		knowledge   = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
-		agent       = NewReActAgent("You are a ReAct agent", toolHandler, llm, memory, storage, knowledge)
+		agent       = NewReActAgent("You are a ReAct agent", toolHandler, llm, memory, history, knowledge)
 	)
 
 	return agent

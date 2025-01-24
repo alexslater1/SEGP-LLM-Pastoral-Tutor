@@ -1,6 +1,7 @@
-package storage
+package history
 
-type Storage interface {
+type History interface {
 	GetChatHistory() ([]string, error)
 	AddChatHistory(chatHistory []string) error
 }
+

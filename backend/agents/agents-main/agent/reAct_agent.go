@@ -9,10 +9,10 @@ import (
 
 	"time"
 
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/memory"
-	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
 )
 
@@ -91,11 +91,11 @@ type ReActAgent struct {
 	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
 	Memory      memory.Memory[memory.ReActMemorySteps]
-	Storage     storage.Storage
+	History     history.History
 	Knowledge   knowledge.Knowledge
 }
 
-func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], storage storage.Storage, knowledge knowledge.Knowledge) *ReActAgent {
+func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, memory memory.Memory[memory.ReActMemorySteps], history history.History, knowledge knowledge.Knowledge) *ReActAgent {
 	// TODO: add check for no_tool tool
 
 	return &ReActAgent{
@@ -103,7 +103,7 @@ func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LL
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Memory:      memory,
-		Storage:     storage,
+		History:     history,
 		Knowledge:   knowledge,
 	}
 }
@@ -116,7 +116,7 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 	slog.Info("Starting logic loop for query", "query", query)
 	fmt.Println()
 
-	for i:=0;; i++ {
+	for i := 0; ; i++ {
 		mem, err := a.Memory.Get()
 		if err != nil {
 			return nil, nil, err
