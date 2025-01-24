@@ -19,13 +19,15 @@ const (
 	AgentCompletionRequestEventTypeThink   AgentCompletionRequestEventType = "Think"
 	AgentCompletionRequestEventTypeAct     AgentCompletionRequestEventType = "Act"
 	AgentCompletionRequestEventTypeObserve AgentCompletionRequestEventType = "Observe"
+	AgentCompletionRequestEventTypeError   AgentCompletionRequestEventType = "Error"
 )
 
 type AgentCompletionRequestEvent struct {
-	ID             string      `json:"id,omitempty"`
-	AgentRequestID string      `json:"agent_request_id"`
-	Type           string      `json:"type"`
-	Metadata       interface{} `json:"metadata"`
+	ID             string                          `json:"id,omitempty"`
+	AgentRequestID string                          `json:"agent_request_id"`
+	Type           AgentCompletionRequestEventType `json:"type"`
+	LLMResponse    string                          `json:"llm_response,omitempty"`
+	Metadata       interface{}                     `json:"metadata,omitempty"`
 }
 
 func (ac AgentCompletionRequestEvent) TableName() StorageTableName {
