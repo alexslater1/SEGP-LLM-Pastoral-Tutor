@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"sort"
 
 	"github.com/segp/agents-main/agent"
@@ -72,6 +73,8 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 			return
 		}
 
+		slog.Info("Created request", "request_id", createdReq.ID)
+
 		go func() {
 			response, reasoning, err := agent.Run(req.Query, createdReq.ID)
 			if err != nil {
@@ -123,30 +126,81 @@ func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
 }
 
 func chatCompletionV2StatusResponseFromEvents(events []storage.AgentEvent) *ChatCompletionV2StatusResponse {
-	if len(events) == 0 {
-		return &ChatCompletionV2StatusResponse{Type: ChatCompletionV2StatusResponseTypePending}
+	lastEvent := getLatestEvent(events, []string{"error", "tool_call_choice", "answer_success", "observation"})
+	if lastEvent == nil {
+		return newPendingResponse("Thinking")
 	}
 
-	// Sort events by timestamp (newest first)
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].CreatedAt.After(*events[j].CreatedAt)
+	switch lastEvent.Type {
+	case "error":
+		metadata := lastEvent.Metadata.(map[string]string)
+		return newErrorResponse(metadata["error"])
+
+	case "observation":
+		return newPendingResponse("Thinking")
+
+	case "answer_success":
+		metadata := lastEvent.Metadata.(map[string]interface{})
+		return newCompletedResponse(metadata["answer"].(string))
+
+	case "tool_call_choice":
+		metadata := lastEvent.Metadata.(map[string]interface{})
+		toolCall := metadata["toolCallChoice"].(map[string]interface{})
+
+		// Handle both string and map arguments cases
+		var action string
+		if argsStr, ok := toolCall["arguments"].(string); ok {
+			var args map[string]interface{}
+			json.Unmarshal([]byte(argsStr), &args)
+			action = args["descriptionOfAction"].(string)
+		} else {
+			arguments := toolCall["arguments"].(map[string]interface{})
+			action = arguments["descriptionOfAction"].(string)
+		}
+		return newPendingResponse(action)
+	}
+
+	return newPendingResponse("Thinking")
+}
+
+// Helper functions to create responses
+func newPendingResponse(action string) *ChatCompletionV2StatusResponse {
+	return &ChatCompletionV2StatusResponse{
+		Type:          ChatCompletionV2StatusResponseTypePending,
+		CurrentAction: action,
+	}
+}
+
+func newErrorResponse(err string) *ChatCompletionV2StatusResponse {
+	return &ChatCompletionV2StatusResponse{
+		Type:  ChatCompletionV2StatusResponseTypeError,
+		Error: err,
+	}
+}
+
+func newCompletedResponse(answer string) *ChatCompletionV2StatusResponse {
+	return &ChatCompletionV2StatusResponse{
+		Type:   ChatCompletionV2StatusResponseTypeCompleted,
+		Answer: answer,
+	}
+}
+
+func getLatestEvent(events []storage.AgentEvent, relevantEventTypes []string) *storage.AgentEvent {
+	sortedRelevantEvents := []storage.AgentEvent{}
+
+	for _, event := range events {
+		if slices.Contains(relevantEventTypes, event.Type) {
+			sortedRelevantEvents = append(sortedRelevantEvents, event)
+		}
+	}
+
+	if len(sortedRelevantEvents) == 0 {
+		return nil
+	}
+
+	sort.Slice(sortedRelevantEvents, func(i, j int) bool {
+		return sortedRelevantEvents[i].CreatedAt.After(*sortedRelevantEvents[j].CreatedAt)
 	})
 
-	lastEvent := events[0]
-
-	if lastEvent.Type == "error" {
-		return &ChatCompletionV2StatusResponse{Type: ChatCompletionV2StatusResponseTypeError, Error: lastEvent.Metadata.(map[string]string)["error"]}
-	}
-
-	if lastEvent.Type == "observation" {
-		return &ChatCompletionV2StatusResponse{Type: ChatCompletionV2StatusResponseTypePending, CurrentAction: "Determining outcomes from my findings"}
-	}
-
-	if lastEvent.Type == "answer_success" {
-		answer := lastEvent.Metadata.(map[string]interface{})["answer"]
-
-		return &ChatCompletionV2StatusResponse{Type: ChatCompletionV2StatusResponseTypeCompleted, Answer: answer.(string)}
-	}
-
-	return &ChatCompletionV2StatusResponse{Type: ChatCompletionV2StatusResponseTypePending, CurrentAction: "Thinking"}
+	return &sortedRelevantEvents[0]
 }

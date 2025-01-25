@@ -102,9 +102,26 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 }
 
 func (t *ToolHandler) ToolDefinitions() []ToolDefinition {
+	return t.toolDefinitionsWithDescribingAction()
+}
+
+func (t *ToolHandler) toolDefinitionsWithDescribingAction() []ToolDefinition {
 	toolDefinitions := []ToolDefinition{}
+
+	describingAction := Parameter{
+		Name:        "descriptionOfAction",
+		Description: "A short description of the action you are taking. Present continuous tense, and must be specific to the tool being used. For example \"Searching Google results for italian restaurants near Imperial College London\".",
+		Type:        ParameterTypeString,
+	}
+
 	for _, tool := range t.Tools {
-		toolDefinitions = append(toolDefinitions, tool.Definition())
+		definition := tool.Definition()
+		newDefinition := ToolDefinition{
+			Name:        definition.Name,
+			Description: definition.Description,
+			Parameters:  append(definition.Parameters, describingAction),
+		}
+		toolDefinitions = append(toolDefinitions, newDefinition)
 	}
 	return toolDefinitions
 }

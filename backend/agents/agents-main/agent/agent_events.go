@@ -1,6 +1,8 @@
 package agent
 
-import "github.com/segp/agents-main/tools"
+import (
+	"github.com/segp/agents-main/tools"
+)
 
 type AgentEventType string
 

@@ -236,6 +236,8 @@ func (a *ReActAgent) decide(requestId string, thought string) (*tools.ToolCall, 
 		return nil, errors.New("no tool chosen")
 	}
 
+	fmt.Println("chosenTool", chosenTool)
+
 	a.publish(NewToolCallChoiceEvent(requestId, chosenTool[0]))
 
 	return &chosenTool[0], nil
