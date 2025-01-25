@@ -47,8 +47,8 @@ func TestCall(t *testing.T) {
 		t.Skip("Skipping test due to CICD")
 	}
 
-	tool := NewGoogleSearchResultsTool(googleSearch.NewRodClient())
-	result, err := tool.GoogleSearchResultsFor("whatt imperial computing courses are there")
+	tool := NewGoogleSearchResultsTool(googleSearch.NewNonHeadlessRodClient())
+	result, err := tool.GoogleSearchResultsFor("usd to eur prices")
 	if err != nil {
 		t.Fatal(err)
 	}

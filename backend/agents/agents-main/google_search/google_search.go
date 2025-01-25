@@ -3,7 +3,7 @@ package googleSearch
 import "time"
 
 type GoogleSearchClient interface {
-	HtmlFromQuery(query string) (*string, error)
+	HtmlFromQuery(query string, actions ...Action) (*string, error)
 	HtmlFromURL(url string, actions ...Action) (*string, error)
 }
 

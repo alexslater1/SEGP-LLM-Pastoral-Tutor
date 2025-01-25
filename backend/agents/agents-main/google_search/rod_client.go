@@ -57,10 +57,12 @@ func NewNonHeadlessRodClient() *RodClient {
 	return NewRodClient(rod.New().ControlURL(l.MustLaunch()).MustConnect())
 }
 
-func (r *RodClient) HtmlFromQuery(query string) (*string, error) {
+func (r *RodClient) HtmlFromQuery(query string, actions ...Action) (*string, error) {
 	encodedQuery := url.QueryEscape(query)
 	url := "https://www.bing.com/search?form=&q=" + encodedQuery
-	return r.htmlFromURL(url)
+
+	fmt.Println("url", url)
+	return r.htmlFromURL(url, actions...)
 }
 
 func (r *RodClient) HtmlFromURL(url string, actions ...Action) (*string, error) {

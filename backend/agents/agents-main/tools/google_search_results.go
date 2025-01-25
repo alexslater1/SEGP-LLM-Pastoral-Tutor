@@ -30,7 +30,7 @@ func (g *GoogleSearchResultsTool) Definition() ToolDefinition {
 }
 
 func (g *GoogleSearchResultsTool) GoogleSearchResultsFor(query string) (*string, error) {
-	html, err := g.googleSearchClient.HtmlFromQuery(query)
+	html, err := g.googleSearchClient.HtmlFromQuery(query, googleSearch.NewWaitElementAction("li.b_algo"))
 	if err != nil {
 		return nil, err
 	}
