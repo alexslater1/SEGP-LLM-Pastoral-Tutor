@@ -48,7 +48,7 @@ func TestCall(t *testing.T) {
 	}
 
 	tool := NewGoogleSearchResultsTool(googleSearch.NewNonHeadlessRodClient())
-	result, err := tool.GoogleSearchResultsFor("usd to eur prices")
+	result, err := tool.GoogleSearchResultsFor("red dog")
 	if err != nil {
 		t.Fatal(err)
 	}

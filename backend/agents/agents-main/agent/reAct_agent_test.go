@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/segp/agents-main/storage"
 )
 
 func TestMain(m *testing.M) {
@@ -20,6 +21,24 @@ func TestReActAgent(t *testing.T) {
 	agent := NewDefaultLoggingReActAgent()
 
 	response, reasoning, err := agent.Run("What is the current price of the dollar", "test-request-id")
+	if err != nil {
+		t.Fatalf("Error running agent: %v", err)
+	}
+
+	t.Logf("Response: %s", *response)
+	t.Logf("Reasoning: %s", *reasoning)
+}
+
+func TestEventStoringReActAgent(t *testing.T) {
+	agent := NewDefaultEventStoringLoggingReActAgent()
+	supabaseStorage := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	createdReq, err := storage.Store(supabaseStorage, storage.NewAgentRequest("/test", map[string]string{"test": "test"}))
+	if err != nil {
+		t.Fatalf("Error creating request: %v", err)
+	}
+
+	response, reasoning, err := agent.Run("What is the current price of the dollar", createdReq.ID)
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}

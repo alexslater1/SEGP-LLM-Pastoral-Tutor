@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"errors"
+
 	supa "github.com/nedpals/supabase-go"
 	postgrest_go "github.com/nedpals/supabase-go/postgrest/pkg"
 	"github.com/segp/agents-main/utils"
@@ -25,7 +27,11 @@ func (s *SupabaseStorage) store(table StorageTableName, data interface{}) (inter
 		return nil, err
 	}
 
-	return result, nil
+	if len(result) == 0 {
+		return nil, errors.New("no result returned from supabase")
+	}
+
+	return result[0], nil
 }
 
 func (s *SupabaseStorage) storeAll(table StorageTableName, data []interface{}) ([]interface{}, error) {
@@ -47,7 +53,11 @@ func (s *SupabaseStorage) get(table StorageTableName, id string) (interface{}, e
 		return nil, err
 	}
 
-	return result, nil
+	if len(result) == 0 {
+		return nil, errors.New("no result returned from supabase")
+	}
+
+	return result[0], nil
 }
 
 func (s *SupabaseStorage) getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error) {

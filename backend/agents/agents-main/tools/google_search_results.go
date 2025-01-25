@@ -3,6 +3,7 @@ package tools
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	googleSearch "github.com/segp/agents-main/google_search"
@@ -30,7 +31,7 @@ func (g *GoogleSearchResultsTool) Definition() ToolDefinition {
 }
 
 func (g *GoogleSearchResultsTool) GoogleSearchResultsFor(query string) (*string, error) {
-	html, err := g.googleSearchClient.HtmlFromQuery(query, googleSearch.NewWaitElementAction("li.b_algo"))
+	html, err := g.googleSearchClient.HtmlFromQuery(query, googleSearch.NewWaitElementAction("li.b_algo").WithTimeout(6*time.Second))
 	if err != nil {
 		return nil, err
 	}

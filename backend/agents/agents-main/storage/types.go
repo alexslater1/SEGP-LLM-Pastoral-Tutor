@@ -1,36 +1,46 @@
 package storage
 
+import (
+	"time"
+)
+
 type StorageType interface {
 	TableName() StorageTableName
 }
 
 type AgentRequest struct {
-	ID       string `json:"id,omitempty"`
-	Endpoint string `json:"endpoint"`
+	ID       string      `json:"id,omitempty"`
+	Endpoint string      `json:"endpoint"`
+	Metadata interface{} `json:"metadata,omitempty"`
 }
 
 func (ar AgentRequest) TableName() StorageTableName {
 	return StorageTableNameAgentRequests
 }
 
-type AgentCompletionRequestEventType string
-
-const (
-	AgentCompletionRequestEventTypeThink   AgentCompletionRequestEventType = "Think"
-	AgentCompletionRequestEventTypeAct     AgentCompletionRequestEventType = "Act"
-	AgentCompletionRequestEventTypeObserve AgentCompletionRequestEventType = "Observe"
-	AgentCompletionRequestEventTypeError   AgentCompletionRequestEventType = "Error"
-	AgentCompletionRequestEventTypeSuccess AgentCompletionRequestEventType = "Success"
-)
-
-type AgentCompletionRequestEvent struct {
-	ID             string                          `json:"id,omitempty"`
-	AgentRequestID string                          `json:"agent_request_id"`
-	Type           AgentCompletionRequestEventType `json:"type"`
-	LLMResponse    string                          `json:"llm_response,omitempty"`
-	Metadata       interface{}                     `json:"metadata,omitempty"`
+func NewAgentRequest(endpoint string, metadata interface{}) AgentRequest {
+	return AgentRequest{
+		Endpoint: endpoint,
+		Metadata: metadata,
+	}
 }
 
-func (ac AgentCompletionRequestEvent) TableName() StorageTableName {
-	return StorageTableNameAgentCompletionRequestEvents
+type AgentEvent struct {
+	ID        int         `json:"id,omitempty"`
+	CreatedAt *time.Time  `json:"created_at,omitempty"`
+	RequestId string      `json:"request_id"`
+	Type      string      `json:"type"`
+	Metadata  interface{} `json:"metadata,omitempty"`
+}
+
+func (ae AgentEvent) TableName() StorageTableName {
+	return StorageTableNameAgentEvents
+}
+
+func NewAgentEvent(requestId string, eventType string, metadata interface{}) AgentEvent {
+	return AgentEvent{
+		RequestId: requestId,
+		Type:      eventType,
+		Metadata:  metadata,
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/memory"
+	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
 )
 
@@ -32,4 +33,12 @@ func NewDefaultReActAgent() Agent {
 
 func NewDefaultLoggingReActAgent() Agent {
 	return NewLoggingAgent(NewDefaultReActAgent())
+}
+
+func NewDefaultEventStoringReActAgent() Agent {
+	return NewEventStoringAgent(NewDefaultReActAgent(), storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY")))
+}
+
+func NewDefaultEventStoringLoggingReActAgent() Agent {
+	return NewLoggingAgent(NewDefaultEventStoringReActAgent())
 }

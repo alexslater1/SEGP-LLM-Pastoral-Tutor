@@ -180,7 +180,7 @@ func (a *ReActAgent) logicLoop(query string, requestId string) (*string, *string
 		}
 
 		if toolCall.Name == "no_tool" {
-			return a.extractAnswerAndReason(toolCall)
+			return a.extractAnswerAndReason(requestId, toolCall)
 		}
 
 		toolCallResult, err := a.act(requestId, *toolCall)
@@ -284,7 +284,7 @@ func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitio
 	return &prompt
 }
 
-func (a *ReActAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *string, error) {
+func (a *ReActAgent) extractAnswerAndReason(requestId string, toolCall *tools.ToolCall) (*string, *string, error) {
 	var arguments map[string]string
 	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
 		return nil, nil, err
@@ -293,7 +293,7 @@ func (a *ReActAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, 
 	reason := arguments["reason"]
 	answer := arguments["answer"]
 
-	a.publish(NewAnswerSuccessEvent(toolCall.Name, answer, reason))
+	a.publish(NewAnswerSuccessEvent(requestId, answer, reason))
 
 	return &answer, &reason, nil
 }
