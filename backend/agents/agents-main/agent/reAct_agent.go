@@ -80,6 +80,8 @@ Remember:
 	After that, give your observation in 
 	## Observation
 	And give the observation in a detailed manner.`
+
+	defaultSubscriberBufferSize = 10
 )
 
 func getCurrentDateTime() string {
@@ -93,6 +95,8 @@ type ReActAgent struct {
 	Memory      memory.Memory[memory.ReActMemorySteps]
 	History     history.History
 	Knowledge   knowledge.Knowledge
+
+	subscribers []chan AgentEvent
 }
 
 func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, mem memory.Memory[memory.ReActMemorySteps], history history.History, knowledge knowledge.Knowledge) *ReActAgent {
@@ -102,17 +106,55 @@ func NewReActAgent(background string, toolHandler *tools.ToolHandler, llm llm.LL
 		Background:  background,
 		ToolHandler: toolHandler,
 		LLM:         llm,
-		Memory:      memory.NewReActMemory(), // TODO: use the one passed in
+		Memory:      memory.NewReActMemory(), // TODO: use the one passed in and make it make use of request id
 		History:     history,
 		Knowledge:   knowledge,
 	}
 }
 
-func (a *ReActAgent) Run(query string) (*string, *string, error) {
-	return a.logicLoop(query)
+func (a *ReActAgent) Run(query string, requestId string) (*string, *string, error) {
+	return a.logicLoop(query, requestId)
 }
 
-func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
+func (a *ReActAgent) Subscribe() <-chan AgentEvent {
+	ch := make(chan AgentEvent, defaultSubscriberBufferSize)
+	a.subscribers = append(a.subscribers, ch)
+	return ch
+}
+
+func (a *ReActAgent) Unsubscribe(ch <-chan AgentEvent) {
+	for i, subscriber := range a.subscribers {
+		if subscriber == ch {
+			a.subscribers = append(a.subscribers[:i], a.subscribers[i+1:]...)
+			break
+		}
+	}
+}
+
+func (a *ReActAgent) publish(event AgentEvent) {
+	for _, subscriber := range a.subscribers {
+		select {
+		case subscriber <- event:
+		default:
+			slog.Warn("Subscriber buffer is full, skipping event", "event", event)
+		}
+	}
+}
+
+func (a *ReActAgent) getKnowledgeContext(includeKnowledge bool, query string) (string, error) {
+	if !includeKnowledge {
+		return "", nil
+	}
+
+	kc, err := a.Knowledge.Get(query)
+	if err != nil {
+		return "", err
+	}
+
+	return *kc, nil
+}
+
+func (a *ReActAgent) logicLoop(query string, requestId string) (*string, *string, error) {
 	slog.Info("Starting logic loop for query", "query", query)
 	fmt.Println()
 
@@ -122,46 +164,35 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 			return nil, nil, err
 		}
 
-		knowledgeContext := ""
-		if i == 0 {
-			kc, err := a.Knowledge.Get(query)
-			if err != nil {
-				return nil, nil, err
-			}
-			knowledgeContext = *kc
-		}
-
-		thoughts, err := a.think(mem, a.ToolHandler.ToolDefinitions(), query, &knowledgeContext)
+		knowledgeContext, err := a.getKnowledgeContext(i == 0, query)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		logReActStage(*thoughts, ReActAgentStageThinking)
-
-		toolCall, err := a.decide(*thoughts)
+		thoughts, err := a.think(requestId, mem, a.ToolHandler.ToolDefinitions(), query, &knowledgeContext)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		logReActStage(fmt.Sprintf("%+v", *toolCall), ReActAgentStageToolCall)
+		toolCall, err := a.decide(requestId, *thoughts)
+		if err != nil {
+			return nil, nil, err
+		}
 
 		if toolCall.Name == "no_tool" {
-			return extractAnswerAndReason(toolCall)
+			return a.extractAnswerAndReason(toolCall)
 		}
 
-		toolCallResult, err := a.act(*toolCall)
+		toolCallResult, err := a.act(requestId, *toolCall)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		logReActStage(*toolCallResult, ReActAgentStageToolCallResult)
-
-		observation, err := a.observe(toolCallResult, thoughts, *toolCall)
+		observation, err := a.observe(requestId, toolCallResult, thoughts, *toolCall)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		logReActStage(*observation, ReActAgentStageObservation)
 		action := fmt.Sprintf("%+v", toolCall)
 		a.Memory.Add(memory.ReActMemorySteps{
 			Thought:     *thoughts,
@@ -173,16 +204,23 @@ func (a *ReActAgent) logicLoop(query string) (*string, *string, error) {
 
 }
 
-func (a *ReActAgent) think(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string, knowledgeContext *string) (*string, error) {
+func (a *ReActAgent) think(requestId string, mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string, knowledgeContext *string) (*string, error) {
 	prompt := a.getThinkPrompt(mem, toolDefinitions, query, knowledgeContext)
 	if prompt == nil {
 		return nil, errors.New("failed to get think prompt")
 	}
 
-	return a.LLM.ChatCompletion(context.Background(), *prompt)
+	thoughts, err := a.LLM.ChatCompletion(context.Background(), *prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	a.publish(NewThinkEvent(requestId, *thoughts))
+
+	return thoughts, nil
 }
 
-func (a *ReActAgent) decide(thought string) (*tools.ToolCall, error) {
+func (a *ReActAgent) decide(requestId string, thought string) (*tools.ToolCall, error) {
 	prompt := fmt.Sprintf(decidePrompt, thought)
 
 	toolChoice := tools.ToolChoice{
@@ -198,17 +236,33 @@ func (a *ReActAgent) decide(thought string) (*tools.ToolCall, error) {
 		return nil, errors.New("no tool chosen")
 	}
 
+	a.publish(NewToolCallChoiceEvent(requestId, chosenTool[0]))
+
 	return &chosenTool[0], nil
 }
 
-func (a *ReActAgent) act(toolCall tools.ToolCall) (*string, error) {
-	return a.ToolHandler.Call(toolCall)
+func (a *ReActAgent) act(requestId string, toolCall tools.ToolCall) (*string, error) {
+	toolCallResult, err := a.ToolHandler.Call(toolCall)
+	if err != nil {
+		return nil, err
+	}
+
+	a.publish(NewToolCallResultEvent(requestId, toolCallResult))
+
+	return toolCallResult, nil
 }
 
-func (a *ReActAgent) observe(toolCallResult *string, thoughts *string, chosenToolCall tools.ToolCall) (*string, error) {
+func (a *ReActAgent) observe(requestId string, toolCallResult *string, thoughts *string, chosenToolCall tools.ToolCall) (*string, error) {
 	prompt := fmt.Sprintf(observerPrompt, *thoughts, chosenToolCall, *toolCallResult)
 
-	return a.LLM.ChatCompletion(context.Background(), prompt)
+	observation, err := a.LLM.ChatCompletion(context.Background(), prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	a.publish(NewObservationEvent(requestId, *observation))
+
+	return observation, nil
 }
 
 func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitions []tools.ToolDefinition, query string, context *string) *string {
@@ -230,7 +284,7 @@ func (a *ReActAgent) getThinkPrompt(mem []memory.ReActMemorySteps, toolDefinitio
 	return &prompt
 }
 
-func extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *string, error) {
+func (a *ReActAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *string, error) {
 	var arguments map[string]string
 	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
 		return nil, nil, err
@@ -238,6 +292,8 @@ func extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *string, error) 
 
 	reason := arguments["reason"]
 	answer := arguments["answer"]
+
+	a.publish(NewAnswerSuccessEvent(toolCall.Name, answer, reason))
 
 	return &answer, &reason, nil
 }

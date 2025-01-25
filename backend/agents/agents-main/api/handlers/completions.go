@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -23,7 +22,7 @@ type ChatCompletionResponse struct {
 	Reason   string `json:"reason"`
 }
 
-func ChatCompletion(agent agent.Agent) http.HandlerFunc {
+func ChatCompletion(agent agent.Agent, requestTracker *request_tracker.RequestTracker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -36,53 +35,17 @@ func ChatCompletion(agent agent.Agent) http.HandlerFunc {
 			return
 		}
 
-		response, reason, err := agent.Run(req.Query)
+		// requestId, err := requestTracker.NewRequest("chatCompletion")
+		// if err != nil {
+		// 	http.Error(w, fmt.Sprintf("error creating request %v", err.Error()), http.StatusInternalServerError)
+		// }
 
+		response, reasoning, err := agent.Run(req.Query, "[requestId goes here]")
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			http.Error(w, fmt.Sprintf("error running agent %v", err.Error()), http.StatusInternalServerError)
 		}
 
-		res := ChatCompletionResponse{
-			Response: *response,
-			Reason:   *reason,
-		}
-
-		json.NewEncoder(w).Encode(res)
-	}
-}
-
-func ChatCompletionV2(agent agent.Agent, requestTracker *request_tracker.RequestTracker) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req ChatCompletionRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, fmt.Sprintf("error decoding json %v", err.Error()), http.StatusBadRequest)
-			return
-		}
-
-		if req.Query == "" {
-			http.Error(w, "query is required", http.StatusBadRequest)
-			return
-		}
-
-		requestId, err := requestTracker.NewRequest("chatCompletionV2")
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error creating request %v", err.Error()), http.StatusInternalServerError)
-		}
-
-		go func() {
-			completion, reason, err := agent.Run(req.Query)
-			if err != nil {
-				log.Printf("Error while processing request %s:%s", requestId, err.Error())
-				requestTracker.NewCompletionErrorEvent(requestId, err)
-				return
-			}
-
-			_, err = requestTracker.NewCompletionSuccessEvent(requestId, completion, reason)
-			if err != nil {
-				log.Printf("Error when setting success event for request %s:%s", requestId, err.Error())
-			}
-		}()
+		json.NewEncoder(w).Encode(ChatCompletionResponse{Response: *response, Reason: *reasoning})
 	}
 }
 

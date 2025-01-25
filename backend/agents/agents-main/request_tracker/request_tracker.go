@@ -40,7 +40,7 @@ func (rt *RequestTracker) NewCompletionThinkEvent(agentRequestsId string, though
 	return data.ID, nil
 }
 
-func (rt *RequestTracker) NewCompletionActEvent(agentRequestsId, toolName string, parameters map[string]interface{}) (string, error) {
+func (rt *RequestTracker) NewCompletionActEvent(agentRequestsId, toolName string, parameters interface{}) (string, error) {
 	event := storage.AgentCompletionRequestEvent{
 		AgentRequestID: agentRequestsId,
 		Type:           storage.AgentCompletionRequestEventTypeAct,

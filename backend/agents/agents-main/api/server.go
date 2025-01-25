@@ -2,9 +2,12 @@ package api
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api/handlers"
+	"github.com/segp/agents-main/request_tracker"
+	"github.com/segp/agents-main/storage"
 )
 
 type Server struct {
@@ -40,7 +43,7 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 }
 
 func (s *Server) routes() {
-	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent.NewDefaultReActAgent()))
+	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent.NewDefaultLoggingReActAgent(), request_tracker.NewRequestTracker(storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY")))))
 }
 
 func (s *Server) Start() error {

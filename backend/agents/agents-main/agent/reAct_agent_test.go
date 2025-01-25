@@ -17,9 +17,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestReActAgent(t *testing.T) {
-	agent := NewDefaultReActAgent()
+	agent := NewDefaultLoggingReActAgent()
 
-	response, reasoning, err := agent.Run("Give me the url of a good italian restaurnant to go to near to Imperial College London")
+	response, reasoning, err := agent.Run("What is the current price of the dollar", "test-request-id")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}

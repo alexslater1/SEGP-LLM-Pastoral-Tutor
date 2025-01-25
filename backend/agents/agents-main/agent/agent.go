@@ -12,7 +12,9 @@ import (
 )
 
 type Agent interface {
-	Run(input string) (*string, *string, error)
+	Run(input string, requestId string) (*string, *string, error)
+	Subscribe() <-chan AgentEvent
+	Unsubscribe(ch <-chan AgentEvent)
 }
 
 func NewDefaultReActAgent() Agent {
@@ -26,4 +28,8 @@ func NewDefaultReActAgent() Agent {
 	)
 
 	return agent
+}
+
+func NewDefaultLoggingReActAgent() Agent {
+	return NewLoggingAgent(NewDefaultReActAgent())
 }
