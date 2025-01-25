@@ -44,9 +44,4 @@ def document_sentence_chunker(pdf_path):
     # Split text into sentences
     sentences = split_into_sentences(cleaned_text)
 
-    # # Print sentences
-    # for i, sentence in enumerate(sentences):
-    #     print(f"Sentence {i+1}: {sentence}")
-    #     print("----------------------------------------------")
-    
     return sentences

@@ -1,9 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from searcher import get_supabase_rag_chunks
-from openai import OpenAI
 from dotenv import load_dotenv
 from document_uploader import upload_doc, delete_doc
-import os
 
 # Load environment variables from .env file
 load_dotenv()

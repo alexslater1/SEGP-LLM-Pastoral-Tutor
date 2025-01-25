@@ -1,6 +1,6 @@
 from embedder import embed
 import numpy as np
-from config import supabase, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME
+from config import supabase, RAG_TABLE_NAME
 
 
 #string, (text, embedding)
