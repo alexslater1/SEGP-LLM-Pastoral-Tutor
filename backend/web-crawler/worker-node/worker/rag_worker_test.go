@@ -1,8 +1,11 @@
 package worker
 
 import (
+	"context"
 	"testing"
+	"time"
 
+	"github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/ragger"
 	"github.com/ethanhosier/worker-node/storage"
 	"github.com/stretchr/testify/assert"
@@ -88,4 +91,105 @@ func TestRagWorkerProcessAndStoreContacts(t *testing.T) {
 	assert.Equal(t, contacts[0].Contact, "John Doe")
 	assert.Equal(t, contacts[0].ContactType, "person")
 	assert.Equal(t, contacts[0].DocID, 1)
+}
+
+func TestRagWorkerExecute(t *testing.T) {
+	// given
+	var (
+		memoryStorage     = storage.NewMemoryStorage()
+		ragClient         = ragger.NewMockRagClient()
+		coordinatorClient = coordinator_client.NewMockCoordinatorClient()
+		ragWorker         = NewRagWorker(ragClient, coordinatorClient, memoryStorage)
+
+		websiteUrl = "https://example.com"
+		markdown   = "Hello, world!"
+
+		chunks     = []string{"Hello, world!1"}
+		embeddings = [][]float32{{1.0, 2.0, 3.0}}
+
+		contacts = []ragger.Contact{{Context: markdown, Value: "John Doe", Type: "person"}}
+	)
+
+	task, err := coordinator_client.NewTask("1", "test", RagWorkerParams{
+		Markdown: markdown,
+		Url:      websiteUrl,
+	})
+	if err != nil {
+		t.Errorf("Error creating task: %v", err)
+	}
+
+	ragClient.SetChunksFor(markdown, chunks)
+	ragClient.SetContactsFor(markdown, contacts)
+	for i, embedding := range embeddings {
+		ragClient.SetEmbeddingsFor(chunks[i], embedding)
+	}
+
+	// when
+	err = ragWorker.Execute(context.TODO(), task)
+	if err != nil {
+		t.Errorf("Error executing task: %v", err)
+	}
+
+	// then
+	websites, err := storage.GetAll[storage.Website](memoryStorage, nil)
+	if err != nil {
+		t.Errorf("Error getting websites: %v", err)
+	}
+
+	assert.Equal(t, len(websites), 1)
+	assert.Equal(t, websites[0].URL, websiteUrl)
+
+	rags, err := storage.GetAll[storage.Rag](memoryStorage, nil)
+	if err != nil {
+		t.Errorf("Error getting chunks: %v", err)
+	}
+
+	assert.Equal(t, len(rags), 1)
+	assert.Equal(t, rags[0].Text, chunks[0])
+	assert.Equal(t, rags[0].Embedding, embeddings[0])
+	assert.Equal(t, rags[0].WebsiteID, websites[0].ID)
+
+	storedContacts, err := storage.GetAll[storage.Contacts](memoryStorage, nil)
+	if err != nil {
+		t.Errorf("Error getting contacts: %v", err)
+	}
+
+	assert.Equal(t, len(storedContacts), 1)
+	assert.Equal(t, storedContacts[0].Context, markdown)
+	assert.Equal(t, storedContacts[0].Contact, "John Doe")
+	assert.Equal(t, storedContacts[0].ContactType, "person")
+	assert.Equal(t, storedContacts[0].DocID, websites[0].ID)
+}
+
+func TestRagWorkerCleanup(t *testing.T) {
+	// given
+	var (
+		coordinatorClient = coordinator_client.NewMockCoordinatorClient()
+		ragWorker         = NewRagWorker(nil, coordinatorClient, nil)
+	)
+
+	task, err := coordinator_client.NewTask("1", "test", RagWorkerParams{
+		Markdown: "Hello, world!",
+		Url:      "https://example.com",
+	})
+	if err != nil {
+		t.Errorf("Error creating task: %v", err)
+	}
+
+	coordinatorClient.CreateTask(context.TODO(), coordinator_client.CoordinatorClientTaskTopicRag, task)
+	if _, err := coordinatorClient.GetTaskAndSetProcessing(context.TODO(), 1*time.Second, coordinator_client.CoordinatorClientTaskTopicRag); err != nil {
+		t.Errorf("Error getting task: %v", err)
+	}
+
+	// when
+	err = ragWorker.Cleanup(context.TODO(), task)
+
+	// then
+	if err != nil {
+		t.Errorf("Error cleaning up: %v", err)
+	}
+
+	if err := coordinatorClient.SetProcessed(context.TODO(), coordinator_client.CoordinatorClientTaskTopicRag, task); err != coordinator_client.ErrNoTasksCompleted {
+		t.Errorf("There should be an error setting task to processed: %v", err)
+	}
 }
