@@ -4,8 +4,15 @@ from embedder import embed
 import os
 from pdf_to_text import pdf_to_text
 from config import supabase, DOCUMENTS_BUCKET_NAME, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME, CONTACT_TABLE_NAME
+from transformers import AutoTokenizer, AutoModel
 
 def upload_doc(url):
+
+    model_name = "BAAI/bge-small-en-v1.5"
+
+    model = AutoModel.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
     file_name = os.path.basename(url)
     print("1")
     mkdwn_pdf = pdf_to_text(url)
@@ -28,12 +35,12 @@ def upload_doc(url):
     text = file_to_text(url)
     print("3")
     #chunk document
-    chunks = document_chunker(mkdwn_pdf, "BAAI/bge-small-en-v1.5")
+    chunks = document_chunker(mkdwn_pdf, tokenizer)
 
     index = 1
     for text in chunks:
         supabase.table(RAG_TABLE_NAME).insert([
-            {"text": text, "doc_id": doc_id, "pos_in_doc": index, "embedding": embed(text).tolist()}
+            {"text": text, "doc_id": doc_id, "pos_in_doc": index, "embedding": embed(text, tokenizer, model).tolist()}
         ]).execute()
         index += 1
     print("4")
@@ -43,7 +50,7 @@ def upload_doc(url):
     for (email, email_context) in contacts[0]:
         supabase.table(CONTACT_TABLE_NAME).insert([
             {"context": email_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "email", 
-             "embedding": embed(email_context).tolist(), "contact": email}
+             "embedding": embed(email_context, tokenizer, model).tolist(), "contact": email}
         ]).execute()
 
         print(f" - {contact_index}")
@@ -52,7 +59,7 @@ def upload_doc(url):
     for (phone, phone_context) in contacts[1]:
         supabase.table(CONTACT_TABLE_NAME).insert([
             {"context": phone_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "phone number", 
-             "embedding": embed(phone_context).tolist(), "contact": phone}
+             "embedding": embed(phone_context, tokenizer, model).tolist(), "contact": phone}
         ]).execute()
 
         print(f" - {contact_index}")
@@ -65,7 +72,7 @@ def upload_doc(url):
              "doc_id": doc_id, 
              "pos_in_contacts": contact_index, 
              "contact_type": "url", 
-             "embedding": embed(url_context).tolist(),
+             "embedding": embed(url_context, tokenizer, model).tolist(),
             "contact": url
             }
         ]).execute()

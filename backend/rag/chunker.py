@@ -1,14 +1,11 @@
 import re
-from transformers import AutoTokenizer
 
-def document_chunker(text, model_name,
+def document_chunker(text, tokenizer,
                      paragraph_separator='\n\n\n',
                      chunk_size=250,
                      separator=' ',
                      secondary_chunking_regex=r'\S+?[\.,;!?]',
                      chunk_overlap=25):
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name)  # Load tokenizer for the specified model
 
     # Process each file using the existing chunking logic
     paragraphs = re.split(paragraph_separator, text)

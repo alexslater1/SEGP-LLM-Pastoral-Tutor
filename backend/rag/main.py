@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from searcher import get_supabase_rag_chunks
 from dotenv import load_dotenv
 from document_uploader import upload_doc, delete_doc
+from transformers import AutoTokenizer, AutoModel
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,9 +41,14 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
     try:
         # Clean query of extra whitespace
         query = query.strip()
+
+        model_name = "BAAI/bge-small-en-v1.5"
+
+        model = AutoModel.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         
         # Search chunks based on query
-        retrieved = get_supabase_rag_chunks(query, num_chunks, similarity_threshold)
+        retrieved = get_supabase_rag_chunks(query, tokenizer, model, num_chunks, similarity_threshold)
        
         return {"chunks": retrieved["chunks"], "contacts": retrieved["contacts"]}
     

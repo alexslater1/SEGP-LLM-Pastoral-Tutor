@@ -4,8 +4,8 @@ from config import supabase, RAG_TABLE_NAME
 
 
 #string, (text, embedding)
-def search(query, chunks, k=5):
-    embedded_query = embed(query)
+def search(query, tokenizer, model, chunks, k=5):
+    embedded_query = embed(query, tokenizer, model)
     normalised_embedded_query = np.linalg.norm(embedded_query)
 
     chunk_scores = []
@@ -19,8 +19,8 @@ def search(query, chunks, k=5):
 
     return chunk_scores[:k]
 
-def get_supabase_rag_chunks(query, k=5, similarity_threshold=0.5):
-    embedded_query = embed(query)
+def get_supabase_rag_chunks(query, tokenizer, model, k=5, similarity_threshold=0.5):
+    embedded_query = embed(query, tokenizer, model)
     
     try:
         chunks = supabase.rpc(

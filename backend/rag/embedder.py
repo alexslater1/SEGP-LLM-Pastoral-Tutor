@@ -1,12 +1,7 @@
-from transformers import BertTokenizer, BertModel
 import torch
 
-#other models can be used
-embedding_model = 'BAAI/bge-small-en-v1.5'
-tokenizer = BertTokenizer.from_pretrained(embedding_model)
-model = BertModel.from_pretrained(embedding_model)
 
-def embed(text):
+def embed(text, tokenizer, model):
     #get tokens from input
     tokens = tokenizer(text, return_tensors='pt', padding=True, truncation=True)
     
