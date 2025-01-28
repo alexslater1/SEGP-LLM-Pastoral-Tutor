@@ -12,7 +12,7 @@ import (
 
 type RagWorker struct {
 	id                string
-	ragClient         *ragger.RagClient
+	ragClient         ragger.Ragger
 	coordinatorClient coordinator_client.CoordinatorClient
 	store             storage.Storage
 }
@@ -22,7 +22,7 @@ type RagWorkerParams struct {
 	Url      string `json:"url"`
 }
 
-func NewRagWorker(ragClient *ragger.RagClient, coordinatorClient coordinator_client.CoordinatorClient, store storage.Storage) *RagWorker {
+func NewRagWorker(ragClient ragger.Ragger, coordinatorClient coordinator_client.CoordinatorClient, store storage.Storage) *RagWorker {
 	id := uuid.New().String()
 	return &RagWorker{id: id, ragClient: ragClient, coordinatorClient: coordinatorClient, store: store}
 }
@@ -79,6 +79,7 @@ func (w *RagWorker) processAndStoreChunks(markdown string, websiteID int) error 
 			Embedding: embeddings,
 			Source:    "WEBSITE",
 			WebsiteID: websiteID,
+			Text:      chunk,
 		})
 	}
 

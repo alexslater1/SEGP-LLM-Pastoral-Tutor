@@ -1,8 +1,8 @@
 package ragger
 
 type Ragger interface {
-	ChunksFor(text string) ([]string, error)
-	ContactsFrom(text string) ([]string, error)
+	ChunksFrom(text string) ([]string, error)
+	ContactsFrom(text string) ([]Contact, error)
 
 	EmbeddingsFor(text string) ([]float32, error)
 }
