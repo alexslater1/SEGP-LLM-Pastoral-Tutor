@@ -7,9 +7,17 @@ import (
 )
 
 type Task struct {
-	Id        string      `json:"id"`
+	ID        string      `json:"id"`
 	CreatedBy string      `json:"created_by"`
 	Params    interface{} `json:"params"`
+}
+
+func NewTask(id string, createdBy string, params interface{}) *Task {
+	return &Task{
+		ID:        id,
+		CreatedBy: createdBy,
+		Params:    params,
+	}
 }
 
 func (t *Task) toString() (string, error) {
@@ -27,7 +35,7 @@ func (c CoordinatorClientTaskTopic) String() string {
 }
 
 func (c CoordinatorClientTaskTopic) ProcessingTopicString() string {
-	return "processing-" + string(c)
+	return "processing_" + string(c)
 }
 
 const (
