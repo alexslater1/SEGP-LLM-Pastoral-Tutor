@@ -64,3 +64,28 @@ func TestRagWorkerProcessAndStoreChunks(t *testing.T) {
 		assert.Equal(t, rag.WebsiteID, 1)
 	}
 }
+
+func TestRagWorkerProcessAndStoreContacts(t *testing.T) {
+	var (
+		memoryStorage = storage.NewMemoryStorage()
+		ragClient     = ragger.NewMockRagClient()
+		ragWorker     = NewRagWorker(ragClient, nil, memoryStorage)
+	)
+
+	ragClient.SetContactsFor("Hello, world!", []ragger.Contact{
+		{Context: "Hello, world!", Value: "John Doe", Type: "person"},
+	})
+
+	ragWorker.processAndStoreContacts("Hello, world!", 1)
+
+	contacts, err := storage.GetAll[storage.Contacts](memoryStorage, nil)
+	if err != nil {
+		t.Errorf("Error getting contacts: %v", err)
+	}
+
+	assert.Equal(t, len(contacts), 1)
+	assert.Equal(t, contacts[0].Context, "Hello, world!")
+	assert.Equal(t, contacts[0].Contact, "John Doe")
+	assert.Equal(t, contacts[0].ContactType, "person")
+	assert.Equal(t, contacts[0].DocID, 1)
+}
