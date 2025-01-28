@@ -3,6 +3,9 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"reflect"
+	"strconv"
 	"sync"
 
 	"github.com/google/uuid"
@@ -41,17 +44,36 @@ func (s *MemoryStorage) store(table StorageTableName, data interface{}) (interfa
 		if err := json.Unmarshal(bytes, &dataMap); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal json to map: %w", err)
 		}
+
+		// Preserve original integer type for ID field
+		if originalID, ok := getOriginalIDType(data); ok && isNumberType(originalID) {
+			if idFloat, ok := dataMap["id"].(float64); ok {
+				dataMap["id"] = int(idFloat)
+			}
+		}
 	}
 
 	// If ID is empty, generate a random UUID
 	if dataMap["id"] == nil {
-		dataMap["id"] = uuid.New().String()
+		// Check if the original data had a numeric ID type
+		if originalID, ok := getOriginalIDType(data); ok && isNumberType(originalID) {
+			// Generate random number between 1 and 1000000 for numeric IDs
+			dataMap["id"] = rand.Intn(1000000) + 1
+		} else {
+			// Default to UUID string if not numeric
+			dataMap["id"] = uuid.New().String()
+		}
 	}
 
-	// Get the ID as string
+	// Get the ID as string or number
 	id, ok := dataMap["id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("ID must be a string")
+		// Try as number
+		if numID, ok := dataMap["id"].(int); ok {
+			id = strconv.Itoa(numID)
+		} else {
+			return nil, fmt.Errorf("ID must be a string or number")
+		}
 	}
 
 	// Initialize table if it doesn't exist
@@ -129,4 +151,30 @@ func (s *MemoryStorage) getAll(table StorageTableName, matchingFields map[string
 		}
 	}
 	return result, nil
+}
+
+// Helper function to check original ID type
+func getOriginalIDType(data interface{}) (interface{}, bool) {
+	val := reflect.ValueOf(data)
+	if val.Kind() == reflect.Struct {
+		field := val.FieldByName("ID")
+		if field.IsValid() {
+			return field.Interface(), true
+		}
+	}
+	if m, ok := data.(map[string]interface{}); ok {
+		if id, exists := m["id"]; exists {
+			return id, true
+		}
+	}
+	return nil, false
+}
+
+// Helper function to check if type is numeric
+func isNumberType(v interface{}) bool {
+	switch v.(type) {
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+		return true
+	}
+	return false
 }
