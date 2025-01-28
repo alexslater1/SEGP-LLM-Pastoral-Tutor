@@ -14,6 +14,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/redis/go-redis/v9 v9.7.0 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
+	github.com/yalue/onnxruntime_go v1.16.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
