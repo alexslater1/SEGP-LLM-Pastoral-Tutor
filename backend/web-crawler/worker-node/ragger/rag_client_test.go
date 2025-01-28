@@ -221,3 +221,15 @@ func TestChunksFor(t *testing.T) {
 		log.Printf("chunk: %v \n=============\n", chunk)
 	}
 }
+
+func TestEmbeddingsFor(t *testing.T) {
+	client := NewRagClient("../model", "../libonnxruntime.so.1.20.1")
+
+	embeddings, err := client.EmbeddingsFor("hello world")
+	if err != nil {
+		t.Fatalf("error getting embeddings %v", err)
+	}
+
+	assert.Equal(t, 384, len(embeddings))
+	log.Printf("embeddings (first 10): %v", embeddings[:10])
+}

@@ -181,7 +181,7 @@ func min(a, b int) int {
 }
 
 // Add this new function to embed text
-func embedText(session *ort.AdvancedSession, text string, tokenizer *TokenizerConfig) ([]float32, error) {
+func embedText(session *ort.AdvancedSession, text string, tokenizer *TokenizerConfig, modelPath string) ([]float32, error) {
 	// Use our tokenizer properly
 	inputIds, attentionMask := tokenizer.Tokenize(text)
 
@@ -216,7 +216,7 @@ func embedText(session *ort.AdvancedSession, text string, tokenizer *TokenizerCo
 	defer outputTensor.Destroy()
 
 	// Create new session for each run
-	session, err = ort.NewAdvancedSession("./model/model.onnx",
+	session, err = ort.NewAdvancedSession(modelPath,
 		[]string{"input_ids", "attention_mask"},
 		[]string{"last_hidden_state"},
 		[]ort.Value{inputIdsTensor, attentionMaskTensor},

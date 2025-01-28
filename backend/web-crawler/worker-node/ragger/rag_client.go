@@ -12,6 +12,7 @@ import (
 type RagClient struct {
 	tokenizer *TokenizerConfig
 	chunker   *DocumentChunker
+	modelPath string
 }
 
 func NewRagClient(modelPath string, libPath string) *RagClient {
@@ -27,6 +28,7 @@ func NewRagClient(modelPath string, libPath string) *RagClient {
 	return &RagClient{
 		tokenizer: tokenizer,
 		chunker:   NewDocumentChunker(tokenizer),
+		modelPath: modelPath,
 	}
 }
 
@@ -39,7 +41,7 @@ func (c *RagClient) ContactsFor(text string) ([]Contact, error) {
 }
 
 func (c *RagClient) EmbeddingsFor(text string) ([]float32, error) {
-	return embedText(nil, text, c.tokenizer)
+	return embedText(nil, text, c.tokenizer, c.modelPath+"/model.onnx")
 }
 
 func setup(libraryPath string) error {
