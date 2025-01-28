@@ -1,0 +1,92 @@
+package worker
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/ethanhosier/worker-node/coordinator_client"
+	"github.com/ethanhosier/worker-node/scraper"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestScraperWorkerMdFromUrl(t *testing.T) {
+	scraper := scraper.NewMockScraper()
+	scraper.SetHtmlContent("https://example.com", "<html><body><main>Hello, world!</main></body></html>")
+
+	worker := NewScraperWorker(scraper, nil)
+	md, err := worker.mdFromUrl("https://example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, md, "Hello, world!")
+}
+
+func TestScraperWorkerMdFromUrlContent(t *testing.T) {
+	scraper := scraper.NewMockScraper()
+	worker := NewScraperWorker(scraper, nil)
+
+	// Test nested content
+	scraper.SetHtmlContent("https://nested.com", `
+		<html><body><main>
+			<h1>Title</h1>
+			<p>Paragraph 1</p>
+			<div>
+				<p>Nested paragraph</p>
+			</div>
+		</main></body></html>
+	`)
+	md, err := worker.mdFromUrl("https://nested.com")
+	assert.NoError(t, err)
+	assert.Contains(t, md, "Title")
+	assert.Contains(t, md, "Paragraph 1")
+	assert.Contains(t, md, "Nested paragraph")
+
+	// Test multiple main tags
+	scraper.SetHtmlContent("https://multiplemain.com", `
+		<html><body>
+			<main>First main</main>
+		</body></html>
+	`)
+	md, err = worker.mdFromUrl("https://multiplemain.com")
+	assert.NoError(t, err)
+	assert.Contains(t, md, "First main")
+}
+
+func TestScraperWorkerId(t *testing.T) {
+	scraper := scraper.NewMockScraper()
+	worker := NewScraperWorker(scraper, nil)
+	assert.NotEmpty(t, worker.Id())
+}
+
+func TestScraperWorkerType(t *testing.T) {
+	scraper := scraper.NewMockScraper()
+	worker := NewScraperWorker(scraper, nil)
+	assert.Equal(t, worker.WorkerType(), WorkerTypeScraper)
+}
+
+func TestScraperWorkerExecute(t *testing.T) {
+	var (
+		mockScraper           = scraper.NewMockScraper()
+		mockCoordinatorClient = coordinator_client.NewMockCoordinatorClient()
+		scraperWorker         = NewScraperWorker(mockScraper, mockCoordinatorClient)
+	)
+
+	mockUrlTask, err := coordinator_client.NewTask("id", "test", ScraperWorkerParams{Url: "https://example.com"})
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	mockScraper.SetHtmlContent("https://example.com", "<html><body><main>Hello, world!</main></body></html>")
+
+	err = scraperWorker.Execute(context.Background(), mockUrlTask)
+	assert.NoError(t, err)
+
+	createdRagTask, err := mockCoordinatorClient.GetTask(context.Background(), time.Second*1, coordinator_client.CoordinatorClientTaskTopicRag)
+
+	assert.NoError(t, err)
+	t.Logf("createdRagTask: %+v", createdRagTask)
+
+	parsedRagParams, err := coordinator_client.CastParams[RagWorkerParams](createdRagTask.Params)
+	assert.NoError(t, err)
+	assert.Equal(t, parsedRagParams.Markdown, "Hello, world!")
+	assert.Equal(t, parsedRagParams.Url, "https://example.com")
+}

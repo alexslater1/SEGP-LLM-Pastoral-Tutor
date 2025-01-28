@@ -7,17 +7,46 @@ import (
 )
 
 type Task struct {
-	ID        string      `json:"id"`
-	CreatedBy string      `json:"created_by"`
-	Params    interface{} `json:"params"`
+	ID        string                 `json:"id"`
+	CreatedBy string                 `json:"created_by"`
+	Params    map[string]interface{} `json:"params"`
 }
 
-func NewTask(id string, createdBy string, params interface{}) *Task {
+func CastParams[T any](params map[string]interface{}) (*T, error) {
+	jsonParams, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	var paramsMap map[string]interface{}
+	if err := json.Unmarshal(jsonParams, &paramsMap); err != nil {
+		return nil, err
+	}
+
+	var paramsT T
+	if err := json.Unmarshal(jsonParams, &paramsT); err != nil {
+		return nil, err
+	}
+
+	return &paramsT, nil
+}
+
+func NewTask(id string, createdBy string, params interface{}) (*Task, error) {
+	jsonParams, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	var paramsMap map[string]interface{}
+	if err := json.Unmarshal(jsonParams, &paramsMap); err != nil {
+		return nil, err
+	}
+
 	return &Task{
 		ID:        id,
 		CreatedBy: createdBy,
-		Params:    params,
-	}
+		Params:    paramsMap,
+	}, nil
 }
 
 func (t *Task) toString() (string, error) {
@@ -40,6 +69,7 @@ func (c CoordinatorClientTaskTopic) ProcessingTopicString() string {
 
 const (
 	CoordinatorClientTaskTopicUrls CoordinatorClientTaskTopic = "urls"
+	CoordinatorClientTaskTopicRag  CoordinatorClientTaskTopic = "rag"
 )
 
 var (

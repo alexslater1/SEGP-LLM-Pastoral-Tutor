@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMockCoordinatorClient(t *testing.T) {
@@ -11,8 +13,12 @@ func TestMockCoordinatorClient(t *testing.T) {
 	ctx := context.Background()
 
 	// Test CreateTask
-	task := NewTask("test-id", "test-data", "test-type")
-	err := client.CreateTask(ctx, CoordinatorClientTaskTopicUrls, task)
+	task, err := NewTask("test-id", "test-data", "test-type")
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	err = client.CreateTask(ctx, CoordinatorClientTaskTopicUrls, task)
 	if err != nil {
 		t.Fatalf("Failed to create task: %v", err)
 	}
@@ -27,7 +33,11 @@ func TestMockCoordinatorClient(t *testing.T) {
 	}
 
 	// Test GetTaskAndSetProcessing
-	task2 := NewTask("test-id-2", "test-data-2", "test-type-2")
+	task2, err := NewTask("test-id-2", "test-data-2", "test-type-2")
+	if err != nil {
+		t.Fatalf("Failed to create second task: %v", err)
+	}
+
 	err = client.CreateTask(ctx, CoordinatorClientTaskTopicUrls, task2)
 	if err != nil {
 		t.Fatalf("Failed to create second task: %v", err)
@@ -57,4 +67,39 @@ func TestMockCoordinatorClient(t *testing.T) {
 	if err != ErrNoTasksCompleted {
 		t.Errorf("Expected ErrNoTasksCompleted, got %v", err)
 	}
+}
+
+func TestMockCoordinatorClient_CreateTask(t *testing.T) {
+	client := NewMockCoordinatorClient()
+	ctx := context.Background()
+
+	type testParams struct {
+		Number int    `json:"number"`
+		Name   string `json:"name"`
+	}
+
+	task, err := NewTask("test-id", "test-data", testParams{Number: 1, Name: "a name"})
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	err = client.CreateTask(ctx, CoordinatorClientTaskTopicUrls, task)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	createdTask, err := client.GetTask(ctx, 1*time.Second, CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get task: %v", err)
+	}
+
+	parsedParams, err := CastParams[testParams](createdTask.Params)
+	if err != nil {
+		t.Fatalf("Failed to parse params: %v", err)
+	}
+
+	assert.Equal(t, parsedParams.Number, 1)
+	assert.Equal(t, parsedParams.Name, "a name")
+
+	t.Logf("createdTask: %+v", createdTask)
 }
