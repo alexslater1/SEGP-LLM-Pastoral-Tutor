@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	getTaskTimeout = 5 * time.Second
+	getTaskTimeout = 3 * time.Second
 )
 
 type WorkerManager struct {
@@ -22,26 +22,40 @@ func newWorkerManager(config *WorkerConfig) *WorkerManager {
 	}
 }
 
-func (w *WorkerManager) Start() error {
+func (w *WorkerManager) Start() (chan<- bool, <-chan error) {
 	workers := w.createWorkers()
 
 	errChan := make(chan error)
 	taskChan := make(chan *coordinator_client.Task)
+	doneChan := make(chan bool)
 
 	go func() {
-		errChan <- w.TaskLoop(taskChan)
+		err := w.TaskLoop(taskChan, doneChan)
+		if err != nil {
+			errChan <- err
+		}
+
+		close(taskChan)
 	}()
 
 	for _, worker := range workers {
 		go w.workerLoop(worker, taskChan, errChan)
 	}
 
-	return <-errChan
+	return doneChan, errChan
 }
 
-func (w *WorkerManager) TaskLoop(taskChan chan<- *coordinator_client.Task) error {
-
+func (w *WorkerManager) TaskLoop(taskChan chan<- *coordinator_client.Task, doneCh <-chan bool) error {
 	for {
+		// Check if we should stop
+		select {
+		case <-doneCh:
+			return nil
+		default:
+			// Continue with task fetching
+		}
+
+		// Try to get a task
 		task, err := w.config.coordinatorClient.GetTaskAndSetProcessing(w.config.ctx, getTaskTimeout, coordinator_client.CoordinatorClientTaskTopicUrls)
 
 		if err == coordinator_client.ErrNoTasksToComplete {
@@ -53,6 +67,7 @@ func (w *WorkerManager) TaskLoop(taskChan chan<- *coordinator_client.Task) error
 			return err
 		}
 
+		log.Printf("Task Found: %s", task.ID)
 		taskChan <- task
 	}
 }
@@ -61,14 +76,14 @@ func (w *WorkerManager) workerLoop(worker worker.Worker, taskChan <-chan *coordi
 	log.Printf("Worker %s starting", worker.Id())
 
 	for task := range taskChan {
+		log.Printf("Worker %s executing task %s", worker.Id(), task.ID)
 		err := worker.Execute(w.config.ctx, task)
 		if err != nil {
 			errorChan <- err
 			return
 		}
 
-		log.Println("cleanup")
-
+		log.Printf("Worker %s cleaning up task %s", worker.Id(), task.ID)
 		err = worker.Cleanup(w.config.ctx, task)
 		if err != nil {
 			errorChan <- err

@@ -42,6 +42,8 @@ func (m *MockCoordinatorClient) GetTask(ctx context.Context, timeout time.Durati
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
+	time.Sleep(timeout)
+
 	topicStr := topic.String()
 	if len(m.tasks[topicStr]) == 0 {
 		return nil, ErrNoTasksToComplete
@@ -63,6 +65,8 @@ func (m *MockCoordinatorClient) GetTask(ctx context.Context, timeout time.Durati
 func (m *MockCoordinatorClient) GetTaskAndSetProcessing(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	time.Sleep(timeout)
 
 	topicStr := topic.String()
 	if len(m.tasks[topicStr]) == 0 {
