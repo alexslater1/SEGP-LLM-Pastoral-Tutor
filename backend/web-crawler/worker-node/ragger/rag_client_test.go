@@ -49,7 +49,7 @@ func TestContactsFor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := client.ContactsFor(tt.input)
+			got, err := client.ContactsFrom(tt.input)
 			if err != nil {
 				t.Errorf("ContactsFor() error = %v", err)
 				return
@@ -210,7 +210,7 @@ func TestChunksFor(t *testing.T) {
 	We do not tolerate bullying or harassment. 
 	`
 
-	chunks, err := client.ChunksFor(text)
+	chunks, err := client.ChunksFrom(text)
 	if err != nil {
 		t.Fatalf("error getting chunks %v", err)
 	}

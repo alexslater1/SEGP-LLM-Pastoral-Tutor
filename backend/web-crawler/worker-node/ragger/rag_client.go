@@ -32,11 +32,11 @@ func NewRagClient(modelPath string, libPath string) *RagClient {
 	}
 }
 
-func (c *RagClient) ChunksFor(text string) ([]string, error) {
+func (c *RagClient) ChunksFrom(text string) ([]string, error) {
 	return c.chunker.ChunkDocument(text), nil
 }
 
-func (c *RagClient) ContactsFor(text string) ([]Contact, error) {
+func (c *RagClient) ContactsFrom(text string) ([]Contact, error) {
 	return extractContactsWithContext(text, 20, 20), nil
 }
 
