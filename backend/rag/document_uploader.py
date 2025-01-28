@@ -40,7 +40,7 @@ def upload_doc(url):
     index = 1
     for text in chunks:
         supabase.table(RAG_TABLE_NAME).insert([
-            {"text": text, "doc_id": doc_id, "pos_in_doc": index, "embedding": embed(text, tokenizer, model).tolist()}
+            {"text": text, "source": "document", "doc_id": doc_id, "pos_in_doc": index, "embedding": embed(text, tokenizer, model).tolist()}
         ]).execute()
         index += 1
     print("4")
@@ -49,7 +49,7 @@ def upload_doc(url):
     contact_index = 1
     for (email, email_context) in contacts[0]:
         supabase.table(CONTACT_TABLE_NAME).insert([
-            {"context": email_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "email", 
+            {"context": email_context, "source": "document", "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "email", 
              "embedding": embed(email_context, tokenizer, model).tolist(), "contact": email}
         ]).execute()
 
@@ -58,7 +58,7 @@ def upload_doc(url):
     
     for (phone, phone_context) in contacts[1]:
         supabase.table(CONTACT_TABLE_NAME).insert([
-            {"context": phone_context, "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "phone number", 
+            {"context": phone_context, "source": "document", "doc_id": doc_id, "pos_in_contacts": contact_index, "contact_type": "phone number", 
              "embedding": embed(phone_context, tokenizer, model).tolist(), "contact": phone}
         ]).execute()
 
@@ -69,10 +69,11 @@ def upload_doc(url):
         supabase.table(CONTACT_TABLE_NAME).insert([
             {
             "context": url_context, 
-             "doc_id": doc_id, 
-             "pos_in_contacts": contact_index, 
-             "contact_type": "url", 
-             "embedding": embed(url_context, tokenizer, model).tolist(),
+            "source": "document",
+            "doc_id": doc_id, 
+            "pos_in_contacts": contact_index, 
+            "contact_type": "url", 
+            "embedding": embed(url_context, tokenizer, model).tolist(),
             "contact": url
             }
         ]).execute()
