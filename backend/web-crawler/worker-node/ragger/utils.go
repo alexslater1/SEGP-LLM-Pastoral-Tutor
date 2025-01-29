@@ -87,48 +87,47 @@ func (dc *DocumentChunker) ChunkDocument(text string) []string {
 	// Split into paragraphs
 	paragraphs := strings.Split(text, dc.paragraphSep)
 	var allChunks []string
-	var lastChunkEnd string // Store the end of the last chunk for overlap
+	var currentChunk strings.Builder
+	currentTokenCount := 0
 
-	for _, paragraph := range paragraphs {
-		words := strings.Split(paragraph, dc.separator)
-		currentChunk := ""
-		if lastChunkEnd != "" {
-			currentChunk = lastChunkEnd // Start with overlap from previous chunk
+	for i, paragraph := range paragraphs {
+		// Skip empty paragraphs
+		if strings.TrimSpace(paragraph) == "" {
+			continue
 		}
 
-		// First-level chunking based on token count
-		for _, word := range words {
-			newChunk := currentChunk
-			if len(newChunk) > 0 {
-				newChunk += dc.separator
-			}
-			newChunk += word
+		// Calculate tokens for this paragraph
+		paragraphTokenCount := dc.tokenizeText(paragraph)
 
-			if dc.tokenizeText(newChunk) <= dc.chunkSize {
-				currentChunk = newChunk
-			} else {
-				if currentChunk != "" {
-					// Store the end of current chunk for next overlap
-					words := strings.Split(currentChunk, " ")
-					if len(words) > dc.chunkOverlap {
-						lastChunkEnd = strings.Join(words[len(words)-dc.chunkOverlap:], " ")
-					} else {
-						lastChunkEnd = currentChunk
-					}
-					allChunks = append(allChunks, currentChunk)
-				}
-				currentChunk = word
+		// If adding this paragraph would exceed chunk size, save current chunk and start new one
+		if currentTokenCount > 0 && currentTokenCount+paragraphTokenCount > dc.chunkSize {
+			if currentChunk.Len() > 0 {
+				allChunks = append(allChunks, currentChunk.String())
+				currentChunk.Reset()
+				currentTokenCount = 0
 			}
 		}
-		if currentChunk != "" {
-			words := strings.Split(currentChunk, " ")
-			if len(words) > dc.chunkOverlap {
-				lastChunkEnd = strings.Join(words[len(words)-dc.chunkOverlap:], " ")
-			} else {
-				lastChunkEnd = currentChunk
-			}
-			allChunks = append(allChunks, currentChunk)
+
+		// Add paragraph to current chunk
+		if currentChunk.Len() > 0 {
+			currentChunk.WriteString(dc.paragraphSep)
 		}
+		currentChunk.WriteString(paragraph)
+		currentTokenCount += paragraphTokenCount
+
+		// If this is the last paragraph or current chunk is getting large, save it
+		if i == len(paragraphs)-1 || currentTokenCount >= dc.chunkSize {
+			if currentChunk.Len() > 0 {
+				allChunks = append(allChunks, currentChunk.String())
+				currentChunk.Reset()
+				currentTokenCount = 0
+			}
+		}
+	}
+
+	// Add any remaining content
+	if currentChunk.Len() > 0 {
+		allChunks = append(allChunks, currentChunk.String())
 	}
 
 	return allChunks

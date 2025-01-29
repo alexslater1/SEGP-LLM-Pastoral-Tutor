@@ -222,7 +222,7 @@ func TestRedisWorkerManager2(t *testing.T) {
 
 	err = redisCoordinatorClient.CreateTask(context.TODO(), coordinator_client.CoordinatorClientTaskTopicUrls, mockTask1)
 	if err != nil {
-		t.Fatalf("Error creating mock  task: %v", err)
+		t.Fatalf("Error creating mock task: %v", err)
 	}
 
 	doneChan, errChan := scraperWorkerManager.Start()

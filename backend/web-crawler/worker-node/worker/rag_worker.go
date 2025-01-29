@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/ragger"
@@ -36,6 +37,8 @@ func (w *RagWorker) Id() string {
 }
 
 func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) error {
+	fmt.Println("RagWorker Execute")
+
 	ragParams, err := coordinator_client.CastParams[RagWorkerParams](task.Params)
 	if err != nil {
 		return fmt.Errorf("invalid params %+v", task.Params)
@@ -45,6 +48,8 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("markdown: %s\n\n\n", ragParams.Markdown)
 
 	if err := w.processAndStoreChunks(ragParams.Markdown, storedWebsite.ID); err != nil {
 		return err
@@ -69,6 +74,7 @@ func (w *RagWorker) processAndStoreChunks(markdown string, websiteID int) error 
 
 	var rags []storage.Rag
 	for i, chunk := range chunks {
+		log.Printf("embedding for chunk %d\n\n", i)
 		embeddings, err := w.ragClient.EmbeddingsFor(chunk)
 		if err != nil {
 			return fmt.Errorf("error extracting embeddings: %v", err)
@@ -97,6 +103,8 @@ func (w *RagWorker) processAndStoreContacts(markdown string, websiteID int) erro
 
 	var contactsToStore []storage.Contact
 	for i, contact := range contacts {
+		log.Printf("embedding for contact %d\n\n", i)
+
 		embedding, err := w.ragClient.EmbeddingsFor(contact.Value)
 		if err != nil {
 			return fmt.Errorf("error extracting embeddings: %v", err)

@@ -37,7 +37,7 @@ func TestRedisCoordinatorClientCreateTask(t *testing.T) {
 
 	err = client.CreateTask(context.Background(), CoordinatorClientTaskTopicUrls, task)
 	if err != nil {
-		t.Fatalf("Failed to create task  : %v", err)
+		t.Fatalf("Failed to create task     : %v", err)
 	}
 }
 
