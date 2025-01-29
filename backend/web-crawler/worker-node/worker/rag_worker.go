@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/ragger"
@@ -48,8 +49,6 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 		return err
 	}
 
-	fmt.Printf("markdown: %s\n\n\n", ragParams.Markdown)
-
 	chunks, err := w.ragClient.ChunksFrom(ragParams.Markdown)
 	if err != nil {
 		return fmt.Errorf("error extracting chunks: %v", err)
@@ -67,6 +66,7 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 		newSlice[len(chunks)+i] = contact.Context
 	}
 
+	log.Printf("RAG: generating embeddings for %d chunks and %d contacts\n", len(chunks), len(contacts))
 	embeddings, err := w.ragClient.EmbeddingsForAll(newSlice)
 	if err != nil {
 		return fmt.Errorf("error extracting embeddings: %v", err)
