@@ -41,7 +41,11 @@ func (c *RagClient) ContactsFrom(text string) ([]Contact, error) {
 }
 
 func (c *RagClient) EmbeddingsFor(text string) ([]float32, error) {
-	return embedText(nil, text, c.tokenizer, c.modelPath+"/model.onnx")
+	return embedText(text, c.tokenizer, c.modelPath+"/model.onnx")
+}
+
+func (c *RagClient) EmbeddingsForAll(texts []string) ([][]float32, error) {
+	return embedMultipleTexts(texts, c.tokenizer, c.modelPath+"/model.onnx")
 }
 
 func setup(libraryPath string) error {

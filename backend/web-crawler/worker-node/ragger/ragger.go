@@ -5,4 +5,5 @@ type Ragger interface {
 	ContactsFrom(text string) ([]Contact, error)
 
 	EmbeddingsFor(text string) ([]float32, error)
+	EmbeddingsForAll(texts []string) ([][]float32, error)
 }

@@ -149,7 +149,7 @@ func min(a, b int) int {
 }
 
 // Add this new function to embed text
-func embedText(session *ort.AdvancedSession, text string, tokenizer *TokenizerConfig, modelPath string) ([]float32, error) {
+func embedText(text string, tokenizer *TokenizerConfig, modelPath string) ([]float32, error) {
 	// Use our tokenizer properly
 	inputIds, attentionMask := tokenizer.Tokenize(text)
 
@@ -184,7 +184,7 @@ func embedText(session *ort.AdvancedSession, text string, tokenizer *TokenizerCo
 	defer outputTensor.Destroy()
 
 	// Create new session for each run
-	session, err = ort.NewAdvancedSession(modelPath,
+	session, err := ort.NewAdvancedSession(modelPath,
 		[]string{"input_ids", "attention_mask"},
 		[]string{"last_hidden_state"},
 		[]ort.Value{inputIdsTensor, attentionMaskTensor},
@@ -320,4 +320,96 @@ func (t *TokenizerConfig) Tokenize(text string) ([]int, []int) {
 	}
 
 	return tokenIds, attentionMask
+}
+
+func embedMultipleTexts(texts []string, tokenizer *TokenizerConfig, modelPath string) ([][]float32, error) {
+	if len(texts) == 0 {
+		return nil, fmt.Errorf("no texts provided for embedding")
+	}
+
+	// Tokenize all texts and find max length
+	var allInputIds [][]int
+	var allAttentionMasks [][]int
+	maxLen := 0
+	for _, text := range texts {
+		inputIds, attentionMask := tokenizer.Tokenize(text)
+		allInputIds = append(allInputIds, inputIds)
+		allAttentionMasks = append(allAttentionMasks, attentionMask)
+		if len(inputIds) > maxLen {
+			maxLen = len(inputIds)
+		}
+	}
+
+	// Pad all sequences to maxLen
+	batchSize := len(texts)
+	inputIds64 := make([]int64, batchSize*maxLen)
+	attentionMask64 := make([]int64, batchSize*maxLen)
+
+	for i := 0; i < batchSize; i++ {
+		for j := 0; j < maxLen; j++ {
+			idx := i*maxLen + j
+			if j < len(allInputIds[i]) {
+				inputIds64[idx] = int64(allInputIds[i][j])
+				attentionMask64[idx] = int64(allAttentionMasks[i][j])
+			} else {
+				inputIds64[idx] = int64(tokenizer.PadToken)
+				attentionMask64[idx] = 0
+			}
+		}
+	}
+
+	// Create input tensors with batch dimension
+	inputShape := ort.NewShape(int64(batchSize), int64(maxLen))
+
+	inputIdsTensor, err := ort.NewTensor(inputShape, inputIds64)
+	if err != nil {
+		return nil, err
+	}
+	defer inputIdsTensor.Destroy()
+
+	attentionMaskTensor, err := ort.NewTensor(inputShape, attentionMask64)
+	if err != nil {
+		return nil, err
+	}
+	defer attentionMaskTensor.Destroy()
+
+	// Create output tensor
+	outputShape := ort.NewShape(int64(batchSize), int64(maxLen), 384)
+	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
+	if err != nil {
+		return nil, err
+	}
+	defer outputTensor.Destroy()
+
+	// Create new session for batch inference
+	session, err := ort.NewAdvancedSession(modelPath,
+		[]string{"input_ids", "attention_mask"},
+		[]string{"last_hidden_state"},
+		[]ort.Value{inputIdsTensor, attentionMaskTensor},
+		[]ort.Value{outputTensor},
+		nil)
+	if err != nil {
+		return nil, err
+	}
+	defer session.Destroy()
+
+	// Run the model
+	err = session.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get embeddings from the output tensor
+	embeddings := outputTensor.GetData()
+
+	// Extract CLS embeddings for each text in batch
+	result := make([][]float32, batchSize)
+	for i := 0; i < batchSize; i++ {
+		// Get the CLS token embedding for each text
+		start := i * maxLen * 384 // Skip to the start of this text's embeddings
+		result[i] = make([]float32, 384)
+		copy(result[i], embeddings[start:start+384]) // Copy only the CLS token embedding
+	}
+
+	return result, nil
 }
