@@ -68,7 +68,7 @@ func (w Website) TableName() StorageTableName {
 	return StorageTableNameWebsite
 }
 
-type Contacts struct {
+type Contact struct {
 	ID            int       `json:"id,omitempty"`
 	Context       string    `json:"context"`
 	DocID         int       `json:"doc_id"`
@@ -80,6 +80,6 @@ type Contacts struct {
 	WebsiteID     int       `json:"website_id,omitempty"`
 }
 
-func (c Contacts) TableName() StorageTableName {
+func (c Contact) TableName() StorageTableName {
 	return StorageTableNameContacts
 }

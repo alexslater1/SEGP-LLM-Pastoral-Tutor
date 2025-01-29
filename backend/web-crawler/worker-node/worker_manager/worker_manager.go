@@ -1,6 +1,7 @@
 package worker_manager
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -56,7 +57,7 @@ func (w *WorkerManager) TaskLoop(taskChan chan<- *coordinator_client.Task, doneC
 		}
 
 		// Try to get a task
-		task, err := w.config.coordinatorClient.GetTaskAndSetProcessing(w.config.ctx, getTaskTimeout, coordinator_client.CoordinatorClientTaskTopicUrls)
+		task, err := w.config.coordinatorClient.GetTaskAndSetProcessing(w.config.ctx, getTaskTimeout, topicForWorkerConfigType(w.config.Type))
 
 		if err == coordinator_client.ErrNoTasksToComplete {
 			log.Println("No tasks to complete, waiting for new tasks...")
@@ -99,8 +100,21 @@ func (w *WorkerManager) createWorkers() []worker.Worker {
 		switch w.config.Type {
 		case WorkerConfigTypeScraper:
 			workers[i] = worker.NewScraperWorker(w.config.scraper, w.config.coordinatorClient)
+		case WorkerConfigTypeRag:
+			workers[i] = worker.NewRagWorker(w.config.ragger, w.config.coordinatorClient, w.config.store)
 		}
 	}
 
 	return workers
+}
+
+func topicForWorkerConfigType(workerType WorkerConfigType) coordinator_client.CoordinatorClientTaskTopic {
+	switch workerType {
+	case WorkerConfigTypeScraper:
+		return coordinator_client.CoordinatorClientTaskTopicUrls
+	case WorkerConfigTypeRag:
+		return coordinator_client.CoordinatorClientTaskTopicRag
+	}
+
+	panic(fmt.Sprintf("Unknown worker type: %s", workerType))
 }

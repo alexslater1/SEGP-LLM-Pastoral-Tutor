@@ -79,9 +79,11 @@ func TestRagWorkerProcessAndStoreContacts(t *testing.T) {
 		{Context: "Hello, world!", Value: "John Doe", Type: "person"},
 	})
 
+	ragClient.SetEmbeddingsFor("John Doe", []float32{1.0, 2.0, 3.0})
+
 	ragWorker.processAndStoreContacts("Hello, world!", 1)
 
-	contacts, err := storage.GetAll[storage.Contacts](memoryStorage, nil)
+	contacts, err := storage.GetAll[storage.Contact](memoryStorage, nil)
 	if err != nil {
 		t.Errorf("Error getting contacts: %v", err)
 	}
@@ -90,7 +92,9 @@ func TestRagWorkerProcessAndStoreContacts(t *testing.T) {
 	assert.Equal(t, contacts[0].Context, "Hello, world!")
 	assert.Equal(t, contacts[0].Contact, "John Doe")
 	assert.Equal(t, contacts[0].ContactType, "person")
-	assert.Equal(t, contacts[0].DocID, 1)
+	assert.Equal(t, contacts[0].Embedding, []float32{1.0, 2.0, 3.0})
+	assert.Equal(t, contacts[0].Source, "WEBSITE")
+	assert.Equal(t, contacts[0].WebsiteID, 1)
 }
 
 func TestRagWorkerExecute(t *testing.T) {
@@ -124,6 +128,8 @@ func TestRagWorkerExecute(t *testing.T) {
 		ragClient.SetEmbeddingsFor(chunks[i], embedding)
 	}
 
+	ragClient.SetEmbeddingsFor(contacts[0].Value, []float32{4.0, 5.0, 6.0})
+
 	// when
 	err = ragWorker.Execute(context.TODO(), task)
 	if err != nil {
@@ -149,7 +155,7 @@ func TestRagWorkerExecute(t *testing.T) {
 	assert.Equal(t, rags[0].Embedding, embeddings[0])
 	assert.Equal(t, rags[0].WebsiteID, websites[0].ID)
 
-	storedContacts, err := storage.GetAll[storage.Contacts](memoryStorage, nil)
+	storedContacts, err := storage.GetAll[storage.Contact](memoryStorage, nil)
 	if err != nil {
 		t.Errorf("Error getting contacts: %v", err)
 	}
@@ -158,7 +164,9 @@ func TestRagWorkerExecute(t *testing.T) {
 	assert.Equal(t, storedContacts[0].Context, markdown)
 	assert.Equal(t, storedContacts[0].Contact, "John Doe")
 	assert.Equal(t, storedContacts[0].ContactType, "person")
-	assert.Equal(t, storedContacts[0].DocID, websites[0].ID)
+	assert.Equal(t, storedContacts[0].Embedding, []float32{4.0, 5.0, 6.0})
+	assert.Equal(t, storedContacts[0].Source, "WEBSITE")
+	assert.Equal(t, storedContacts[0].WebsiteID, websites[0].ID)
 }
 
 func TestRagWorkerCleanup(t *testing.T) {

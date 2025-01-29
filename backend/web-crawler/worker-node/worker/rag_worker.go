@@ -95,14 +95,21 @@ func (w *RagWorker) processAndStoreContacts(markdown string, websiteID int) erro
 		return fmt.Errorf("error extracting contacts: %v", err)
 	}
 
-	var contactsToStore []storage.Contacts
+	var contactsToStore []storage.Contact
 	for i, contact := range contacts {
-		contactsToStore = append(contactsToStore, storage.Contacts{
+		embedding, err := w.ragClient.EmbeddingsFor(contact.Value)
+		if err != nil {
+			return fmt.Errorf("error extracting embeddings: %v", err)
+		}
+
+		contactsToStore = append(contactsToStore, storage.Contact{
 			Context:       contact.Context,
-			DocID:         websiteID,
 			PosInContacts: i,
 			Contact:       contact.Value,
 			ContactType:   contact.Type,
+			WebsiteID:     websiteID,
+			Source:        "WEBSITE",
+			Embedding:     embedding,
 		})
 	}
 
