@@ -215,7 +215,7 @@ func TestChunksFor(t *testing.T) {
 		t.Fatalf("error getting chunks %v", err)
 	}
 
-	assert.Equal(t, 9, len(chunks))
+	assert.Equal(t, 6, len(chunks))
 
 	for _, chunk := range chunks {
 		log.Printf("chunk: %v \n=============\n", chunk)

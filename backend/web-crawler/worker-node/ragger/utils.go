@@ -68,11 +68,11 @@ type DocumentChunker struct {
 func NewDocumentChunker(tokenizer *TokenizerConfig) *DocumentChunker {
 	return &DocumentChunker{
 		tokenizer:        tokenizer,
-		paragraphSep:     "\n\n\n",
-		chunkSize:        250, // Match Python default
-		separator:        " ",
-		secondaryChunkRe: regexp.MustCompile(`\S+?[\.,;!?]`),
-		chunkOverlap:     25,
+		paragraphSep:     "\n\n",
+		chunkSize:        256,
+		separator:        ". ",
+		secondaryChunkRe: regexp.MustCompile(`(?:[.!?]|[\n]{2,})`),
+		chunkOverlap:     50,
 	}
 }
 
@@ -87,11 +87,14 @@ func (dc *DocumentChunker) ChunkDocument(text string) []string {
 	// Split into paragraphs
 	paragraphs := strings.Split(text, dc.paragraphSep)
 	var allChunks []string
+	var lastChunkEnd string // Store the end of the last chunk for overlap
 
 	for _, paragraph := range paragraphs {
 		words := strings.Split(paragraph, dc.separator)
 		currentChunk := ""
-		var chunks []string
+		if lastChunkEnd != "" {
+			currentChunk = lastChunkEnd // Start with overlap from previous chunk
+		}
 
 		// First-level chunking based on token count
 		for _, word := range words {
@@ -105,61 +108,27 @@ func (dc *DocumentChunker) ChunkDocument(text string) []string {
 				currentChunk = newChunk
 			} else {
 				if currentChunk != "" {
-					chunks = append(chunks, currentChunk)
+					// Store the end of current chunk for next overlap
+					words := strings.Split(currentChunk, " ")
+					if len(words) > dc.chunkOverlap {
+						lastChunkEnd = strings.Join(words[len(words)-dc.chunkOverlap:], " ")
+					} else {
+						lastChunkEnd = currentChunk
+					}
+					allChunks = append(allChunks, currentChunk)
 				}
 				currentChunk = word
 			}
 		}
 		if currentChunk != "" {
-			chunks = append(chunks, currentChunk)
-		}
-
-		// Secondary chunking for chunks that are still too large
-		var refinedChunks []string
-		for _, chunk := range chunks {
-			if dc.tokenizeText(chunk) > dc.chunkSize {
-				// Split on sentence boundaries
-				subChunks := dc.secondaryChunkRe.Split(chunk, -1)
-				subChunkAccum := ""
-
-				for _, subChunk := range subChunks {
-					if len(subChunkAccum) > 0 &&
-						dc.tokenizeText(subChunkAccum+subChunk+" ") > dc.chunkSize {
-						refinedChunks = append(refinedChunks, strings.TrimSpace(subChunkAccum))
-						subChunkAccum = subChunk
-					} else {
-						subChunkAccum += subChunk + " "
-					}
-				}
-				if len(subChunkAccum) > 0 {
-					refinedChunks = append(refinedChunks, strings.TrimSpace(subChunkAccum))
-				}
+			words := strings.Split(currentChunk, " ")
+			if len(words) > dc.chunkOverlap {
+				lastChunkEnd = strings.Join(words[len(words)-dc.chunkOverlap:], " ")
 			} else {
-				refinedChunks = append(refinedChunks, chunk)
+				lastChunkEnd = currentChunk
 			}
+			allChunks = append(allChunks, currentChunk)
 		}
-
-		// Add overlapping chunks if required
-		var finalChunks []string
-		if dc.chunkOverlap > 0 && len(refinedChunks) > 1 {
-			for i := 0; i < len(refinedChunks)-1; i++ {
-				finalChunks = append(finalChunks, refinedChunks[i])
-
-				// Create overlap chunk
-				chunk1 := refinedChunks[i]
-				chunk2 := refinedChunks[i+1]
-				overlapStart := max(0, len(chunk1)-dc.chunkOverlap)
-				overlapEnd := min(dc.chunkOverlap, len(chunk2))
-				overlapChunk := chunk1[overlapStart:] + " " + chunk2[:overlapEnd]
-
-				finalChunks = append(finalChunks, overlapChunk)
-			}
-			finalChunks = append(finalChunks, refinedChunks[len(refinedChunks)-1])
-		} else {
-			finalChunks = refinedChunks
-		}
-
-		allChunks = append(allChunks, finalChunks...)
 	}
 
 	return allChunks
