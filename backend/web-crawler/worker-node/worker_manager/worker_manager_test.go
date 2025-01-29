@@ -87,15 +87,13 @@ func TestWorkerManagerRag(t *testing.T) {
 		})
 
 		chunks1     = []string{"Hello, World!1", "Hello, World!2"}
-		embeddings1 = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
+		embeddings1 = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}}
 	)
 	if err != nil {
 		t.Fatalf("Error creating mock task: %v", err)
 	}
 
 	ragClient.SetChunksFor(markdown, chunks1)
-	ragClient.SetEmbeddingsFor(chunks1[0], embeddings1[0])
-	ragClient.SetEmbeddingsFor(chunks1[1], embeddings1[1])
 
 	ragClient.SetContactsFor(markdown, []ragger.Contact{
 		{
@@ -105,7 +103,11 @@ func TestWorkerManagerRag(t *testing.T) {
 		},
 	})
 
-	ragClient.SetEmbeddingsFor("johndoe@example.com", []float32{1.0, 2.0, 3.0})
+	newSlice := make([]string, len(chunks1)+1)
+	copy(newSlice, chunks1)
+	newSlice[len(chunks1)] = markdown
+
+	ragClient.SetEmbeddingsForAll(newSlice, embeddings1)
 
 	err = coordinatorClient.CreateTask(context.TODO(), coordinator_client.CoordinatorClientTaskTopicRag, mockTask1)
 	if err != nil {
@@ -149,7 +151,7 @@ func TestWorkerManagerRag(t *testing.T) {
 	assert.Equal(t, contacts[0].Contact, "johndoe@example.com")
 	assert.Equal(t, contacts[0].ContactType, "email")
 	assert.Equal(t, contacts[0].WebsiteID, storedWebsites[0].ID)
-	assert.Equal(t, contacts[0].Embedding, []float32{1.0, 2.0, 3.0})
+	assert.Equal(t, contacts[0].Embedding, []float32{7.0, 8.0, 9.0})
 	assert.Equal(t, contacts[0].Source, "WEBSITE")
 
 	rags, err := storage.GetAll[storage.Rag](store, nil)
