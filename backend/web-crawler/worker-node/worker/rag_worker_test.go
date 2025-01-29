@@ -40,21 +40,15 @@ func TestStoreWebsite(t *testing.T) {
 	assert.Equal(t, storedWebsite.URL, url)
 }
 
-func TestRagWorkerProcessAndStoreChunks(t *testing.T) {
+func TestRagWorkerStoreChunks(t *testing.T) {
 	var (
 		memoryStorage = storage.NewMemoryStorage()
-		ragClient     = ragger.NewMockRagClient()
-		ragWorker     = NewRagWorker(ragClient, nil, memoryStorage)
+		ragWorker     = NewRagWorker(nil, nil, memoryStorage)
 		chunks        = []string{"Hello, world!1", "Hello, world!2", "Hello, world!3"}
 		embeddings    = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}}
 	)
 
-	ragClient.SetChunksFor("Hello, world!", chunks)
-	for i, embedding := range embeddings {
-		ragClient.SetEmbeddingsFor(chunks[i], embedding)
-	}
-
-	ragWorker.processAndStoreChunks("Hello, world!", 1)
+	ragWorker.storeChunks(chunks, embeddings, 1)
 
 	rags, err := storage.GetAll[storage.Rag](memoryStorage, nil)
 	if err != nil {
@@ -68,20 +62,15 @@ func TestRagWorkerProcessAndStoreChunks(t *testing.T) {
 	}
 }
 
-func TestRagWorkerProcessAndStoreContacts(t *testing.T) {
+func TestRagWorkerStoreContacts(t *testing.T) {
 	var (
 		memoryStorage = storage.NewMemoryStorage()
-		ragClient     = ragger.NewMockRagClient()
-		ragWorker     = NewRagWorker(ragClient, nil, memoryStorage)
+		ragWorker     = NewRagWorker(nil, nil, memoryStorage)
 	)
 
-	ragClient.SetContactsFor("Hello, world!", []ragger.Contact{
+	ragWorker.storeContacts([]ragger.Contact{
 		{Context: "Hello, world!", Value: "John Doe", Type: "person"},
-	})
-
-	ragClient.SetEmbeddingsFor("John Doe", []float32{1.0, 2.0, 3.0})
-
-	ragWorker.processAndStoreContacts("Hello, world!", 1)
+	}, [][]float32{{1.0, 2.0, 3.0}}, 1)
 
 	contacts, err := storage.GetAll[storage.Contact](memoryStorage, nil)
 	if err != nil {
@@ -109,7 +98,7 @@ func TestRagWorkerExecute(t *testing.T) {
 		markdown   = "Hello, world!"
 
 		chunks     = []string{"Hello, world!1"}
-		embeddings = [][]float32{{1.0, 2.0, 3.0}}
+		embeddings = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
 
 		contacts = []ragger.Contact{{Context: markdown, Value: "John Doe", Type: "person"}}
 	)
@@ -124,11 +113,15 @@ func TestRagWorkerExecute(t *testing.T) {
 
 	ragClient.SetChunksFor(markdown, chunks)
 	ragClient.SetContactsFor(markdown, contacts)
-	for i, embedding := range embeddings {
-		ragClient.SetEmbeddingsFor(chunks[i], embedding)
+
+	newSlice := make([]string, len(chunks)+len(contacts))
+	copy(newSlice, chunks)
+
+	for i, contact := range contacts {
+		newSlice[len(chunks)+i] = contact.Context
 	}
 
-	ragClient.SetEmbeddingsFor(contacts[0].Value, []float32{4.0, 5.0, 6.0})
+	ragClient.SetEmbeddingsForAll(newSlice, embeddings)
 
 	// when
 	err = ragWorker.Execute(context.TODO(), task)

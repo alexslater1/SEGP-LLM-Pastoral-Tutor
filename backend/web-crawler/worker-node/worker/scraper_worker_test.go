@@ -83,7 +83,6 @@ func TestScraperWorkerExecute(t *testing.T) {
 	createdRagTask, err := mockCoordinatorClient.GetTask(context.Background(), time.Second*1, coordinator_client.CoordinatorClientTaskTopicRag)
 
 	assert.NoError(t, err)
-	t.Logf("createdRagTask: %+v", createdRagTask)
 
 	parsedRagParams, err := coordinator_client.CastParams[RagWorkerParams](createdRagTask.Params)
 	assert.NoError(t, err)

@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/ragger"
@@ -51,11 +50,37 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 
 	fmt.Printf("markdown: %s\n\n\n", ragParams.Markdown)
 
-	if err := w.processAndStoreChunks(ragParams.Markdown, storedWebsite.ID); err != nil {
-		return err
+	chunks, err := w.ragClient.ChunksFrom(ragParams.Markdown)
+	if err != nil {
+		return fmt.Errorf("error extracting chunks: %v", err)
 	}
 
-	return w.processAndStoreContacts(ragParams.Markdown, storedWebsite.ID)
+	contacts, err := w.ragClient.ContactsFrom(ragParams.Markdown)
+	if err != nil {
+		return fmt.Errorf("error extracting contacts: %v", err)
+	}
+
+	newSlice := make([]string, len(chunks)+len(contacts))
+	copy(newSlice, chunks)
+
+	for i, contact := range contacts {
+		newSlice[len(chunks)+i] = contact.Context
+	}
+
+	embeddings, err := w.ragClient.EmbeddingsForAll(newSlice)
+	if err != nil {
+		return fmt.Errorf("error extracting embeddings: %v", err)
+	}
+
+	if err := w.storeChunks(chunks, embeddings, storedWebsite.ID); err != nil {
+		return fmt.Errorf("error storing chunks: %v", err)
+	}
+
+	if err := w.storeContacts(contacts, embeddings[len(chunks):], storedWebsite.ID); err != nil {
+		return fmt.Errorf("error storing contacts: %v", err)
+	}
+
+	return nil
 }
 
 func (w *RagWorker) storeWebsite(url string) (*storage.Website, error) {
@@ -66,49 +91,30 @@ func (w *RagWorker) storeWebsite(url string) (*storage.Website, error) {
 	return storedWebsite, nil
 }
 
-func (w *RagWorker) processAndStoreChunks(markdown string, websiteID int) error {
-	chunks, err := w.ragClient.ChunksFrom(markdown)
-	if err != nil {
-		return fmt.Errorf("error extracting chunks: %v", err)
-	}
+func (w *RagWorker) storeChunks(chunks []string, embeddings [][]float32, websiteID int) error {
 
 	var rags []storage.Rag
 	for i, chunk := range chunks {
-		log.Printf("embedding for chunk %d\n\n", i)
-		embeddings, err := w.ragClient.EmbeddingsFor(chunk)
-		if err != nil {
-			return fmt.Errorf("error extracting embeddings: %v", err)
-		}
 
 		rags = append(rags, storage.Rag{
 			PosInDoc:  i,
-			Embedding: embeddings,
+			Embedding: embeddings[i],
 			Source:    "WEBSITE",
 			WebsiteID: websiteID,
 			Text:      chunk,
 		})
 	}
 
-	if _, err = storage.StoreAll(w.store, rags...); err != nil {
+	if _, err := storage.StoreAll(w.store, rags...); err != nil {
 		return fmt.Errorf("error storing chunks: %v", err)
 	}
 	return nil
 }
 
-func (w *RagWorker) processAndStoreContacts(markdown string, websiteID int) error {
-	contacts, err := w.ragClient.ContactsFrom(markdown)
-	if err != nil {
-		return fmt.Errorf("error extracting contacts: %v", err)
-	}
+func (w *RagWorker) storeContacts(contacts []ragger.Contact, embeddings [][]float32, websiteID int) error {
 
 	var contactsToStore []storage.Contact
 	for i, contact := range contacts {
-		log.Printf("embedding for contact %d\n\n", i)
-
-		embedding, err := w.ragClient.EmbeddingsFor(contact.Value)
-		if err != nil {
-			return fmt.Errorf("error extracting embeddings: %v", err)
-		}
 
 		contactsToStore = append(contactsToStore, storage.Contact{
 			Context:       contact.Context,
@@ -117,11 +123,11 @@ func (w *RagWorker) processAndStoreContacts(markdown string, websiteID int) erro
 			ContactType:   contact.Type,
 			WebsiteID:     websiteID,
 			Source:        "WEBSITE",
-			Embedding:     embedding,
+			Embedding:     embeddings[i],
 		})
 	}
 
-	if _, err = storage.StoreAll(w.store, contactsToStore...); err != nil {
+	if _, err := storage.StoreAll(w.store, contactsToStore...); err != nil {
 		return fmt.Errorf("error storing contacts: %v", err)
 	}
 	return nil
