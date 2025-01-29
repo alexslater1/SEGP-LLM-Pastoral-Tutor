@@ -105,6 +105,8 @@ func TestWorkerManagerRag(t *testing.T) {
 		},
 	})
 
+	ragClient.SetEmbeddingsFor("johndoe@example.com", []float32{1.0, 2.0, 3.0})
+
 	err = coordinatorClient.CreateTask(context.TODO(), coordinator_client.CoordinatorClientTaskTopicRag, mockTask1)
 	if err != nil {
 		t.Fatalf("Error creating mock task: %v", err)
@@ -147,6 +149,8 @@ func TestWorkerManagerRag(t *testing.T) {
 	assert.Equal(t, contacts[0].Contact, "johndoe@example.com")
 	assert.Equal(t, contacts[0].ContactType, "email")
 	assert.Equal(t, contacts[0].WebsiteID, storedWebsites[0].ID)
+	assert.Equal(t, contacts[0].Embedding, []float32{1.0, 2.0, 3.0})
+	assert.Equal(t, contacts[0].Source, "WEBSITE")
 
 	rags, err := storage.GetAll[storage.Rag](store, nil)
 	if err != nil {
@@ -160,8 +164,6 @@ func TestWorkerManagerRag(t *testing.T) {
 	assert.Equal(t, rags[1].Embedding, embeddings1[1])
 	assert.Equal(t, rags[0].WebsiteID, storedWebsites[0].ID)
 	assert.Equal(t, rags[1].WebsiteID, storedWebsites[0].ID)
-
-	t.Logf("Rags: %v", rags)
 }
 
 func TestWorkerManagerRedis(t *testing.T) {
