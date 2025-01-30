@@ -92,3 +92,20 @@ func (r *RedisCoordinatorClient) SetProcessed(ctx context.Context, topic Coordin
 
 	return nil
 }
+
+func (r *RedisCoordinatorClient) StoreError(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task, err error) error {
+
+	storedError := StoredError{
+		Error:   err.Error(),
+		Task:    task,
+		Topic:   topic,
+		Created: time.Now(),
+	}
+
+	storedErrorString, err := json.Marshal(storedError)
+	if err != nil {
+		return err
+	}
+
+	return r.redisClient.RPush(ctx, "errors", storedErrorString).Err()
+}

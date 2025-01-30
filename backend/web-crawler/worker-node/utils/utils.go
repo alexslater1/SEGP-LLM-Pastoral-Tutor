@@ -48,11 +48,20 @@ func CleanText(text string) string {
 	return text
 }
 
-func IsValidUrl(uri string) bool {
+func FormatUrl(uri string) (string, error) {
+	// If no scheme is present, prepend "https://"
+	if !regexp.MustCompile(`^[a-zA-Z]+://`).MatchString(uri) {
+		uri = "https://" + uri
+	}
+
 	parsedUrl, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return false
+		return "", fmt.Errorf("failed to parse url %s: %w", uri, err)
 	}
-	// Check if the URL has a host
-	return parsedUrl.Host != ""
+
+	if parsedUrl.Host == "" {
+		return "", fmt.Errorf("malformed url: %s", uri)
+	}
+
+	return parsedUrl.String(), nil
 }

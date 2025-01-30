@@ -11,6 +11,7 @@ import (
 type MockCoordinatorClient struct {
 	tasks      map[string][]string // topic -> tasks
 	processing map[string][]string // topic -> processing tasks
+	errors     []string
 	mutex      sync.Mutex
 }
 
@@ -19,6 +20,7 @@ func NewMockCoordinatorClient() *MockCoordinatorClient {
 	return &MockCoordinatorClient{
 		tasks:      make(map[string][]string),
 		processing: make(map[string][]string),
+		errors:     make([]string, 0),
 	}
 }
 
@@ -118,6 +120,27 @@ func (m *MockCoordinatorClient) SetProcessed(ctx context.Context, topic Coordina
 	if !found {
 		return ErrNoTasksCompleted
 	}
+
+	return nil
+}
+
+func (m *MockCoordinatorClient) StoreError(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task, err error) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	storedError := StoredError{
+		Error:   err.Error(),
+		Task:    task,
+		Topic:   topic,
+		Created: time.Now(),
+	}
+
+	b, err := json.Marshal(storedError)
+	if err != nil {
+		return err
+	}
+
+	m.errors = append(m.errors, string(b))
 
 	return nil
 }

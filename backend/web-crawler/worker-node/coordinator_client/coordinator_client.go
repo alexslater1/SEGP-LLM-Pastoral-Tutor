@@ -12,6 +12,13 @@ type Task struct {
 	Params    map[string]interface{} `json:"params"`
 }
 
+type StoredError struct {
+	Error   string                     `json:"error"`
+	Task    *Task                      `json:"task"`
+	Topic   CoordinatorClientTaskTopic `json:"topic"`
+	Created time.Time                  `json:"created"`
+}
+
 func CastParams[T any](params map[string]interface{}) (*T, error) {
 	jsonParams, err := json.Marshal(params)
 	if err != nil {
@@ -82,6 +89,8 @@ type CoordinatorClient interface {
 	GetTask(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error)
 	GetTaskAndSetProcessing(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error)
 	SetProcessed(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task) error
+
+	StoreError(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task, err error) error
 }
 
 type CoordinatorClientNoTasksToComplete struct {

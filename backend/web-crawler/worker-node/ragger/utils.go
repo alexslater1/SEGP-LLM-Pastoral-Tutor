@@ -324,7 +324,7 @@ func (t *TokenizerConfig) Tokenize(text string) ([]int, []int) {
 
 func embedMultipleTexts(texts []string, tokenizer *TokenizerConfig, modelPath string) ([][]float32, error) {
 	if len(texts) == 0 {
-		return nil, fmt.Errorf("no texts provided for embedding")
+		return [][]float32{}, nil
 	}
 
 	// Tokenize all texts and find max length

@@ -81,8 +81,15 @@ func (w *WorkerManager) workerLoop(worker worker.Worker, taskChan <-chan *coordi
 		log.Printf("%s Worker %s executing task %s", strings.ToUpper(string(w.config.Type)), worker.Id(), task.ID)
 		err := worker.Execute(w.config.ctx, task)
 		if err != nil {
-			errorChan <- err
-			return
+			log.Printf("%s Worker %s failed to execute task %s: %v. Will store error and continue.",
+				strings.ToUpper(string(w.config.Type)), worker.Id(), task.ID, err)
+
+			err = w.config.coordinatorClient.StoreError(w.config.ctx, topicForWorkerConfigType(w.config.Type), task, err)
+			if err != nil {
+				log.Printf("Failed to store error for task %s: %v", task.ID, err)
+				errorChan <- err
+				return
+			}
 		}
 
 		log.Printf("%s Worker %s cleaning up task %s", strings.ToUpper(string(w.config.Type)), worker.Id(), task.ID)

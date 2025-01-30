@@ -16,14 +16,16 @@ func NewHttpScraper() *HttpScraper {
 }
 
 func (h *HttpScraper) HtmlFrom(url string) (*string, error) {
-	if !utils.IsValidUrl(url) {
-		return nil, fmt.Errorf("invalid url: %s", url)
+
+	formattedUrl, err := utils.FormatUrl(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to format url %s: %w", url, err)
 	}
 
 	// Make HTTP GET request
-	resp, err := http.Get(url)
+	resp, err := http.Get(formattedUrl)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to make http get request for url %s: %w", formattedUrl, err)
 	}
 	defer resp.Body.Close()
 
@@ -42,8 +44,13 @@ func (h *HttpScraper) HtmlFrom(url string) (*string, error) {
 }
 
 func (h *HttpScraper) HtmlFromTag(url string, tag string) (*string, error) {
+	formattedUrl, err := utils.FormatUrl(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to format url %s: %w", url, err)
+	}
+
 	// Make HTTP GET request directly (don't reuse HtmlFrom to avoid double parsing)
-	resp, err := http.Get(url)
+	resp, err := http.Get(formattedUrl)
 	if err != nil {
 		return nil, err
 	}
