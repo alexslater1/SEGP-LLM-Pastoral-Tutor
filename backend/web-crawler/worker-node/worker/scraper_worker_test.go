@@ -89,3 +89,26 @@ func TestScraperWorkerExecute(t *testing.T) {
 	assert.Equal(t, parsedRagParams.Markdown, "Hello, world!")
 	assert.Equal(t, parsedRagParams.Url, "https://example.com")
 }
+
+func TestScraperWorkerExecuteNoMarkdown(t *testing.T) {
+	var (
+		mockScraper           = scraper.NewMockScraper()
+		mockCoordinatorClient = coordinator_client.NewMockCoordinatorClient()
+		scraperWorker         = NewScraperWorker(mockScraper, mockCoordinatorClient)
+	)
+
+	mockScraper.SetHtmlContent("https://example.com", "<html><body>Hello, world!</body></html>")
+
+	mockUrlTask, err := coordinator_client.NewTask("id", "test", ScraperWorkerParams{Url: "https://example.com"})
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	err = scraperWorker.Execute(context.Background(), mockUrlTask)
+	assert.NoError(t, err)
+
+	_, err = mockCoordinatorClient.GetTask(context.Background(), time.Second*1, coordinator_client.CoordinatorClientTaskTopicRag)
+	if err != nil && err != coordinator_client.ErrNoTasksToComplete {
+		t.Fatalf("Expected ErrNoTasksToComplete, got %v", err)
+	}
+}

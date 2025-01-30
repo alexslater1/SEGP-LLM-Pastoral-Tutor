@@ -16,13 +16,13 @@ func main() {
 		coordinatorClient = coordinator_client.NewRedisCoordinatorClient(context.TODO(), "localhost:6379", "", 0)
 	)
 
-	go func() {
-		_, errCh := startScraperWorkerManager(coordinatorClient)
+	// go func() {
+	// 	_, errCh := startScraperWorkerManager(coordinatorClient)
 
-		for err := range errCh {
-			log.Fatalf("Error: %v", err)
-		}
-	}()
+	// 	for err := range errCh {
+	// 		log.Fatalf("Error: %v", err)
+	// 	}
+	// }()
 
 	go func() {
 		_, errCh := startRagWorkerManager(coordinatorClient)
@@ -39,7 +39,7 @@ func startScraperWorkerManager(coordinatorClient coordinator_client.CoordinatorC
 	var (
 		scraperClient = scraper.NewHttpScraper()
 
-		scraperWorkerManager = worker_manager.NewScraperWorkerManager(context.TODO(), coordinatorClient, scraperClient, 1)
+		scraperWorkerManager = worker_manager.NewScraperWorkerManager(context.TODO(), coordinatorClient, scraperClient, 10)
 	)
 
 	return scraperWorkerManager.Start()

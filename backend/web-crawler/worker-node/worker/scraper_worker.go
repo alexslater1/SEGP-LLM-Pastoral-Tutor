@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"log"
 
 	coordinator_client "github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/scraper"
@@ -55,6 +56,11 @@ func (w *ScraperWorker) Execute(ctx context.Context, task *coordinator_client.Ta
 	md, err := w.mdFromUrl(scraperParams.Url)
 	if err != nil {
 		return err
+	}
+
+	if md == "" {
+		log.Printf("No markdown parsed for %s. No need to rag", scraperParams.Url)
+		return nil
 	}
 
 	ragParams := RagWorkerParams{Markdown: md, Url: scraperParams.Url}

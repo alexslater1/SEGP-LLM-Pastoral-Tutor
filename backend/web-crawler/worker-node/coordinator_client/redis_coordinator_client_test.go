@@ -183,9 +183,9 @@ ideabuilders.com`
 			"url": url,
 		}
 
-		task, err := NewTask(uuid.New().String(), "asdasdasd", params)
+		task, err := NewTask(uuid.New().String(), "asdasdsasd", params)
 		if err != nil {
-			t.Fatalf("Failed to create task: %v", err)
+			t.Fatalf("Failed t o    create task: %v", err)
 		}
 
 		err = client.CreateTask(context.Background(), CoordinatorClientTaskTopicUrls, task)

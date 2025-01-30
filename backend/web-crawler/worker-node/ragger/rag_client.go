@@ -45,7 +45,25 @@ func (c *RagClient) EmbeddingsFor(text string) ([]float32, error) {
 }
 
 func (c *RagClient) EmbeddingsForAll(texts []string) ([][]float32, error) {
-	return embedMultipleTexts(texts, c.tokenizer, c.modelPath+"/model.onnx")
+	const batchSize = 30 // Process 20 texts at a time to limit memory usage
+	var allEmbeddings [][]float32
+
+	for i := 0; i < len(texts); i += batchSize {
+		end := i + batchSize
+		if end > len(texts) {
+			end = len(texts)
+		}
+
+		batch := texts[i:end]
+		batchEmbeddings, err := embedMultipleTexts(batch, c.tokenizer, c.modelPath+"/model.onnx")
+		if err != nil {
+			return nil, fmt.Errorf("failed to embed batch %d-%d: %w", i, end, err)
+		}
+
+		allEmbeddings = append(allEmbeddings, batchEmbeddings...)
+	}
+
+	return allEmbeddings, nil
 }
 
 func setup(libraryPath string) error {
