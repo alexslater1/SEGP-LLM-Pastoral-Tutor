@@ -1,7 +1,9 @@
 package ragger
 
 import (
+	"encoding/json"
 	"log"
+	"os"
 	"testing"
 	"time"
 
@@ -406,24 +408,150 @@ Press "⌘J" to open the command menu`
 	}
 }
 
+func TestChunksForMaxTokens512(t *testing.T) {
+	client := NewRagClient("../model", "../libonnxruntime.so.1.20.1")
+
+	chunks, err := client.ChunksFrom(`Paragraph
+
+Article
+Talk
+Read
+Edit
+View history
+
+Tools
+Appearance hide
+Text
+
+Small
+
+Standard
+
+Large
+Width
+
+Standard
+
+Wide
+Color (beta)
+
+Automatic
+
+Light
+
+Dark
+From Wikipedia, the free encyclopedia
+For the journal, see Paragraph (journal).
+Globe icon.
+The examples and perspective in this article may not represent a worldwide view of the subject. You may improve this article, discuss the issue on the talk page, or create a new article, as appropriate. (June 2013) (Learn how and when to remove this message)
+A paragraph (from Ancient Greek παράγραφος (parágraphos) 'to write beside') is a self-contained unit of discourse in writing dealing with a particular point or idea. Though not required by the orthographic conventions of any language with a writing system, paragraphs are a conventional means of organizing extended segments of prose.
+
+History
+The oldest classical British and Latin writings had little or no space between words and could be written in boustrophedon (alternating directions). Over time, text direction (left to right) became standardized. Word dividers and terminal punctuation became common. The first way to divide sentences into groups was the original paragraphos, similar to an underscore at the beginning of the new group.[1] The Greek parágraphos evolved into the pilcrow (¶), which in English manuscripts in the Middle Ages can be seen inserted inline between sentences.
+
+
+Indented paragraphs demonstrated in the US Constitution
+Ancient manuscripts also divided sentences into paragraphs with line breaks (newline) followed by an initial at the beginning of the next paragraph. An initial is an oversized capital letter, sometimes outdented beyond the margin of the text. This style can be seen, for example, in the original Old English manuscript of Beowulf. Outdenting is still used in English typography, though not commonly.[2] Modern English typography usually indicates a new paragraph by indenting the first line. This style can be seen in the (handwritten) United States Constitution from 1787. For additional ornamentation, a hedera leaf or other symbol can be added to the inter-paragraph white space, or put in the indentation space.
+
+A second common modern English style is to use no indenting, but add vertical white space to create "block paragraphs." On a typewriter, a double carriage return produces a blank line for this purpose; professional typesetters (or word processing software) may put in an arbitrary vertical space by adjusting leading. This style is very common in electronic formats, such `)
+	if err != nil {
+		t.Fatalf("error getting chunks %v", err)
+	}
+
+	assert.Equal(t, 1, len(chunks))
+
+	chunks2, err := client.ChunksFrom(`Paragraph
+
+	Article
+	Talk
+	Read
+	Edit
+	View history
+	
+	Tools
+	Appearance hide
+	Text
+	
+	Small
+	
+	Standard
+	
+	Large
+	Width
+	
+	Standard
+	
+	Wide
+	Color (beta)
+	
+	Automatic
+	
+	Light
+	
+	Dark
+	From Wikipedia, the free encyclopedia
+	For the journal, see Paragraph (journal).
+	Globe icon.
+	The examples and perspective in this article may not represent a worldwide view of the subject. You may improve this article, discuss the issue on the talk page, or create a new article, as appropriate. (June 2013) (Learn how and when to remove this message)
+	A paragraph (from Ancient Greek παράγραφος (parágraphos) 'to write beside') is a self-contained unit of discourse in writing dealing with a particular point or idea. Though not required by the orthographic conventions of any language with a writing system, paragraphs are a conventional means of organizing extended segments of prose.
+	
+	History
+	The oldest classical British and Latin writings had little or no space between words and could be written in boustrophedon (alternating directions). Over time, text direction (left to right) became standardized. Word dividers and terminal punctuation became common. The first way to divide sentences into groups was the original paragraphos, similar to an underscore at the beginning of the new group.[1] The Greek parágraphos evolved into the pilcrow (¶), which in English manuscripts in the Middle Ages can be seen inserted inline between sentences.
+	
+	
+	Indented paragraphs demonstrated in the US Constitution
+	Ancient manuscripts also divided sentences into paragraphs with line breaks (newline) followed by an initial at the beginning of the next paragraph. An initial is an oversized capital letter, sometimes outdented beyond the margin of the text. This style can be seen, for example, in the original Old English manuscript of Beowulf. Outdenting is still used in English typography, though not commonly.[2] Modern English typography usually indicates a new paragraph by indenting the first line. This style can be seen in the (handwritten) United States Constitution from 1787. For additional ornamentation, a hedera leaf or other symbol can be added to the inter-paragraph white space, or put in the indentation space.
+
+	A second common modern English style is to use no indenting, but add vertical white space to create "block paragraphs." On a typewriter, a double carriage return produces a blank line for this purpose; professional typesetters (or word processing software) may put in an arbitrary vertical space by adjusting leading. This style is very common in electronic formats, such a`)
+	if err != nil {
+		t.Fatalf("error getting chunks %v", err)
+	}
+
+	assert.Equal(t, 2, len(chunks2))
+}
+
 func TestEmbeddingsFor(t *testing.T) {
 	client := NewRagClient("../model", "../libonnxruntime.so.1.20.1")
 
-	embeddings, err := client.EmbeddingsFor("hello world")
+	embeddings, err := client.EmbeddingsFor(`Pellentesque fermentum nisl vitae
+fringilla venenatis. Etiam id mauris vitae orci maximus ultricies. Cras fringilla ipsum
+magna, in fringilla dui commodo a.
+
+Etiam vehicula luctus fermentum. In vel metus congue, pulvinar lectus vel, fermentum dui.
+Maecenas ante orci, egestas ut aliquet sit amet, sagittis a magna. Aliquam ante quam,
+pellentesque ut dignissim quis, laoreet eget est. Aliquam erat volutpat. Class aptent taciti
+sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Ut ullamcorper
+justo sapien, in cursus libero viverra eget. Vivamus auctor imperdiet urna, at pulvinar leo
+posuere laoreet. Suspendisse neque nisl, fringilla at iaculis scelerisque, ornare`)
 	if err != nil {
 		t.Fatalf("error getting embeddings %v", err)
 	}
 
 	assert.Equal(t, 384, len(embeddings))
-	log.Printf("embeddings (first 10): %v", embeddings[:10])
+
+	jsonString, err := json.Marshal(embeddings)
+	if err != nil {
+		t.Fatalf("error marshalling embeddings %v", err)
+	}
+
+	log.Printf("embeddings %v", string(jsonString))
 }
 
 func TestEmbeddingsForAll(t *testing.T) {
 	client := NewRagClient("../model", "../libonnxruntime.so.1.20.1")
 
-	embeddings, err := client.EmbeddingsForAll([]string{"hello world", "hello world 2"})
+	embeddings, err := client.EmbeddingsForAll([]string{"culis scelerisque, ornare vel dolor. Ut et pulvinar", "Ut id neque eget tortor mattis tristique. Donec a"})
 	if err != nil {
 		t.Fatalf("error getting embeddings %v", err)
+	}
+
+	for _, embedding := range embeddings {
+		jsonString, err := json.Marshal(embedding)
+		if err != nil {
+			t.Fatalf("error marshalling embeddings %v", err)
+		}
+		log.Printf("embedding %v\n", string(jsonString))
+		log.Printf("================\n")
 	}
 
 	assert.Equal(t, 2, len(embeddings))
@@ -746,7 +874,7 @@ Press "⌘J" to open the command menu`
 	t.Logf("num chunks: %v", len(chunks))
 
 	t1 := time.Now()
-	_, err = embedMultipleTexts(chunks, client.tokenizer, client.modelPath+"/model.onnx")
+	_, err = client.embedBatch(chunks)
 	if err != nil {
 		t.Fatalf("error getting embeddings %v", err)
 	}
@@ -760,4 +888,102 @@ Press "⌘J" to open the command menu`
 		}
 	}
 	t.Logf("embeddingsFor took %v", time.Since(t3))
+}
+
+func TestSequentialEmbeddings(t *testing.T) {
+	if os.Getenv("CICD") != "" {
+		t.Skip("skipping in CI")
+	}
+
+	client := NewRagClient("../model", "../libonnxruntime.so.1.20.1")
+
+	embed1 := `Paragraph
+
+Article
+Talk
+Read
+Edit
+View history
+
+Tools
+Appearance hide
+Text
+
+Small
+
+Standard
+
+Large
+Width
+
+Standard
+
+Wide
+Color (beta)
+
+Automatic
+
+Light
+
+Dark
+From Wikipedia, the free encyclopedia
+For the journal, see Paragraph (journal).
+Globe icon.
+The examples and perspective in this article may not represent a worldwide view of the subject. You may improve this article, discuss the issue on the talk page, or create a new article, as appropriate. (June 2013) (Learn how and when to remove this message)
+A paragraph (from Ancient Greek παράγραφος (parágraphos) 'to write beside') is a self-contained unit of discourse in writing dealing with a particular point or idea. Though not required by the orthographic conventions of any language with a writing system, paragraphs are a conventional means of organizing extended segments of prose.
+
+History
+The oldest classical British and Latin writings had little or no space between words and could be written in boustrophedon (alternating directions). Over time, text direction (left to right) became standardized. Word dividers and terminal punctuation became common. The first way to divide sentences into groups was the original paragraphos, similar to an underscore at the beginning of the new group.[1] The Greek parágraphos evolved into the pilcrow (¶), which in English manuscripts in the Middle Ages can be seen inserted inline between sentences.
+
+
+Indented paragraphs demonstrated in the US Constitution
+Ancient manuscripts also divided sentences into paragraphs with line breaks (newline) followed by an initial at the beginning of the next paragraph. An initial is an oversized capital letter, sometimes outdented beyond the margin of the text. This style can be seen, for example, in the original Old English manuscript of Beowulf. Outdenting is still used in English typography, though not commonly.[2] Modern English typography usually indicates a new paragraph by indenting the first line. This style can be seen in the (handwritten) United States Constitution from 1787. For additional ornamentation, a hedera leaf or other symbol can be added to the inter-paragraph white space, or put in the indentation space.
+
+A second common modern English style is to use no indenting, but add vertical white space to create "block paragraphs." On a typewriter, a double carriage return produces a blank line for this purpose; professional typesetters (or word processing software) may put in an arbitrary vertical space by adjusting leading. This style is very common in electronic formats, such `
+
+	for i := 0; i < 100; i++ {
+		embeddings, err := client.EmbeddingsForAll([]string{embed1})
+		if err != nil {
+			t.Fatalf("error getting embeddings %v", err)
+		}
+
+		assert.Equal(t, 1, len(embeddings))
+		assert.Equal(t, 384, len(embeddings[0]))
+
+		jsonString, err := json.Marshal(embeddings[0])
+		if err != nil {
+			t.Fatalf("error marshalling embeddings %v", err)
+		}
+		t.Logf("embeddings: %v\n====\n", string(jsonString))
+
+		embeddings, err = client.EmbeddingsForAll([]string{`21**
+
+**6.** **Working while studying .......................................................................................................... 22**
+
+**7.** **Health and Safety ....................................................................................................................`, "sssssad asd asdsasa sdsas s", "adsas asdasds"})
+		if err != nil {
+			t.Fatalf("error getting embeddings %v", err)
+		}
+
+		assert.Equal(t, 3, len(embeddings))
+		assert.Equal(t, 384, len(embeddings[0]))
+		assert.Equal(t, 384, len(embeddings[1]))
+
+		jsonString, err = json.Marshal(embeddings[0])
+		if err != nil {
+			t.Fatalf("error marshalling embeddings %v", err)
+		}
+		t.Logf("embeddings: %v\n====\n", string(jsonString))
+	}
+}
+
+func TestExtractContacts(t *testing.T) {
+	client := NewRagClient("../model", "../libonnxruntime.so.1.20.1")
+	contacts, err := client.ContactsFrom(`here is a contact: ethan@imperial.ac.uk`)
+	if err != nil {
+		t.Fatalf("error getting contacts %v", err)
+	}
+
+	assert.Equal(t, 1, len(contacts))
+	assert.Equal(t, "ethan@imperial.ac.uk", contacts[0].Value)
 }

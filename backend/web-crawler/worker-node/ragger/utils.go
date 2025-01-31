@@ -1,86 +1,34 @@
 package ragger
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
-	"unicode"
 
-	ort "github.com/yalue/onnxruntime_go"
+	"github.com/sugarme/tokenizer"
+	"github.com/yalue/onnxruntime_go"
 )
 
-type TokenizerConfig struct {
-	Vocab     map[string]int `json:"vocab"`
-	MaxLength int            `json:"max_length"`
-	PadToken  int            `json:"pad_token"`
-	SepToken  int            `json:"sep_token"`
-	ClsToken  int            `json:"cls_token"`
-	UnkToken  int            `json:"unk_token"`
-}
-
-func loadTokenizer(path string) (*TokenizerConfig, error) {
-	data, err := os.ReadFile(path + "/tokenizer_config.json")
-	if err != nil {
-		return nil, err
-	}
-
-	var config TokenizerConfig
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, err
-	}
-
-	// Set default values if not provided in config
-	if config.MaxLength == 0 {
-		config.MaxLength = 512 // Standard BERT-style max length
-	}
-	if config.PadToken == 0 {
-		config.PadToken = 0 // Common default
-	}
-	if config.SepToken == 0 {
-		config.SepToken = 102 // Common default for BERT-style models
-	}
-	if config.ClsToken == 0 {
-		config.ClsToken = 101 // Common default for BERT-style models
-	}
-	if config.UnkToken == 0 {
-		config.UnkToken = 100 // Common default
-	}
-
-	// Validate vocab is not empty
-	if len(config.Vocab) == 0 {
-		return nil, fmt.Errorf("vocabulary is empty in tokenizer config")
-	}
-
-	return &config, nil
-}
-
 type DocumentChunker struct {
-	tokenizer        *TokenizerConfig
-	paragraphSep     string
-	chunkSize        int
-	separator        string
-	secondaryChunkRe *regexp.Regexp
-	chunkOverlap     int
+	paragraphSep       string
+	maxChunkSizeTokens int
+	separator          string
+	secondaryChunkRe   *regexp.Regexp
+	chunkOverlap       int
+	wordsPerToken      float64 // Average words per token approximation
+	tokenizer          *tokenizer.Tokenizer
 }
 
-func NewDocumentChunker(tokenizer *TokenizerConfig) *DocumentChunker {
+func NewDocumentChunker(tokenizer *tokenizer.Tokenizer) *DocumentChunker {
 	return &DocumentChunker{
-		tokenizer:        tokenizer,
-		paragraphSep:     "\n\n",
-		chunkSize:        256,
-		separator:        ". ",
-		secondaryChunkRe: regexp.MustCompile(`(?:[.!?]|[\n]{2,})`),
-		chunkOverlap:     50,
+		paragraphSep:       "\n\n",
+		maxChunkSizeTokens: 256,
+		separator:          ". ",
+		secondaryChunkRe:   regexp.MustCompile(`(?:[.!?]|[\n]{2,})`),
+		chunkOverlap:       50,
+		wordsPerToken:      0.75, // Most tokenizers average about 0.75 tokens per word
+		tokenizer:          tokenizer,
 	}
-}
-
-func (dc *DocumentChunker) tokenizeText(text string) int {
-	// Use the BGE tokenizer to get actual token count
-	tokens, _ := dc.tokenizer.Tokenize(text)
-	// Return actual token count (including special tokens since they count towards the limit)
-	return len(tokens)
 }
 
 func (dc *DocumentChunker) ChunkDocument(text string) []string {
@@ -88,40 +36,99 @@ func (dc *DocumentChunker) ChunkDocument(text string) []string {
 	paragraphs := strings.Split(text, dc.paragraphSep)
 	var allChunks []string
 	var currentChunk strings.Builder
-	currentTokenCount := 0
 
-	for i, paragraph := range paragraphs {
+	for _, paragraph := range paragraphs {
 		// Skip empty paragraphs
 		if strings.TrimSpace(paragraph) == "" {
 			continue
 		}
 
-		// Calculate tokens for this paragraph
-		paragraphTokenCount := dc.tokenizeText(paragraph)
-
-		// If adding this paragraph would exceed chunk size, save current chunk and start new one
-		if currentTokenCount > 0 && currentTokenCount+paragraphTokenCount > dc.chunkSize {
-			if currentChunk.Len() > 0 {
-				allChunks = append(allChunks, currentChunk.String())
-				currentChunk.Reset()
-				currentTokenCount = 0
-			}
-		}
-
-		// Add paragraph to current chunk
+		// Try adding paragraph to current chunk
+		var proposedChunk string
 		if currentChunk.Len() > 0 {
-			currentChunk.WriteString(dc.paragraphSep)
+			proposedChunk = currentChunk.String() + dc.paragraphSep + paragraph
+		} else {
+			proposedChunk = paragraph
 		}
-		currentChunk.WriteString(paragraph)
-		currentTokenCount += paragraphTokenCount
 
-		// If this is the last paragraph or current chunk is getting large, save it
-		if i == len(paragraphs)-1 || currentTokenCount >= dc.chunkSize {
+		// Check actual token count
+		encodeInput := tokenizer.NewSingleEncodeInput(tokenizer.NewInputSequence(proposedChunk))
+		encoding, err := dc.tokenizer.Encode(encodeInput, true)
+		if err != nil {
+			// If encoding fails, treat it as exceeding limit to be safe
 			if currentChunk.Len() > 0 {
 				allChunks = append(allChunks, currentChunk.String())
 				currentChunk.Reset()
-				currentTokenCount = 0
 			}
+			continue
+		}
+
+		// If adding this paragraph would exceed token limit, save current chunk and start new one
+		if len(encoding.Ids) > dc.maxChunkSizeTokens {
+			if currentChunk.Len() > 0 {
+				allChunks = append(allChunks, currentChunk.String())
+				currentChunk.Reset()
+			}
+			// Try to add paragraph as a new chunk
+			encodeInput = tokenizer.NewSingleEncodeInput(tokenizer.NewInputSequence(paragraph))
+			encoding, err = dc.tokenizer.Encode(encodeInput, true)
+			if err == nil && len(encoding.Ids) <= dc.maxChunkSizeTokens {
+				currentChunk.WriteString(paragraph)
+			} else {
+				// If single paragraph is too long, first try splitting by sentences
+				sentences := dc.secondaryChunkRe.Split(paragraph, -1)
+				currentSentences := make([]string, 0)
+
+				for _, sentence := range sentences {
+					// If a single sentence is too long, split it into smaller chunks
+					encodeInput = tokenizer.NewSingleEncodeInput(tokenizer.NewInputSequence(sentence))
+					encoding, err = dc.tokenizer.Encode(encodeInput, true)
+					if err == nil && len(encoding.Ids) > dc.maxChunkSizeTokens {
+						// Split long sentence into smaller chunks by word count
+						words := strings.Fields(sentence)
+						estimatedChunkSize := int(float64(dc.maxChunkSizeTokens) * dc.wordsPerToken)
+
+						for i := 0; i < len(words); i += estimatedChunkSize {
+							end := i + estimatedChunkSize
+							if end > len(words) {
+								end = len(words)
+							}
+							chunk := strings.Join(words[i:end], " ")
+							if len(currentSentences) > 0 {
+								allChunks = append(allChunks, strings.Join(currentSentences, ". "))
+								currentSentences = []string{}
+							}
+							currentSentences = append(currentSentences, chunk)
+						}
+						continue
+					}
+
+					// Normal sentence handling
+					if len(currentSentences) > 0 {
+						testChunk := strings.Join(append(currentSentences, sentence), ". ")
+						encodeInput = tokenizer.NewSingleEncodeInput(tokenizer.NewInputSequence(testChunk))
+						encoding, err = dc.tokenizer.Encode(encodeInput, true)
+						if err != nil || len(encoding.Ids) > dc.maxChunkSizeTokens {
+							// Save current sentences and start new chunk
+							allChunks = append(allChunks, strings.Join(currentSentences, ". "))
+							currentSentences = []string{sentence}
+						} else {
+							currentSentences = append(currentSentences, sentence)
+						}
+					} else {
+						currentSentences = append(currentSentences, sentence)
+					}
+				}
+				if len(currentSentences) > 0 {
+					currentChunk.WriteString(strings.Join(currentSentences, ". "))
+				}
+			}
+		} else {
+			// Paragraph fits, add it to current chunk
+			if currentChunk.Len() > 0 {
+				currentChunk.WriteString(dc.paragraphSep)
+			}
+			currentChunk.WriteString(paragraph)
 		}
 	}
 
@@ -133,86 +140,126 @@ func (dc *DocumentChunker) ChunkDocument(text string) []string {
 	return allChunks
 }
 
-// Helper functions
-func max(a, b int) int {
-	if a > b {
-		return a
+func (r *RagClient) inputIdsAndAttentionMasks(texts []string) ([][]int, [][]int, error) {
+	var inputIds [][]int
+	var attentionMasks [][]int
+	maxLength := 0
+
+	// First pass: tokenize and find max length
+	for _, text := range texts {
+		encodeInput := tokenizer.NewSingleEncodeInput(tokenizer.NewInputSequence(text))
+		encoding, err := r.tokenizer.Encode(encodeInput, true)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to encode text: %v", err)
+		}
+
+		inputIds = append(inputIds, encoding.Ids)
+		attentionMasks = append(attentionMasks, encoding.AttentionMask)
+		if len(encoding.Ids) > maxLength {
+			maxLength = len(encoding.Ids)
+		}
 	}
-	return b
-}
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-// Add this new function to embed text
-func embedText(text string, tokenizer *TokenizerConfig, modelPath string) ([]float32, error) {
-	// Use our tokenizer properly
-	inputIds, attentionMask := tokenizer.Tokenize(text)
-
-	// Convert to int64 for ONNX
-	inputIds64 := make([]int64, len(inputIds))
-	attentionMask64 := make([]int64, len(attentionMask))
+	// Pad all sequences to maxLength
 	for i := range inputIds {
-		inputIds64[i] = int64(inputIds[i])
-		attentionMask64[i] = int64(attentionMask[i])
+		if len(inputIds[i]) < maxLength {
+			padding := make([]int, maxLength-len(inputIds[i]))
+			inputIds[i] = append(inputIds[i], padding...)
+			attentionMasks[i] = append(attentionMasks[i], padding...)
+		}
 	}
 
-	inputShape := ort.NewShape(1, int64(len(inputIds))) // [batch_size, sequence_length]
+	return inputIds, attentionMasks, nil
+}
 
-	inputIdsTensor, err := ort.NewTensor(inputShape, inputIds64)
+func (r *RagClient) tensorsFromInputIdsAndAttentionMasks(inputIds [][]int, attentionMasks [][]int) (onnxruntime_go.Value, onnxruntime_go.Value, error) {
+	batchSize := len(inputIds)
+	maxLength := len(inputIds[0])
+
+	inputIdsTensor, err := onnxruntime_go.NewTensor[int64](
+		onnxruntime_go.NewShape(int64(batchSize), int64(maxLength)),
+		make([]int64, batchSize*maxLength),
+	)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to create input_ids tensor: %v", err)
+	}
+
+	attentionMaskTensor, err := onnxruntime_go.NewTensor[int64](
+		onnxruntime_go.NewShape(int64(batchSize), int64(maxLength)),
+		make([]int64, batchSize*maxLength),
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create attention_mask tensor: %v", err)
+	}
+
+	// Copy values into tensors
+	for i := 0; i < batchSize; i++ {
+		for j := 0; j < maxLength; j++ {
+			idx := i*maxLength + j
+			inputIdsTensor.GetData()[idx] = int64(inputIds[i][j])
+			attentionMaskTensor.GetData()[idx] = int64(attentionMasks[i][j])
+		}
+	}
+
+	return inputIdsTensor, attentionMaskTensor, nil
+}
+
+func (r *RagClient) embedBatch(texts []string) ([][]float32, error) {
+	inputIds, attentionMasks, err := r.inputIdsAndAttentionMasks(texts)
+	fmt.Println(len(inputIds[0]))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get inputIds and attentionMasks: %v", err)
+	}
+
+	inputIdsTensor, attentionMaskTensor, err := r.tensorsFromInputIdsAndAttentionMasks(inputIds, attentionMasks)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tensors from inputIds and attentionMasks: %v", err)
 	}
 	defer inputIdsTensor.Destroy()
-
-	attentionMaskTensor, err := ort.NewTensor(inputShape, attentionMask64)
-	if err != nil {
-		return nil, err
-	}
 	defer attentionMaskTensor.Destroy()
 
-	// BERT output shape will be [batch_size, sequence_length, hidden_size]
-	outputShape := ort.NewShape(1, int64(len(inputIds)), 384) // 384 is hidden size for bge-small
-	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
+	batchSize := len(inputIds)
+	maxLength := len(inputIds[0])
+
+	outputTensor, err := onnxruntime_go.NewTensor[float32](
+		onnxruntime_go.NewShape(int64(batchSize), int64(maxLength), 384),
+		make([]float32, batchSize*maxLength*384),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create output tensor: %v", err)
 	}
 	defer outputTensor.Destroy()
 
-	// Create new session for each run
-	session, err := ort.NewAdvancedSession(modelPath,
-		[]string{"input_ids", "attention_mask"},
-		[]string{"last_hidden_state"},
-		[]ort.Value{inputIdsTensor, attentionMaskTensor},
-		[]ort.Value{outputTensor},
-		nil)
-	if err != nil {
-		return nil, err
-	}
-	defer session.Destroy()
+	// Set up inputs and outputs for dynamic session
+	inputs := []onnxruntime_go.Value{inputIdsTensor, attentionMaskTensor}
+	outputs := []onnxruntime_go.Value{outputTensor}
+	defer outputs[0].Destroy()
 
-	// Run the model
-	err = session.Run()
+	// Run inference
+	err = r.onnx_session.Run(inputs, outputs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to run inference: %v", err)
 	}
 
-	// Get embeddings from the output tensor
-	embeddings := outputTensor.GetData()
+	// Extract embeddings for each text (using [CLS] token)
+	embeddings := make([][]float32, batchSize)
+	for i := 0; i < batchSize; i++ {
+		embedding := make([]float32, 384)
+		start := i * 384 // We only want the [CLS] token embedding
+		copy(embedding, outputTensor.GetData()[start:start+384])
+		embeddings[i] = embedding
+	}
 
-	// Return only the CLS token embedding (first token's embedding)
-	clsEmbedding := embeddings[:384] // First 384 values represent CLS token embedding
-	return clsEmbedding, nil
+	return embeddings, nil
 }
 
-type Contact struct {
-	Value   string
-	Context string
-	Type    string
+// Keep the original Embed method but make it use EmbedBatch internally
+func (r *RagClient) embed(text string) ([]float32, error) {
+	embeddings, err := r.embedBatch([]string{text})
+	if err != nil {
+		return nil, err
+	}
+	return embeddings[0], nil
 }
 
 func extractContactsWithContext(text string, wordsBefore, wordsAfter int) []Contact {
@@ -281,135 +328,4 @@ func extractContactsWithContext(text string, wordsBefore, wordsAfter int) []Cont
 	}
 
 	return contacts
-}
-
-// Add this method to TokenizerConfig
-func (t *TokenizerConfig) Tokenize(text string) ([]int, []int) {
-	text = strings.TrimSpace(text)
-	if text == "" {
-		// Return minimal valid tokens for empty text
-		return []int{t.ClsToken, t.SepToken}, []int{1, 1}
-	}
-
-	tokenIds := []int{t.ClsToken}
-
-	// Split on whitespace and punctuation
-	words := strings.FieldsFunc(text, func(r rune) bool {
-		return unicode.IsSpace(r) || unicode.IsPunct(r)
-	})
-
-	for _, word := range words {
-		word = strings.ToLower(word)
-		if tokenId, exists := t.Vocab[word]; exists {
-			tokenIds = append(tokenIds, tokenId)
-		} else {
-			// For unknown words, add a single UNK token instead of per-character
-			tokenIds = append(tokenIds, t.UnkToken)
-		}
-	}
-
-	tokenIds = append(tokenIds, t.SepToken)
-
-	if len(tokenIds) > t.MaxLength {
-		tokenIds = tokenIds[:t.MaxLength]
-	}
-
-	attentionMask := make([]int, len(tokenIds))
-	for i := range attentionMask {
-		attentionMask[i] = 1
-	}
-
-	return tokenIds, attentionMask
-}
-
-func embedMultipleTexts(texts []string, tokenizer *TokenizerConfig, modelPath string) ([][]float32, error) {
-	if len(texts) == 0 {
-		return [][]float32{}, nil
-	}
-
-	// Tokenize all texts and find max length
-	var allInputIds [][]int
-	var allAttentionMasks [][]int
-	maxLen := 0
-	for _, text := range texts {
-		inputIds, attentionMask := tokenizer.Tokenize(text)
-		allInputIds = append(allInputIds, inputIds)
-		allAttentionMasks = append(allAttentionMasks, attentionMask)
-		if len(inputIds) > maxLen {
-			maxLen = len(inputIds)
-		}
-	}
-
-	// Pad all sequences to maxLen
-	batchSize := len(texts)
-	inputIds64 := make([]int64, batchSize*maxLen)
-	attentionMask64 := make([]int64, batchSize*maxLen)
-
-	for i := 0; i < batchSize; i++ {
-		for j := 0; j < maxLen; j++ {
-			idx := i*maxLen + j
-			if j < len(allInputIds[i]) {
-				inputIds64[idx] = int64(allInputIds[i][j])
-				attentionMask64[idx] = int64(allAttentionMasks[i][j])
-			} else {
-				inputIds64[idx] = int64(tokenizer.PadToken)
-				attentionMask64[idx] = 0
-			}
-		}
-	}
-
-	// Create input tensors with batch dimension
-	inputShape := ort.NewShape(int64(batchSize), int64(maxLen))
-
-	inputIdsTensor, err := ort.NewTensor(inputShape, inputIds64)
-	if err != nil {
-		return nil, err
-	}
-	defer inputIdsTensor.Destroy()
-
-	attentionMaskTensor, err := ort.NewTensor(inputShape, attentionMask64)
-	if err != nil {
-		return nil, err
-	}
-	defer attentionMaskTensor.Destroy()
-
-	// Create output tensor
-	outputShape := ort.NewShape(int64(batchSize), int64(maxLen), 384)
-	outputTensor, err := ort.NewEmptyTensor[float32](outputShape)
-	if err != nil {
-		return nil, err
-	}
-	defer outputTensor.Destroy()
-
-	// Create new session for batch inference
-	session, err := ort.NewAdvancedSession(modelPath,
-		[]string{"input_ids", "attention_mask"},
-		[]string{"last_hidden_state"},
-		[]ort.Value{inputIdsTensor, attentionMaskTensor},
-		[]ort.Value{outputTensor},
-		nil)
-	if err != nil {
-		return nil, err
-	}
-	defer session.Destroy()
-
-	// Run the model
-	err = session.Run()
-	if err != nil {
-		return nil, err
-	}
-
-	// Get embeddings from the output tensor
-	embeddings := outputTensor.GetData()
-
-	// Extract CLS embeddings for each text in batch
-	result := make([][]float32, batchSize)
-	for i := 0; i < batchSize; i++ {
-		// Get the CLS token embedding for each text
-		start := i * maxLen * 384 // Skip to the start of this text's embeddings
-		result[i] = make([]float32, 384)
-		copy(result[i], embeddings[start:start+384]) // Copy only the CLS token embedding
-	}
-
-	return result, nil
 }

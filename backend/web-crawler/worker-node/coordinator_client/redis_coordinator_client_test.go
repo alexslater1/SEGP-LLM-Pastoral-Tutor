@@ -71,7 +71,7 @@ func TestRedisCoordinatorClientCreate100Tasks(t *testing.T) {
 
 func TestRedisCoordinatorClientCreate100UrlTasks(t *testing.T) {
 	if os.Getenv("CICD") == "true" {
-		t.Skip("Skipping test in CICD")
+		t.Skip("Skipping test in CICD ")
 	}
 
 	links := `https://www.imperial.ac.uk/
@@ -173,8 +173,7 @@ https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants
 https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/nhs-bursary/
 https://www.imperial.ac.uk/study/fees-and-funding/scholarships-search/
 https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/ib-excellence/
-https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/presidential-scholarships-black-heritage-students/
-`
+https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/presidential-scholarships-black-heritage-students/`
 
 	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
 	urls := strings.Split(links, "\n")
@@ -186,12 +185,12 @@ https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants
 
 		task, err := NewTask(uuid.New().String(), "asdasdsasd", params)
 		if err != nil {
-			t.Fatalf("Failed t o     create task: %v", err)
+			t.Fatalf("Failed to create task: %v", err)
 		}
 
 		err = client.CreateTask(context.Background(), CoordinatorClientTaskTopicUrls, task)
 		if err != nil {
-			t.Fatalf("Failed  to create task: %v", err)
+			t.Fatalf("Failed to   create task: %v", err)
 		}
 	}
 }

@@ -22,6 +22,9 @@ func main() {
 	// Add command line flags
 	workerType := flag.String("worker", "", "Type of worker to run (scraper or rag)")
 	concurrency := flag.Int("concurrency", 0, "Number of concurrent workers (only used for scraper)")
+	redisAddr := flag.String("redis-addr", "localhost:6379", "Redis server address")
+	redisPassword := flag.String("redis-password", "", "Redis password")
+	redisDB := flag.Int("redis-db", 0, "Redis database number")
 	flag.Parse()
 
 	if *workerType == "" {
@@ -33,7 +36,12 @@ func main() {
 	}
 
 	var (
-		coordinatorClient = coordinator_client.NewRedisCoordinatorClient(context.TODO(), "localhost:6379", "", 0)
+		coordinatorClient = coordinator_client.NewRedisCoordinatorClient(
+			context.TODO(),
+			*redisAddr,
+			*redisPassword,
+			*redisDB,
+		)
 	)
 
 	switch *workerType {
