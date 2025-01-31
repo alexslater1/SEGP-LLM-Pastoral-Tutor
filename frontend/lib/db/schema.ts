@@ -15,6 +15,8 @@ export const user = pgTable('User', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   email: varchar('email', { length: 64 }).notNull(),
   password: varchar('password', { length: 64 }),
+  role: text('role', { enum: ['admin', 'student'] }).notNull().default('student'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export type User = InferSelectModel<typeof user>;
