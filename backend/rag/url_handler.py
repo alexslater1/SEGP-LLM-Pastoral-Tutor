@@ -79,4 +79,8 @@ def upload_url(url):
     print("5")
 
 def delete_url(url):
-    return ""
+    try:
+        response = supabase.table(RAG_SOURCES_TABLE_NAME).delete().eq("url", url).execute()
+
+    except Exception as e:
+        print(f"An error occurred deleting the document: {e}")
