@@ -3,32 +3,51 @@ package ragger
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/ethanhosier/worker-node/utils"
-	ort "github.com/yalue/onnxruntime_go"
+	"github.com/sugarme/tokenizer"
+	"github.com/sugarme/tokenizer/pretrained"
+	"github.com/yalue/onnxruntime_go"
 )
 
+type Contact struct {
+	Value   string
+	Context string
+	Type    string
+}
+
 type RagClient struct {
-	tokenizer *TokenizerConfig
-	chunker   *DocumentChunker
-	modelPath string
+	chunker      *DocumentChunker
+	modelPath    string
+	onnx_session *onnxruntime_go.DynamicAdvancedSession
+	tokenizer    *tokenizer.Tokenizer
 }
 
 func NewRagClient(modelPath string, libPath string) *RagClient {
-	if err := setup(utils.Required(libPath, "libonx lihrary path")); err != nil {
-		log.Fatalf("error initializing rag client environment %v", err)
+	onnxruntime_go.SetSharedLibraryPath(utils.Required(libPath, "libonx library path"))
+	err := onnxruntime_go.InitializeEnvironment()
+	if err != nil {
+		log.Fatalf("Failed to initialize environment: %v", err)
 	}
 
-	tokenizer, err := loadTokenizer(utils.Required(modelPath, "model path"))
+	session, err := onnxruntime_go.NewDynamicAdvancedSession(modelPath+"/model.onnx",
+		[]string{"input_ids", "attention_mask"},
+		[]string{"last_hidden_state"},
+		nil)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to create session: %v", err)
+	}
+
+	tok, err := pretrained.FromFile(modelPath + "/tokenizer.json")
+	if err != nil {
+		log.Fatalf("failed to load tokenizer: %v", err)
 	}
 
 	return &RagClient{
-		tokenizer: tokenizer,
-		chunker:   NewDocumentChunker(tokenizer),
-		modelPath: modelPath,
+		chunker:      NewDocumentChunker(tok),
+		modelPath:    modelPath,
+		onnx_session: session,
+		tokenizer:    tok,
 	}
 }
 
@@ -41,14 +60,27 @@ func (c *RagClient) ContactsFrom(text string) ([]Contact, error) {
 }
 
 func (c *RagClient) EmbeddingsFor(text string) ([]float32, error) {
-	return embedText(nil, text, c.tokenizer, c.modelPath+"/model.onnx")
+	return c.embed(text)
 }
 
-func setup(libraryPath string) error {
-	if err := os.Setenv("LD_LIBRARY_PATH", libraryPath); err != nil {
-		return fmt.Errorf("error loading .env file %v", err)
+func (c *RagClient) EmbeddingsForAll(texts []string) ([][]float32, error) {
+	const batchSize = 30 // Process 20 texts at a time to limit memory usage
+	var allEmbeddings [][]float32
+
+	for i := 0; i < len(texts); i += batchSize {
+		end := i + batchSize
+		if end > len(texts) {
+			end = len(texts)
+		}
+
+		batch := texts[i:end]
+		batchEmbeddings, err := c.embedBatch(batch)
+		if err != nil {
+			return nil, fmt.Errorf("failed to embed batch %d-%d: %w", i, end, err)
+		}
+
+		allEmbeddings = append(allEmbeddings, batchEmbeddings...)
 	}
 
-	ort.SetSharedLibraryPath(libraryPath)
-	return ort.InitializeEnvironment()
+	return allEmbeddings, nil
 }

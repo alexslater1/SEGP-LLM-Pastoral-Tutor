@@ -149,3 +149,19 @@ func TestMockRagClient(t *testing.T) {
 		})
 	})
 }
+
+func TestMockRagClient_EmbeddingsForAll(t *testing.T) {
+	mock := NewMockRagClient()
+	testInput := []string{"test document 1", "test document 2"}
+	expectedEmbeddings := [][]float32{{0.1, 0.2, 0.3}, {0.4, 0.5, 0.6}}
+
+	mock.SetEmbeddingsForAll(testInput, expectedEmbeddings)
+	embeddings, err := mock.EmbeddingsForAll(testInput)
+
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(embeddings, expectedEmbeddings) {
+		t.Errorf("got embeddings %v, want %v", embeddings, expectedEmbeddings)
+	}
+}

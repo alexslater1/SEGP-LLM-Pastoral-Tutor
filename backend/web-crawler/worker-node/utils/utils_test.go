@@ -1,45 +1,70 @@
 package utils
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestIsValidUrl(t *testing.T) {
 	tests := []struct {
 		name     string
 		url      string
-		expected bool
+		expected string
+		err      error
 	}{
 		{
 			name:     "valid http url",
 			url:      "http://example.com",
-			expected: true,
+			expected: "http://example.com",
+			err:      nil,
 		},
 		{
 			name:     "valid https url",
 			url:      "https://example.com/path?query=value",
-			expected: true,
+			expected: "https://example.com/path?query=value",
+			err:      nil,
 		},
 		{
-			name:     "invalid url - missing scheme",
+			name:     "valid url but missing scheme",
 			url:      "example.com",
-			expected: false,
+			expected: "https://example.com",
+			err:      nil,
 		},
 		{
 			name:     "invalid url - empty string",
 			url:      "",
-			expected: false,
+			expected: "",
+			err:      errors.New("empty string"),
 		},
 		{
 			name:     "invalid url - malformed",
 			url:      "http://",
-			expected: false,
+			expected: "",
+			err:      errors.New("malformed url"),
+		},
+		{
+			name:     "valid url - missing scheme",
+			url:      "accounting-by-post.com",
+			expected: "https://accounting-by-post.com",
+			err:      nil,
+		},
+		{
+			name:     "valid url - missing scheme",
+			url:      "fdu.org.ua",
+			expected: "https://fdu.org.ua",
+			err:      nil,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := IsValidUrl(tt.url)
+			result, err := FormatUrl(tt.url)
+			if err != nil && tt.err == nil {
+				t.Errorf("FormatUrl(%q) Error = %v, want %v", tt.url, err, tt.expected)
+			}
+
 			if result != tt.expected {
-				t.Errorf("IsValidUrl(%q) = %v, want %v", tt.url, result, tt.expected)
+				t.Errorf("FormatUrl(%q) = %v, want %v", tt.url, result, tt.expected)
 			}
 		})
 	}

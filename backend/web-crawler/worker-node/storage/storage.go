@@ -11,9 +11,9 @@ type StorageTableName string
 const (
 	StorageTableNameAgentRequests StorageTableName = "agent_requests"
 	StorageTableNameAgentEvents   StorageTableName = "agent_events"
-	StorageTableNameRag           StorageTableName = "rag"
-	StorageTableNameWebsite       StorageTableName = "website"
-	StorageTableNameContacts      StorageTableName = "contacts"
+	StorageTableNameRagChunks     StorageTableName = "rag_chunks"
+	StorageTableNameRagSources    StorageTableName = "rag_sources"
+	StorageTableNameRagContacts   StorageTableName = "rag_contacts"
 )
 
 type Storage interface {

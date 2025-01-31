@@ -44,84 +44,88 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 		return fmt.Errorf("invalid params %+v", task.Params)
 	}
 
-	storedWebsite, err := w.storeWebsite(ragParams.Url)
+	storedRagSource, err := w.storeRagSource(ragParams.Url)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("markdown: %s\n\n\n", ragParams.Markdown)
-
-	if err := w.processAndStoreChunks(ragParams.Markdown, storedWebsite.ID); err != nil {
-		return err
-	}
-
-	return w.processAndStoreContacts(ragParams.Markdown, storedWebsite.ID)
-}
-
-func (w *RagWorker) storeWebsite(url string) (*storage.Website, error) {
-	storedWebsite, err := storage.Store(w.store, storage.Website{URL: url})
-	if err != nil {
-		return nil, fmt.Errorf("error storing website: %v", err)
-	}
-	return storedWebsite, nil
-}
-
-func (w *RagWorker) processAndStoreChunks(markdown string, websiteID int) error {
-	chunks, err := w.ragClient.ChunksFrom(markdown)
+	chunks, err := w.ragClient.ChunksFrom(ragParams.Markdown)
 	if err != nil {
 		return fmt.Errorf("error extracting chunks: %v", err)
 	}
 
-	var rags []storage.Rag
-	for i, chunk := range chunks {
-		log.Printf("embedding for chunk %d\n\n", i)
-		embeddings, err := w.ragClient.EmbeddingsFor(chunk)
-		if err != nil {
-			return fmt.Errorf("error extracting embeddings: %v", err)
-		}
+	contacts, err := w.ragClient.ContactsFrom(ragParams.Markdown)
+	if err != nil {
+		return fmt.Errorf("error extracting contacts: %v", err)
+	}
 
-		rags = append(rags, storage.Rag{
-			PosInDoc:  i,
-			Embedding: embeddings,
-			Source:    "WEBSITE",
-			WebsiteID: websiteID,
-			Text:      chunk,
+	newSlice := make([]string, len(chunks)+len(contacts))
+	copy(newSlice, chunks)
+
+	for i, contact := range contacts {
+		newSlice[len(chunks)+i] = contact.Context
+	}
+
+	log.Printf("RAG: generating embeddings for %d chunks and %d contacts\n", len(chunks), len(contacts))
+	embeddings, err := w.ragClient.EmbeddingsForAll(newSlice)
+	if err != nil {
+		return fmt.Errorf("error extracting embeddings: %v", err)
+	}
+
+	if err := w.storeChunks(chunks, embeddings, storedRagSource.ID); err != nil {
+		return fmt.Errorf("error storing chunks: %v", err)
+	}
+
+	if err := w.storeContacts(contacts, embeddings[len(chunks):], storedRagSource.ID); err != nil {
+		return fmt.Errorf("error storing contacts: %v", err)
+	}
+
+	return nil
+}
+
+func (w *RagWorker) storeRagSource(url string) (*storage.RagSource, error) {
+	storedRagSource, err := storage.Store(w.store, storage.RagSource{URL: url})
+	if err != nil {
+		return nil, fmt.Errorf("error storing rag source: %v", err)
+	}
+	return storedRagSource, nil
+}
+
+func (w *RagWorker) storeChunks(chunks []string, embeddings [][]float32, ragSourceId int) error {
+
+	var rags []storage.RagChunk
+	for i, chunk := range chunks {
+
+		rags = append(rags, storage.RagChunk{
+			PosInSource: i,
+			Embedding:   embeddings[i],
+			RagSourceId: ragSourceId,
+			Text:        chunk,
 		})
 	}
 
-	if _, err = storage.StoreAll(w.store, rags...); err != nil {
+	if _, err := storage.StoreAll(w.store, rags...); err != nil {
 		return fmt.Errorf("error storing chunks: %v", err)
 	}
 	return nil
 }
 
-func (w *RagWorker) processAndStoreContacts(markdown string, websiteID int) error {
-	contacts, err := w.ragClient.ContactsFrom(markdown)
-	if err != nil {
-		return fmt.Errorf("error extracting contacts: %v", err)
-	}
+func (w *RagWorker) storeContacts(contacts []ragger.Contact, embeddings [][]float32, ragSourceId int) error {
 
-	var contactsToStore []storage.Contact
+	var contactsToStore []storage.RagContact
 	for i, contact := range contacts {
-		log.Printf("embedding for contact %d\n\n", i)
 
-		embedding, err := w.ragClient.EmbeddingsFor(contact.Value)
-		if err != nil {
-			return fmt.Errorf("error extracting embeddings: %v", err)
-		}
-
-		contactsToStore = append(contactsToStore, storage.Contact{
-			Context:       contact.Context,
-			PosInContacts: i,
-			Contact:       contact.Value,
-			ContactType:   contact.Type,
-			WebsiteID:     websiteID,
-			Source:        "WEBSITE",
-			Embedding:     embedding,
+		contactsToStore = append(contactsToStore, storage.RagContact{
+			Context:     contact.Context,
+			PosInSource: i,
+			Contact:     contact.Value,
+			ContactType: contact.Type,
+			RagSourceId: ragSourceId,
+			Embedding:   embeddings[i],
 		})
 	}
 
-	if _, err = storage.StoreAll(w.store, contactsToStore...); err != nil {
+	if _, err := storage.StoreAll(w.store, contactsToStore...); err != nil {
 		return fmt.Errorf("error storing contacts: %v", err)
 	}
 	return nil

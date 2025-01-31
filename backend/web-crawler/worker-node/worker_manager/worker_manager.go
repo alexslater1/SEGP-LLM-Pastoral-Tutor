@@ -3,6 +3,7 @@ package worker_manager
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/ethanhosier/worker-node/coordinator_client"
@@ -60,7 +61,7 @@ func (w *WorkerManager) TaskLoop(taskChan chan<- *coordinator_client.Task, doneC
 		task, err := w.config.coordinatorClient.GetTaskAndSetProcessing(w.config.ctx, getTaskTimeout, topicForWorkerConfigType(w.config.Type))
 
 		if err == coordinator_client.ErrNoTasksToComplete {
-			log.Println("No tasks to complete, waiting for new tasks...")
+			log.Printf("No %s tasks to complete, waiting for new tasks...", strings.ToUpper(string(w.config.Type)))
 			continue
 		}
 
@@ -68,23 +69,30 @@ func (w *WorkerManager) TaskLoop(taskChan chan<- *coordinator_client.Task, doneC
 			return err
 		}
 
-		log.Printf("Task Found: %s", task.ID)
+		log.Printf("%s Task Found: %s", strings.ToUpper(string(w.config.Type)), task.ID)
 		taskChan <- task
 	}
 }
 
 func (w *WorkerManager) workerLoop(worker worker.Worker, taskChan <-chan *coordinator_client.Task, errorChan chan<- error) {
-	log.Printf("Worker %s starting", worker.Id())
+	log.Printf("%s Worker %s starting", strings.ToUpper(string(w.config.Type)), worker.Id())
 
 	for task := range taskChan {
-		log.Printf("Worker %s executing task %s", worker.Id(), task.ID)
+		log.Printf("%s Worker %s executing task %s", strings.ToUpper(string(w.config.Type)), worker.Id(), task.ID)
 		err := worker.Execute(w.config.ctx, task)
 		if err != nil {
-			errorChan <- err
-			return
+			log.Printf("%s Worker %s failed to execute task %s: %v. Will store error and continue.",
+				strings.ToUpper(string(w.config.Type)), worker.Id(), task.ID, err)
+
+			err = w.config.coordinatorClient.StoreError(w.config.ctx, topicForWorkerConfigType(w.config.Type), task, err)
+			if err != nil {
+				log.Printf("Failed to store error for task %s: %v", task.ID, err)
+				errorChan <- err
+				return
+			}
 		}
 
-		log.Printf("Worker %s cleaning up task %s", worker.Id(), task.ID)
+		log.Printf("%s Worker %s cleaning up task %s", strings.ToUpper(string(w.config.Type)), worker.Id(), task.ID)
 		err = worker.Cleanup(w.config.ctx, task)
 		if err != nil {
 			errorChan <- err

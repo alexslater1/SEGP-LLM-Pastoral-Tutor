@@ -87,15 +87,13 @@ func TestWorkerManagerRag(t *testing.T) {
 		})
 
 		chunks1     = []string{"Hello, World!1", "Hello, World!2"}
-		embeddings1 = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
+		embeddings1 = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}}
 	)
 	if err != nil {
 		t.Fatalf("Error creating mock task: %v", err)
 	}
 
 	ragClient.SetChunksFor(markdown, chunks1)
-	ragClient.SetEmbeddingsFor(chunks1[0], embeddings1[0])
-	ragClient.SetEmbeddingsFor(chunks1[1], embeddings1[1])
 
 	ragClient.SetContactsFor(markdown, []ragger.Contact{
 		{
@@ -105,7 +103,11 @@ func TestWorkerManagerRag(t *testing.T) {
 		},
 	})
 
-	ragClient.SetEmbeddingsFor("johndoe@example.com", []float32{1.0, 2.0, 3.0})
+	newSlice := make([]string, len(chunks1)+1)
+	copy(newSlice, chunks1)
+	newSlice[len(chunks1)] = markdown
+
+	ragClient.SetEmbeddingsForAll(newSlice, embeddings1)
 
 	err = coordinatorClient.CreateTask(context.TODO(), coordinator_client.CoordinatorClientTaskTopicRag, mockTask1)
 	if err != nil {
@@ -131,15 +133,15 @@ func TestWorkerManagerRag(t *testing.T) {
 		t.Fatal("There should be no tasks to complete error")
 	}
 
-	storedWebsites, err := storage.GetAll[storage.Website](store, nil)
+	storedRagSources, err := storage.GetAll[storage.RagSource](store, nil)
 	if err != nil {
-		t.Fatalf("Error getting stored website: %v", err)
+		t.Fatalf("Error getting stored rag source: %v", err)
 	}
 
-	assert.Equal(t, len(storedWebsites), 1)
-	assert.Equal(t, storedWebsites[0].URL, "https://example.com")
+	assert.Equal(t, len(storedRagSources), 1)
+	assert.Equal(t, storedRagSources[0].URL, "https://example.com")
 
-	contacts, err := storage.GetAll[storage.Contact](store, nil)
+	contacts, err := storage.GetAll[storage.RagContact](store, nil)
 	if err != nil {
 		t.Fatalf("Error getting contacts: %v", err)
 	}
@@ -148,11 +150,10 @@ func TestWorkerManagerRag(t *testing.T) {
 	assert.Equal(t, contacts[0].Context, markdown)
 	assert.Equal(t, contacts[0].Contact, "johndoe@example.com")
 	assert.Equal(t, contacts[0].ContactType, "email")
-	assert.Equal(t, contacts[0].WebsiteID, storedWebsites[0].ID)
-	assert.Equal(t, contacts[0].Embedding, []float32{1.0, 2.0, 3.0})
-	assert.Equal(t, contacts[0].Source, "WEBSITE")
+	assert.Equal(t, contacts[0].RagSourceId, storedRagSources[0].ID)
+	assert.Equal(t, contacts[0].Embedding, []float32{7.0, 8.0, 9.0})
 
-	rags, err := storage.GetAll[storage.Rag](store, nil)
+	rags, err := storage.GetAll[storage.RagChunk](store, nil)
 	if err != nil {
 		t.Fatalf("Error getting rags: %v", err)
 	}
@@ -162,8 +163,8 @@ func TestWorkerManagerRag(t *testing.T) {
 	assert.Equal(t, rags[1].Text, chunks1[1])
 	assert.Equal(t, rags[0].Embedding, embeddings1[0])
 	assert.Equal(t, rags[1].Embedding, embeddings1[1])
-	assert.Equal(t, rags[0].WebsiteID, storedWebsites[0].ID)
-	assert.Equal(t, rags[1].WebsiteID, storedWebsites[0].ID)
+	assert.Equal(t, rags[0].RagSourceId, storedRagSources[0].ID)
+	assert.Equal(t, rags[1].RagSourceId, storedRagSources[0].ID)
 }
 
 func TestWorkerManagerRedis(t *testing.T) {
