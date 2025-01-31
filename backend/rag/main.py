@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from searcher import get_supabase_rag_chunks
 from dotenv import load_dotenv
-from document_uploader import upload_doc, delete_doc
+from document_handler import upload_doc, delete_doc
 from transformers import AutoTokenizer, AutoModel
+from url_handler import upload_url, delete_url
+import validators
 
 # Load environment variables from .env file
 load_dotenv()
@@ -55,7 +57,7 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/rag")
+@app.post("/rag-doc")
 async def upload_rag_document(url: str):
     # Clean url of extra whitespace
     url = url.strip()
@@ -64,7 +66,7 @@ async def upload_rag_document(url: str):
     if not url:
         raise HTTPException(
             status_code=400, 
-            detail="Url parameter cannot be empty or only whitespace"
+            detail="Url parameter cannot be empty"
         )
 
     if not url.endswith((".pdf", ".docx", ".txt", ".pptx")):
@@ -81,21 +83,19 @@ async def upload_rag_document(url: str):
     
     try:
         # Embed and upload document chunks to database
-        print("A")
         upload_doc(url)
-        print("B")
         return {"response": "Document uploaded"}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/rag")
+@app.delete("/rag-doc")
 async def delete_rag_document(name: str):
     # Validate url
     if not name or name.isspace():
         raise HTTPException(
             status_code=400, 
-            detail="Url parameter cannot be empty or only whitespace"
+            detail="Url parameter cannot be empty"
         )
 
     if not name.endswith((".pdf", ".docx", ".txt", ".pptx")):
@@ -118,6 +118,59 @@ async def delete_rag_document(name: str):
         delete_doc(name)
        
         return {"response": "Document deleted"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag-url")
+async def upload_rag_url(url: str):
+    # Clean url of extra whitespace
+    url = url.strip()
+
+    # Validate url
+    if not url:
+        raise HTTPException(
+            status_code=400, 
+            detail="Url parameter cannot be empty"
+        )
+
+    if not validators.url(url):
+        raise HTTPException(
+            status_code=400, 
+            detail="Input must be a valid url"
+        )
+    
+    try:
+        # Embed and upload url chunks to database
+        upload_url(url)
+        return {"response": "Url uploaded"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/rag-url")
+async def delete_rag_url(url: str):
+    # Clean url of extra whitespace
+    url = url.strip()
+
+    # Validate url
+    if not url:
+        raise HTTPException(
+            status_code=400, 
+            detail="Url parameter cannot be empty"
+        )
+
+    if not validators.url(url):
+        raise HTTPException(
+            status_code=400, 
+            detail="Input must be a valid url"
+        )
+    
+    try:    
+        # Embed and upload url chunks to database
+        delete_url(url)
+       
+        return {"response": "Url deleted"}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

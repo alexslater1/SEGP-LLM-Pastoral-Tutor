@@ -3,7 +3,7 @@ from chunker import document_chunker, extract_contacts_with_context
 from embedder import embed
 import os
 from pdf_to_text import pdf_to_text
-from config import supabase, DOCUMENTS_BUCKET_NAME, DOCUMENTS_TABLE_NAME, RAG_TABLE_NAME, CONTACT_TABLE_NAME
+from config import supabase, DOCUMENTS_BUCKET_NAME, RAG_SOURCES_TABLE_NAME, RAG_CHUNKS_TABLE_NAME, RAG_CONTACT_TABLE_NAME
 from transformers import AutoTokenizer, AutoModel
 
 def upload_doc(url):
@@ -25,7 +25,7 @@ def upload_doc(url):
     public_url = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).get_public_url(file_name)
     print("2")
     #add entry for file in documents table
-    response = supabase.table(DOCUMENTS_TABLE_NAME).insert([
+    response = supabase.table(RAG_SOURCES_TABLE_NAME).insert([
             {"url": public_url, "name": file_name, "type": "DOCUMENT"}
         ]).execute()
     doc_id = response.data[0].get('id')
@@ -37,7 +37,7 @@ def upload_doc(url):
 
     index = 1
     for text in chunks:
-        supabase.table(RAG_TABLE_NAME).insert([
+        supabase.table(RAG_CHUNKS_TABLE_NAME).insert([
             {"text": text, "rag_source_id": doc_id, "pos_in_source": index, "embedding": embed(text, tokenizer, model).tolist()}
         ]).execute()
         index += 1
@@ -46,7 +46,7 @@ def upload_doc(url):
     contacts = extract_contacts_with_context(mkdwn_pdf)
     contact_index = 1
     for (email, email_context) in contacts[0]:
-        supabase.table(CONTACT_TABLE_NAME).insert([
+        supabase.table(RAG_CONTACT_TABLE_NAME).insert([
             {"context": email_context,
             "rag_source_id": doc_id, 
             "pos_in_source": contact_index,
@@ -59,7 +59,7 @@ def upload_doc(url):
         contact_index += 1
     
     for (phone, phone_context) in contacts[1]:
-        supabase.table(CONTACT_TABLE_NAME).insert([
+        supabase.table(RAG_CONTACT_TABLE_NAME).insert([
             {"context": phone_context,
              "rag_source_id": doc_id,
              "pos_in_source": contact_index,
@@ -72,7 +72,7 @@ def upload_doc(url):
         contact_index += 1
         
     for (url, url_context) in contacts[2]:
-        supabase.table(CONTACT_TABLE_NAME).insert([
+        supabase.table(RAG_CONTACT_TABLE_NAME).insert([
             {
             "context": url_context, 
             "rag_source_id": doc_id, 
@@ -89,7 +89,7 @@ def upload_doc(url):
 
 def delete_doc(name):
     try:
-        response = supabase.table(DOCUMENTS_TABLE_NAME).delete().eq("name", name).execute()
+        response = supabase.table(RAG_SOURCES_TABLE_NAME).delete().eq("name", name).execute()
         response2 = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).remove([name])
 
     except Exception as e:
