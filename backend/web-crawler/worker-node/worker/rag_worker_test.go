@@ -32,12 +32,12 @@ func TestStoreWebsite(t *testing.T) {
 		url           = "https://example.com"
 	)
 
-	storedWebsite, err := ragWorker.storeWebsite(url)
+	storedRagSource, err := ragWorker.storeRagSource(url)
 	if err != nil {
-		t.Errorf("Error storing website: %v", err)
+		t.Errorf("Error storing rag source: %v", err)
 	}
 
-	assert.Equal(t, storedWebsite.URL, url)
+	assert.Equal(t, storedRagSource.URL, url)
 }
 
 func TestRagWorkerStoreChunks(t *testing.T) {
@@ -50,15 +50,15 @@ func TestRagWorkerStoreChunks(t *testing.T) {
 
 	ragWorker.storeChunks(chunks, embeddings, 1)
 
-	rags, err := storage.GetAll[storage.Rag](memoryStorage, nil)
+	rags, err := storage.GetAll[storage.RagChunk](memoryStorage, nil)
 	if err != nil {
 		t.Errorf("Error getting chunks: %v", err)
 	}
 
 	for _, rag := range rags {
-		assert.Equal(t, rag.Text, chunks[rag.PosInDoc])
-		assert.Equal(t, rag.Embedding, embeddings[rag.PosInDoc])
-		assert.Equal(t, rag.WebsiteID, 1)
+		assert.Equal(t, rag.Text, chunks[rag.PosInSource])
+		assert.Equal(t, rag.Embedding, embeddings[rag.PosInSource])
+		assert.Equal(t, rag.RagSourceId, 1)
 	}
 }
 
@@ -72,7 +72,7 @@ func TestRagWorkerStoreContacts(t *testing.T) {
 		{Context: "Hello, world!", Value: "John Doe", Type: "person"},
 	}, [][]float32{{1.0, 2.0, 3.0}}, 1)
 
-	contacts, err := storage.GetAll[storage.Contact](memoryStorage, nil)
+	contacts, err := storage.GetAll[storage.RagContact](memoryStorage, nil)
 	if err != nil {
 		t.Errorf("Error getting contacts: %v", err)
 	}
@@ -82,8 +82,7 @@ func TestRagWorkerStoreContacts(t *testing.T) {
 	assert.Equal(t, contacts[0].Contact, "John Doe")
 	assert.Equal(t, contacts[0].ContactType, "person")
 	assert.Equal(t, contacts[0].Embedding, []float32{1.0, 2.0, 3.0})
-	assert.Equal(t, contacts[0].Source, "WEBSITE")
-	assert.Equal(t, contacts[0].WebsiteID, 1)
+	assert.Equal(t, contacts[0].RagSourceId, 1)
 }
 
 func TestRagWorkerExecute(t *testing.T) {
@@ -130,15 +129,15 @@ func TestRagWorkerExecute(t *testing.T) {
 	}
 
 	// then
-	websites, err := storage.GetAll[storage.Website](memoryStorage, nil)
+	ragSources, err := storage.GetAll[storage.RagSource](memoryStorage, nil)
 	if err != nil {
-		t.Errorf("Error getting websites: %v", err)
+		t.Errorf("Error getting rag sources: %v", err)
 	}
 
-	assert.Equal(t, len(websites), 1)
-	assert.Equal(t, websites[0].URL, websiteUrl)
+	assert.Equal(t, len(ragSources), 1)
+	assert.Equal(t, ragSources[0].URL, websiteUrl)
 
-	rags, err := storage.GetAll[storage.Rag](memoryStorage, nil)
+	rags, err := storage.GetAll[storage.RagChunk](memoryStorage, nil)
 	if err != nil {
 		t.Errorf("Error getting chunks: %v", err)
 	}
@@ -146,9 +145,9 @@ func TestRagWorkerExecute(t *testing.T) {
 	assert.Equal(t, len(rags), 1)
 	assert.Equal(t, rags[0].Text, chunks[0])
 	assert.Equal(t, rags[0].Embedding, embeddings[0])
-	assert.Equal(t, rags[0].WebsiteID, websites[0].ID)
+	assert.Equal(t, rags[0].RagSourceId, ragSources[0].ID)
 
-	storedContacts, err := storage.GetAll[storage.Contact](memoryStorage, nil)
+	storedContacts, err := storage.GetAll[storage.RagContact](memoryStorage, nil)
 	if err != nil {
 		t.Errorf("Error getting contacts: %v", err)
 	}
@@ -158,8 +157,7 @@ func TestRagWorkerExecute(t *testing.T) {
 	assert.Equal(t, storedContacts[0].Contact, "John Doe")
 	assert.Equal(t, storedContacts[0].ContactType, "person")
 	assert.Equal(t, storedContacts[0].Embedding, []float32{4.0, 5.0, 6.0})
-	assert.Equal(t, storedContacts[0].Source, "WEBSITE")
-	assert.Equal(t, storedContacts[0].WebsiteID, websites[0].ID)
+	assert.Equal(t, storedContacts[0].RagSourceId, ragSources[0].ID)
 }
 
 func TestRagWorkerCleanup(t *testing.T) {

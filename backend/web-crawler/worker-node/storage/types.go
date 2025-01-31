@@ -45,41 +45,39 @@ func NewAgentEvent(requestId string, eventType string, metadata interface{}) Age
 	}
 }
 
-type Rag struct {
-	ID        int       `json:"id,omitempty"`
-	Text      string    `json:"text"`
-	DocID     int       `json:"doc_id"`
-	PosInDoc  int       `json:"pos_in_doc"`
-	Embedding []float32 `json:"embedding"`
-	Source    string    `json:"source,omitempty"`
-	WebsiteID int       `json:"website_id,omitempty"`
+type RagChunk struct {
+	ID          int       `json:"id,omitempty"`
+	RagSourceId int       `json:"rag_source_id"`
+	Text        string    `json:"text"`
+	PosInSource int       `json:"pos_in_source"`
+	Embedding   []float32 `json:"embedding"`
 }
 
-func (r Rag) TableName() StorageTableName {
-	return StorageTableNameRag
+func (r RagChunk) TableName() StorageTableName {
+	return StorageTableNameRagChunks
 }
 
-type Website struct {
-	ID  int    `json:"id,omitempty"`
-	URL string `json:"url"`
+type RagSource struct {
+	ID   int    `json:"id,omitempty"`
+	URL  string `json:"url"`
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
-func (w Website) TableName() StorageTableName {
-	return StorageTableNameWebsite
+func (r RagSource) TableName() StorageTableName {
+	return StorageTableNameRagSources
 }
 
-type Contact struct {
-	ID            int       `json:"id,omitempty"`
-	Context       string    `json:"context"`
-	DocID         int       `json:"doc_id"`
-	Contact       string    `json:"contact"`
-	PosInContacts int       `json:"pos_in_contacts"`
-	ContactType   string    `json:"contact_type"`
-	Embedding     []float32 `json:"embedding"`
-	Source        string    `json:"source,omitempty"`
-	WebsiteID     int       `json:"website_id,omitempty"`
+type RagContact struct {
+	ID          int       `json:"id,omitempty"`
+	RagSourceId int       `json:"rag_source_id"`
+	Context     string    `json:"context"`
+	Contact     string    `json:"contact"`
+	PosInSource int       `json:"pos_in_source"`
+	ContactType string    `json:"contact_type"`
+	Embedding   []float32 `json:"embedding"`
 }
 
-func (c Contact) TableName() StorageTableName {
-	return StorageTableNameContacts
+func (c RagContact) TableName() StorageTableName {
+	return StorageTableNameRagContacts
 }

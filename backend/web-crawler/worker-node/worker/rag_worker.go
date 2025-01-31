@@ -44,7 +44,7 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 		return fmt.Errorf("invalid params %+v", task.Params)
 	}
 
-	storedWebsite, err := w.storeWebsite(ragParams.Url)
+	storedRagSource, err := w.storeRagSource(ragParams.Url)
 	if err != nil {
 		return err
 	}
@@ -72,36 +72,35 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 		return fmt.Errorf("error extracting embeddings: %v", err)
 	}
 
-	if err := w.storeChunks(chunks, embeddings, storedWebsite.ID); err != nil {
+	if err := w.storeChunks(chunks, embeddings, storedRagSource.ID); err != nil {
 		return fmt.Errorf("error storing chunks: %v", err)
 	}
 
-	if err := w.storeContacts(contacts, embeddings[len(chunks):], storedWebsite.ID); err != nil {
+	if err := w.storeContacts(contacts, embeddings[len(chunks):], storedRagSource.ID); err != nil {
 		return fmt.Errorf("error storing contacts: %v", err)
 	}
 
 	return nil
 }
 
-func (w *RagWorker) storeWebsite(url string) (*storage.Website, error) {
-	storedWebsite, err := storage.Store(w.store, storage.Website{URL: url})
+func (w *RagWorker) storeRagSource(url string) (*storage.RagSource, error) {
+	storedRagSource, err := storage.Store(w.store, storage.RagSource{URL: url})
 	if err != nil {
-		return nil, fmt.Errorf("error storing website: %v", err)
+		return nil, fmt.Errorf("error storing rag source: %v", err)
 	}
-	return storedWebsite, nil
+	return storedRagSource, nil
 }
 
-func (w *RagWorker) storeChunks(chunks []string, embeddings [][]float32, websiteID int) error {
+func (w *RagWorker) storeChunks(chunks []string, embeddings [][]float32, ragSourceId int) error {
 
-	var rags []storage.Rag
+	var rags []storage.RagChunk
 	for i, chunk := range chunks {
 
-		rags = append(rags, storage.Rag{
-			PosInDoc:  i,
-			Embedding: embeddings[i],
-			Source:    "WEBSITE",
-			WebsiteID: websiteID,
-			Text:      chunk,
+		rags = append(rags, storage.RagChunk{
+			PosInSource: i,
+			Embedding:   embeddings[i],
+			RagSourceId: ragSourceId,
+			Text:        chunk,
 		})
 	}
 
@@ -111,19 +110,18 @@ func (w *RagWorker) storeChunks(chunks []string, embeddings [][]float32, website
 	return nil
 }
 
-func (w *RagWorker) storeContacts(contacts []ragger.Contact, embeddings [][]float32, websiteID int) error {
+func (w *RagWorker) storeContacts(contacts []ragger.Contact, embeddings [][]float32, ragSourceId int) error {
 
-	var contactsToStore []storage.Contact
+	var contactsToStore []storage.RagContact
 	for i, contact := range contacts {
 
-		contactsToStore = append(contactsToStore, storage.Contact{
-			Context:       contact.Context,
-			PosInContacts: i,
-			Contact:       contact.Value,
-			ContactType:   contact.Type,
-			WebsiteID:     websiteID,
-			Source:        "WEBSITE",
-			Embedding:     embeddings[i],
+		contactsToStore = append(contactsToStore, storage.RagContact{
+			Context:     contact.Context,
+			PosInSource: i,
+			Contact:     contact.Value,
+			ContactType: contact.Type,
+			RagSourceId: ragSourceId,
+			Embedding:   embeddings[i],
 		})
 	}
 
