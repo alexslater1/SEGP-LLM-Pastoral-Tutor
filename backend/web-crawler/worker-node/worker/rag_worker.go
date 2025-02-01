@@ -119,7 +119,7 @@ func (w *RagWorker) storeContacts(contacts []ragger.Contact, embeddings [][]floa
 			Context:     contact.Context,
 			PosInSource: i,
 			Contact:     contact.Value,
-			ContactType: contact.Type,
+			ContactType: string(contact.Type),
 			RagSourceId: ragSourceId,
 			Embedding:   embeddings[i],
 		})

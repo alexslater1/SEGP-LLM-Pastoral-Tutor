@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/ragger"
@@ -12,6 +13,12 @@ import (
 	"github.com/ethanhosier/worker-node/storage"
 	"github.com/ethanhosier/worker-node/worker_manager"
 	"github.com/joho/godotenv"
+)
+
+var (
+	modelPath     = filepath.Join("model", "model.onnx")
+	libraryPath   = filepath.Join("libonnxruntime.so.1.20.1")
+	tokenizerPath = filepath.Join("model", "tokenizer.json")
 )
 
 func main() {
@@ -74,7 +81,7 @@ func startScraperWorkerManager(coordinatorClient coordinator_client.CoordinatorC
 
 func startRagWorkerManager(coordinatorClient coordinator_client.CoordinatorClient) (chan<- bool, <-chan error) {
 	var (
-		ragClient        = ragger.NewRagClient("./model", "./libonnxruntime.so.1.20.1")
+		ragClient        = ragger.NewRAGClient(modelPath, libraryPath, tokenizerPath)
 		store            = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 		ragWorkerManager = worker_manager.NewRagWorkerManager(context.TODO(), coordinatorClient, ragClient, store, 1)
 	)

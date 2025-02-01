@@ -7,3 +7,17 @@ type Ragger interface {
 	EmbeddingsFor(text string) ([]float32, error)
 	EmbeddingsForAll(texts []string) ([][]float32, error)
 }
+
+type ContactType string
+
+const (
+	ContactTypeEmail   ContactType = "email"
+	ContactTypePhone   ContactType = "phone"
+	ContactTypeAddress ContactType = "address"
+)
+
+type Contact struct {
+	Value   string
+	Context string
+	Type    ContactType
+}

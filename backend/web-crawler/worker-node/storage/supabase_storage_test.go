@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/ethanhosier/worker-node/ragger"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	modelPath     = filepath.Join("..", "model", "model.onnx")
+	libraryPath   = filepath.Join("..", "libonnxruntime.so.1.20.1")
+	tokenizerPath = filepath.Join("..", "model", "tokenizer.json")
 )
 
 func TestMain(m *testing.M) {
@@ -157,7 +164,7 @@ func TestSupabaseStorageTestStoreRagChunk(t *testing.T) {
 
 	store := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	ragger := ragger.NewRagClient("../model", "../libonnxruntime.so.1.20.1")
+	ragger := ragger.NewRAGClient(modelPath, libraryPath, tokenizerPath)
 	embedding, err := ragger.EmbeddingsFor("Hello, world!")
 	if err != nil {
 		t.Error("Error embedding text", err)
@@ -188,7 +195,7 @@ func TestSupabaseStorageTestStoreRagContacts(t *testing.T) {
 
 	store := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	ragger := ragger.NewRagClient("../model", "../libonnxruntime.so.1.20.1")
+	ragger := ragger.NewRAGClient(modelPath, libraryPath, tokenizerPath)
 	embedding, err := ragger.EmbeddingsFor("Hello, world!")
 	if err != nil {
 		t.Error("Error embedding text", err)
