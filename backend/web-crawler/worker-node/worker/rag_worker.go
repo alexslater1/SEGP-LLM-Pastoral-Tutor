@@ -20,8 +20,9 @@ type RagWorker struct {
 }
 
 type RagWorkerParams struct {
-	Markdown string `json:"markdown"`
-	Url      string `json:"url"`
+	Markdown  string `json:"markdown"`
+	Url       string `json:"url"`
+	InnerText string `json:"text"`
 }
 
 func NewRagWorker(ragClient ragger.Ragger, coordinatorClient coordinator_client.CoordinatorClient, store storage.Storage) *RagWorker {
@@ -45,19 +46,17 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 		return fmt.Errorf("invalid params %+v", task.Params)
 	}
 
-	storedRagSource, err := w.storeRagSource(ragParams.Url)
+	storedRagSource, err := w.storeRagSource(ragParams.Url, "WEBSITE")
 	if err != nil {
 		return err
 	}
 
-	cleanedMarkdown := utils.CleanText(ragParams.Markdown)
-
-	chunks, err := w.ragClient.ChunksFrom(cleanedMarkdown)
+	chunks, err := w.ragClient.ChunksFrom(utils.CleanText(ragParams.InnerText))
 	if err != nil {
 		return fmt.Errorf("error extracting chunks: %v", err)
 	}
 
-	contacts, err := w.ragClient.ContactsFrom(cleanedMarkdown)
+	contacts, err := w.ragClient.ContactsFrom(utils.CleanText(ragParams.Markdown))
 	if err != nil {
 		return fmt.Errorf("error extracting contacts: %v", err)
 	}
@@ -86,8 +85,8 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 	return nil
 }
 
-func (w *RagWorker) storeRagSource(url string) (*storage.RagSource, error) {
-	storedRagSource, err := storage.Store(w.store, storage.RagSource{URL: url})
+func (w *RagWorker) storeRagSource(url string, typ string) (*storage.RagSource, error) {
+	storedRagSource, err := storage.Store(w.store, storage.RagSource{URL: url, Type: typ})
 	if err != nil {
 		return nil, fmt.Errorf("error storing rag source: %v", err)
 	}

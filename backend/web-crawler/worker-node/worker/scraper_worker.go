@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	coordinator_client "github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/scraper"
 	"github.com/ethanhosier/worker-node/utils"
@@ -53,7 +55,7 @@ func (w *ScraperWorker) Execute(ctx context.Context, task *coordinator_client.Ta
 		return fmt.Errorf("url is required")
 	}
 
-	md, err := w.mdFromUrl(scraperParams.Url)
+	md, text, err := w.mdAndTextFromUrl(scraperParams.Url)
 	if err != nil {
 		return err
 	}
@@ -63,7 +65,7 @@ func (w *ScraperWorker) Execute(ctx context.Context, task *coordinator_client.Ta
 		return nil
 	}
 
-	ragParams := RagWorkerParams{Markdown: md, Url: scraperParams.Url}
+	ragParams := RagWorkerParams{Markdown: md, Url: scraperParams.Url, InnerText: text}
 
 	ragTask, err := coordinator_client.NewTask(uuid.New().String(), w.id, ragParams)
 	if err != nil {
@@ -77,10 +79,21 @@ func (w *ScraperWorker) Cleanup(ctx context.Context, task *coordinator_client.Ta
 	return w.coordinatorClient.SetProcessed(ctx, coordinator_client.CoordinatorClientTaskTopicUrls, task)
 }
 
-func (w *ScraperWorker) mdFromUrl(url string) (string, error) {
+func (w *ScraperWorker) mdAndTextFromUrl(url string) (string, string, error) {
 	html, err := w.scraper.HtmlFromTag(url, "main")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return utils.HtmlToMarkdown(html)
+
+	h, err := goquery.NewDocumentFromReader(strings.NewReader(*html))
+	if err != nil {
+		return "", "", err
+	}
+
+	md, err := utils.HtmlToMarkdown(html)
+	if err != nil {
+		return "", "", err
+	}
+
+	return md, h.Text(), nil
 }

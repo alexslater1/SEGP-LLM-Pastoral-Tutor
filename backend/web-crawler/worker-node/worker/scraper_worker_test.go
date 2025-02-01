@@ -10,14 +10,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestScraperWorkerMdFromUrl(t *testing.T) {
+func TestScraperWorkerMdAndTextFromUrl(t *testing.T) {
 	scraper := scraper.NewMockScraper()
 	scraper.SetHtmlContent("https://example.com", "<html><body><main>Hello, world!</main></body></html>")
 
 	worker := NewScraperWorker(scraper, nil)
-	md, err := worker.mdFromUrl("https://example.com")
+	md, text, err := worker.mdAndTextFromUrl("https://example.com")
 	assert.NoError(t, err)
 	assert.Equal(t, md, "Hello, world!")
+	assert.Equal(t, text, "Hello, world!")
 }
 
 func TestScraperWorkerMdFromUrlContent(t *testing.T) {
@@ -34,11 +35,14 @@ func TestScraperWorkerMdFromUrlContent(t *testing.T) {
 			</div>
 		</main></body></html>
 	`)
-	md, err := worker.mdFromUrl("https://nested.com")
+	md, text, err := worker.mdAndTextFromUrl("https://nested.com")
 	assert.NoError(t, err)
 	assert.Contains(t, md, "Title")
 	assert.Contains(t, md, "Paragraph 1")
 	assert.Contains(t, md, "Nested paragraph")
+	assert.Contains(t, text, "Title")
+	assert.Contains(t, text, "Paragraph 1")
+	assert.Contains(t, text, "Nested paragraph")
 
 	// Test multiple main tags
 	scraper.SetHtmlContent("https://multiplemain.com", `
@@ -46,9 +50,10 @@ func TestScraperWorkerMdFromUrlContent(t *testing.T) {
 			<main>First main</main>
 		</body></html>
 	`)
-	md, err = worker.mdFromUrl("https://multiplemain.com")
+	md, text, err = worker.mdAndTextFromUrl("https://multiplemain.com")
 	assert.NoError(t, err)
 	assert.Contains(t, md, "First main")
+	assert.Contains(t, text, "First main")
 }
 
 func TestScraperWorkerId(t *testing.T) {

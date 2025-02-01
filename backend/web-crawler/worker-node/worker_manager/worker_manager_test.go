@@ -81,9 +81,11 @@ func TestWorkerManagerRag(t *testing.T) {
 		workerManager = NewRagWorkerManager(context.TODO(), coordinatorClient, ragClient, store, 1)
 
 		markdown       = "# Hello, World!"
+		text           = "Hello, World!"
 		mockTask1, err = coordinator_client.NewTask("1", "CREATED_BY", worker.RagWorkerParams{
-			Markdown: markdown,
-			Url:      "https://example.com",
+			Markdown:  markdown,
+			Url:       "https://example.com",
+			InnerText: text,
 		})
 
 		chunks1     = []string{"Hello, World!1", "Hello, World!2"}
@@ -93,7 +95,7 @@ func TestWorkerManagerRag(t *testing.T) {
 		t.Fatalf("Error creating mock task: %v", err)
 	}
 
-	ragClient.SetChunksFor(markdown, chunks1)
+	ragClient.SetChunksFor(text, chunks1)
 
 	ragClient.SetContactsFor(markdown, []ragger.Contact{
 		{
@@ -192,6 +194,10 @@ func TestWorkerManagerRedis(t *testing.T) {
 }
 
 func TestCreateWorkers(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test because CICD is true")
+	}
+
 	scraper := scraper.NewHttpScraper()
 	redisClient := coordinator_client.NewRedisCoordinatorClient(context.TODO(), "localhost:6379", "", 0)
 	scraperWorkerManager := NewScraperWorkerManager(context.TODO(), redisClient, scraper, 1)

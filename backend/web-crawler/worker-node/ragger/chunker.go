@@ -47,7 +47,7 @@ func (c *Chunker) Chunk(text string) ([]string, error) {
 
 	// Input validation and preprocessing
 	if text == "" {
-		return nil, errors.New("empty text provided")
+		return []string{" "}, nil
 	}
 
 	// Split the text into sentences.

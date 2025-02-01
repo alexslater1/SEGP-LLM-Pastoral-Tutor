@@ -35,12 +35,13 @@ func TestStoreWebsite(t *testing.T) {
 		url           = "https://example.com"
 	)
 
-	storedRagSource, err := ragWorker.storeRagSource(url)
+	storedRagSource, err := ragWorker.storeRagSource(url, "WEBSITE")
 	if err != nil {
 		t.Errorf("Error storing rag source: %v", err)
 	}
 
 	assert.Equal(t, storedRagSource.URL, url)
+	assert.Equal(t, storedRagSource.Type, "WEBSITE")
 }
 
 func TestRagWorkerStoreChunks(t *testing.T) {
@@ -98,7 +99,7 @@ func TestRagWorkerExecute(t *testing.T) {
 
 		websiteUrl = "https://example.com"
 		markdown   = "Hello, world!"
-
+		text       = "Hello, world!"
 		chunks     = []string{"Hello, world!1"}
 		embeddings = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}}
 
@@ -106,8 +107,9 @@ func TestRagWorkerExecute(t *testing.T) {
 	)
 
 	task, err := coordinator_client.NewTask("1", "test", RagWorkerParams{
-		Markdown: markdown,
-		Url:      websiteUrl,
+		Markdown:  markdown,
+		Url:       websiteUrl,
+		InnerText: text,
 	})
 	if err != nil {
 		t.Errorf("Error creating task: %v", err)

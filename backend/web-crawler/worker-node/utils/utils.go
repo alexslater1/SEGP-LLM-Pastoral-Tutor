@@ -44,8 +44,22 @@ func HtmlToMarkdown(html *string) (string, error) {
 }
 
 func CleanText(text string) string {
+	// Split into lines, trim each line, and handle multiple newlines
+	lines := strings.Split(text, "\n")
+	var cleanedLines []string
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			cleanedLines = append(cleanedLines, trimmed)
+		}
+	}
+
+	// Join with double newlines and clean up any remaining multiple newlines
+	text = strings.Join(cleanedLines, "\n")
 	re := regexp.MustCompile(`\n\s*\n`)
 	text = re.ReplaceAllString(text, "\n\n")
+
 	// Remove zero-width characters
 	text = strings.ReplaceAll(text, "\u200c", "") // Remove zero-width non-joiner
 	text = strings.ReplaceAll(text, "\u200b", "") // Remove zero-width space
