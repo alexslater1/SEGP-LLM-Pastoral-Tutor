@@ -1,6 +1,7 @@
 package ragger
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -10,7 +11,8 @@ import (
 )
 
 const (
-	contactContextLengthEitherSide = 50
+	contactContextLengthCharsBefore = 200
+	contactContextLengthCharsAfter  = 50
 )
 
 type RAGClient struct {
@@ -50,71 +52,79 @@ func (c *RAGClient) EmbeddingsForAll(texts []string) ([][]float32, error) {
 }
 
 func (c *RAGClient) ContactsFrom(text string) ([]Contact, error) {
-	// Compile regular expressions.
-	// Email regex: case-insensitive.
-	emailRegex, err := regexp.Compile(`(?i)[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}`)
-	if err != nil {
-		return nil, err
-	}
+	var result []Contact
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Recovered from in contactsFrom panic: %v\n", r)
+			// Set result to empty contacts on panic
+			result = []Contact{}
+		}
+	}()
 
-	// Phone regex: a simple pattern for US-like phone numbers.
-	phoneRegex, err := regexp.Compile(`(?i)(\+?\d{1,3}[\s\-]?)?(\(?\d{3}\)?[\s\-]?)?\d{3}[\s\-]?\d{4}`)
-	if err != nil {
-		return nil, err
-	}
-
-	// Address regex: a very basic heuristic pattern.
-	// It looks for a number followed by words and a street designator.
-	addressRegex, err := regexp.Compile(`(?i)\d+\s+\w+(?:\s+\w+)*\s+(?:Street|St\.|Road|Rd\.|Avenue|Ave\.|Boulevard|Blvd\.|Lane|Ln\.|Drive|Dr\.)`)
-	if err != nil {
-		return nil, err
-	}
-
-	// Prepare slice to hold found contacts.
 	var contacts []Contact
 
-	// A helper function to extract context around a match.
-	extractContext := func(matchStart, matchEnd int) string {
-		// Compute start and end indexes for context.
-		start := matchStart - contactContextLengthEitherSide
-		if start < 0 {
-			start = 0
+	// Regex for emails.
+	emailRegex := regexp.MustCompile(`(?i)[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}`)
+	// Regex for phone numbers.
+	// This pattern expects the phone number to be in the format (xxx) xxx-xxxx.
+	phoneRegex := regexp.MustCompile(`\(\d{3}\)[\s-]*\d{3}[\s-]*\d{4}`)
+	// Regex for websites.
+	// Note: This simple pattern may include trailing punctuation.
+	websiteRegex := regexp.MustCompile(`(?i)\b(?:https?://|www\.)[^\s]+`)
+
+	// Helper function to compute context: 200 chars before, 50 chars after.
+	getContext := func(start, end int) string {
+		from := start - 200
+		if from < 0 {
+			from = 0
 		}
-		end := matchEnd + contactContextLengthEitherSide
-		if end > len(text) {
-			end = len(text)
+		to := end + 50
+		if to > len(text) {
+			to = len(text)
 		}
-		return text[start:end]
+		context := text[from:to]
+
+		// Check token count - return empty string if too long
+		enc, err := c.tokenizer.Encode(tokenizer.NewSingleEncodeInput(tokenizer.NewInputSequence(context)), true)
+		if err != nil || len(enc.Ids) > 512 {
+			return ""
+		}
+		return context
 	}
 
-	// Define a slice of regexes and their corresponding contact types.
-	type regexEntry struct {
-		re    *regexp.Regexp
-		cType ContactType
-	}
-	regexes := []regexEntry{
-		{emailRegex, ContactTypeEmail},
-		{phoneRegex, ContactTypePhone},
-		{addressRegex, ContactTypeAddress},
-	}
-
-	// Loop over each regex and find all matches.
-	for _, entry := range regexes {
-		// Find all matches with their indices.
-		matches := entry.re.FindAllStringIndex(text, -1)
-		for _, loc := range matches {
-			// loc[0] is start, loc[1] is end of the match.
-			matchVal := text[loc[0]:loc[1]]
-			context := extractContext(loc[0], loc[1])
-			// Clean up context by replacing newlines with spaces.
-			context = strings.ReplaceAll(context, "\n", " ")
-			contacts = append(contacts, Contact{
-				Value:   matchVal,
-				Context: context,
-				Type:    entry.cType,
-			})
-		}
+	// Extract emails.
+	for _, loc := range emailRegex.FindAllStringIndex(text, -1) {
+		start, end := loc[0], loc[1]
+		contacts = append(contacts, Contact{
+			Value:   text[start:end],
+			Context: getContext(start, end),
+			Type:    ContactTypeEmail,
+		})
 	}
 
-	return contacts, nil
+	// Extract phone numbers.
+	for _, loc := range phoneRegex.FindAllStringIndex(text, -1) {
+		start, end := loc[0], loc[1]
+		contacts = append(contacts, Contact{
+			Value:   text[start:end],
+			Context: getContext(start, end),
+			Type:    ContactTypePhone,
+		})
+	}
+
+	// Extract websites.
+	for _, loc := range websiteRegex.FindAllStringIndex(text, -1) {
+		start, end := loc[0], loc[1]
+		value := text[start:end]
+		// Remove trailing punctuation (like a period, comma, semicolon, or colon)
+		value = strings.TrimRight(value, ".,;:")
+		contacts = append(contacts, Contact{
+			Value:   value,
+			Context: getContext(start, end),
+			Type:    ContactTypeWebsite,
+		})
+	}
+
+	result = contacts
+	return result, nil
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ethanhosier/worker-node/coordinator_client"
 	"github.com/ethanhosier/worker-node/ragger"
 	"github.com/ethanhosier/worker-node/storage"
+	"github.com/ethanhosier/worker-node/utils"
 	"github.com/google/uuid"
 )
 
@@ -49,12 +50,14 @@ func (w *RagWorker) Execute(ctx context.Context, task *coordinator_client.Task) 
 		return err
 	}
 
-	chunks, err := w.ragClient.ChunksFrom(ragParams.Markdown)
+	cleanedMarkdown := utils.CleanText(ragParams.Markdown)
+
+	chunks, err := w.ragClient.ChunksFrom(cleanedMarkdown)
 	if err != nil {
 		return fmt.Errorf("error extracting chunks: %v", err)
 	}
 
-	contacts, err := w.ragClient.ContactsFrom(ragParams.Markdown)
+	contacts, err := w.ragClient.ContactsFrom(cleanedMarkdown)
 	if err != nil {
 		return fmt.Errorf("error extracting contacts: %v", err)
 	}

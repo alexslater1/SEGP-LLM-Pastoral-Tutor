@@ -45,6 +45,16 @@ func NewEmbedder(modelPath string, libraryPath string, tok *tokenizer.Tokenizer)
 }
 
 func (e *Embedder) EmbedAll(texts []string) ([][]float32, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Panic occurred in EmbedAll. Number of texts: %d\nFirst text: %q\n", len(texts), texts[0])
+			if len(texts) > 1 {
+				fmt.Printf("Last text: %q\n", texts[len(texts)-1])
+			}
+			panic(r) // re-panic after printing the context
+		}
+	}()
+
 	var (
 		batchSize      = int64(len(texts))
 		inputIds       [][]int64
@@ -138,6 +148,13 @@ func (e *Embedder) EmbedAll(texts []string) ([][]float32, error) {
 }
 
 func (e *Embedder) Embed(text string) ([]float32, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Panic occurred in Embed. Input text: %q\n", text)
+			panic(r)
+		}
+	}()
+
 	// Tokenize input
 	encodeInput := tokenizer.NewSingleEncodeInput(tokenizer.NewInputSequence(text))
 	encoding, err := e.tokenizer.Encode(encodeInput, true)

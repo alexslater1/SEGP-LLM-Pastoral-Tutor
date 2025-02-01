@@ -185,7 +185,7 @@ https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants
 
 		task, err := NewTask(uuid.New().String(), "asdasdsasd", params)
 		if err != nil {
-			t.Fatalf("Failed to create task: %v", err)
+			t.Fatalf("Failed  to create task: %v", err)
 		}
 
 		err = client.CreateTask(context.Background(), CoordinatorClientTaskTopicUrls, task)

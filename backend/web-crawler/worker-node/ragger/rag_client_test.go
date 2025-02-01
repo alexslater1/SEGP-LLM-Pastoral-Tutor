@@ -11,7 +11,7 @@ func TestContactsFrom(t *testing.T) {
 	client := &RAGClient{}
 
 	text := `You can contact me at john.doe@example.com or call me at (555) 123-4567.
-My office is located at 123 Main Street in Springfield.
+My website is https://www.example.com.
 Alternatively, reach out to jane_doe123@example.org for further details.`
 
 	contacts, err := client.ContactsFrom(text)
@@ -31,7 +31,7 @@ Alternatively, reach out to jane_doe123@example.org for further details.`
 		{"john.doe@example.com", ContactTypeEmail},
 		{"jane_doe123@example.org", ContactTypeEmail},
 		{"(555) 123-4567", ContactTypePhone},
-		{"123 Main Street", ContactTypeAddress},
+		{"https://www.example.com", ContactTypeWebsite},
 	}
 
 	// Check that the number of contacts is as expected.

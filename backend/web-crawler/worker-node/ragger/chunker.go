@@ -38,8 +38,19 @@ func NewChunker(tokenizer *tokenizer.Tokenizer) *Chunker {
 // Chunk splits the input text into medium sized, overlapping chunks
 // while ensuring no chunk ever exceeds maxTokenChunkSize tokens.
 func (c *Chunker) Chunk(text string) ([]string, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Panic occurred while processing text: %v\nInput text was: %q\n", r, text)
+			panic(r)
+		}
+	}()
+
+	// Input validation and preprocessing
+	if text == "" {
+		return nil, errors.New("empty text provided")
+	}
+
 	// Split the text into sentences.
-	// This is a very naive split; you may want to replace it with a better sentence tokenizer.
 	sentences := splitIntoSentences(text)
 	if len(sentences) == 0 {
 		return nil, errors.New("no content to chunk")
@@ -125,6 +136,12 @@ func joinSentences(sentences []string) string {
 // getOverlap selects sentences from the end of the current chunk
 // such that the total token count is at least overlapTokenCount (or as close as possible without exceeding the chunk size).
 func (c *Chunker) getOverlap(sentences []string, desiredOverlap int) ([]string, int) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Panic occurred in getOverlap. Sentences: `%q`\n", sentences)
+			panic(r)
+		}
+	}()
 	var overlapSentences []string
 	totalTokens := 0
 	// Iterate backwards over the sentences.
@@ -148,6 +165,12 @@ func (c *Chunker) getOverlap(sentences []string, desiredOverlap int) ([]string, 
 // splitLongSentence splits a sentence that exceeds maxTokenChunkSize into smaller pieces.
 // For simplicity, we will split at whitespace boundaries.
 func (c *Chunker) splitLongSentence(sentence string) ([]string, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Panic occurred in splitLongSentence. Sentence: `%q`\n", sentence)
+			panic(r)
+		}
+	}()
 	words := strings.Fields(sentence)
 	if len(words) == 0 {
 		return nil, errors.New("cannot split an empty sentence")

@@ -13,7 +13,7 @@ type ContactType string
 const (
 	ContactTypeEmail   ContactType = "email"
 	ContactTypePhone   ContactType = "phone"
-	ContactTypeAddress ContactType = "address"
+	ContactTypeWebsite ContactType = "website"
 )
 
 type Contact struct {
