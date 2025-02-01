@@ -1,22 +1,25 @@
+import { cookies } from 'next/headers';
 import { auth } from '../(auth)/auth';
 import { redirect } from 'next/navigation';
+import { AdminSidebar } from '@/components/admin-sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+  const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
 
   if (!session?.user || session.user.role !== 'admin') {
     redirect('/login');
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-10">
-        {children}
-      </div>
-    </div>
+    <SidebarProvider defaultOpen={!isCollapsed}>
+      <AdminSidebar user={session.user} />
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
   );
 } 
