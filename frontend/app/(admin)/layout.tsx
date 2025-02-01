@@ -3,6 +3,7 @@ import { auth } from '../(auth)/auth';
 import { redirect } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { AdminHeader } from '@/components/admin-header';
 
 export default async function AdminLayout({
   children,
@@ -19,7 +20,10 @@ export default async function AdminLayout({
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
       <AdminSidebar user={session.user} />
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset>
+        <AdminHeader />
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 } 

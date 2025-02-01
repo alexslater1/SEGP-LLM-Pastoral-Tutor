@@ -57,6 +57,9 @@
         --sidebar-accent-foreground: 240 5.9% 10%;
         --sidebar-border: 220 13% 91%;
         --sidebar-ring: 217.2 91.2% 59.8%;
+        --sidebar-selected: 221.2 83.2% 53.3%;    /* #3b82f6 - solid blue */
+        --sidebar-selected-bg: 221.2 83.2% 53.3%; /* #3b82f6 with transparency */
+        --sidebar-selected-foreground: 210 40% 98%; /* #f8fafc */
     }
     .dark {
         --background: 240 10% 3.9%;
@@ -91,6 +94,9 @@
         --sidebar-accent-foreground: 240 4.8% 95.9%;
         --sidebar-border: 240 3.7% 15.9%;
         --sidebar-ring: 217.2 91.2% 59.8%;
+        --sidebar-selected: 217.2 91.2% 59.8%;    /* #60a5fa - solid blue */
+        --sidebar-selected-bg: 217.2 91.2% 59.8%; /* #60a5fa with transparency */
+        --sidebar-selected-foreground: 210 40% 98%; /* #f8fafc */
     }
 }
 
