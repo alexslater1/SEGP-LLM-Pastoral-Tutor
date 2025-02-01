@@ -1,10 +1,7 @@
 # Build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.23 AS builder
 
 WORKDIR /app
-
-# Install build dependencies
-RUN apk add --no-cache gcc musl-dev
 
 # Copy go mod files
 COPY go.mod go.sum ./
@@ -17,15 +14,14 @@ COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -o worker-node .
 
 # Final stage
-FROM alpine:latest
+FROM ubuntu:latest
 
 WORKDIR /app
 
-# Install required dependencies for onnxruntime
-RUN apk add --no-cache \
-  libc6-compat \
-  libstdc++ \
-  gcompat
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy the binary from builder
 COPY --from=builder /app/worker-node .
@@ -36,7 +32,7 @@ COPY model/ ./model/
 # Copy libonnxruntime and ensure it's in the correct location
 COPY libonnxruntime.so.1.20.1 .
 
-# Create a directory for .env file
+# Copy .env file
 COPY .env .
 
 # Make the binary executable

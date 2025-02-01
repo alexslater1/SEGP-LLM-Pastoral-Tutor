@@ -71,7 +71,7 @@ func TestRedisCoordinatorClientCreate100Tasks(t *testing.T) {
 
 func TestRedisCoordinatorClientCreate100UrlTasks(t *testing.T) {
 	if os.Getenv("CICD") == "true" {
-		t.Skip(" Skipping test in CICD                    ")
+		t.Skip(" Skipping test in CICD                      ")
 	}
 
 	links := `https://www.imperial.ac.uk/
