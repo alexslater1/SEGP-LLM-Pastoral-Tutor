@@ -42,8 +42,10 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 }
 
 func (s *Server) routes() {
-	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent.NewDefaultEventStoringLoggingReActAgent(), storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
-	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(agent.NewDefaultEventStoringLoggingReActAgent(), storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
+	agent := agent.NewDefaultEventStoringLoggingReActAgent()
+
+	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent, storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
+	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(agent, storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
 	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
 }
 

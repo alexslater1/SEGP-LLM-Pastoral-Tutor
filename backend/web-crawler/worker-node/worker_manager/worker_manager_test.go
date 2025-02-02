@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/ethanhosier/worker-node/coordinator_client"
+	"github.com/ethanhosier/worker-node/ragger"
 	"github.com/ethanhosier/worker-node/scraper"
+	"github.com/ethanhosier/worker-node/storage"
 	"github.com/ethanhosier/worker-node/worker"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +24,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestWorkerManager(t *testing.T) {
+func TestWorkerManagerScraper(t *testing.T) {
 	var (
 		scraper              = scraper.NewMockScraper()
 		coordinatorClient    = coordinator_client.NewMockCoordinatorClient()
@@ -69,6 +71,104 @@ func TestWorkerManager(t *testing.T) {
 	assert.Equal(t, parsedParams.Markdown, "# Hello, World!")
 }
 
+func TestWorkerManagerRag(t *testing.T) {
+	// given
+	var (
+		ragClient         = ragger.NewMockRagClient()
+		coordinatorClient = coordinator_client.NewMockCoordinatorClient()
+		store             = storage.NewMemoryStorage()
+
+		workerManager = NewRagWorkerManager(context.TODO(), coordinatorClient, ragClient, store, 1)
+
+		markdown       = "# Hello, World!"
+		text           = "Hello, World!"
+		mockTask1, err = coordinator_client.NewTask("1", "CREATED_BY", worker.RagWorkerParams{
+			Markdown:  markdown,
+			Url:       "https://example.com",
+			InnerText: text,
+		})
+
+		chunks1     = []string{"Hello, World!1", "Hello, World!2"}
+		embeddings1 = [][]float32{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}}
+	)
+	if err != nil {
+		t.Fatalf("Error creating mock task: %v", err)
+	}
+
+	ragClient.SetChunksFor(text, chunks1)
+
+	ragClient.SetContactsFor(markdown, []ragger.Contact{
+		{
+			Value:   "johndoe@example.com",
+			Context: markdown,
+			Type:    "email",
+		},
+	})
+
+	newSlice := make([]string, len(chunks1)+1)
+	copy(newSlice, chunks1)
+	newSlice[len(chunks1)] = markdown
+
+	ragClient.SetEmbeddingsForAll(newSlice, embeddings1)
+
+	err = coordinatorClient.CreateTask(context.TODO(), coordinator_client.CoordinatorClientTaskTopicRag, mockTask1)
+	if err != nil {
+		t.Fatalf("Error creating mock task: %v", err)
+	}
+
+	// when
+	doneChan, errChan := workerManager.Start()
+
+	time.Sleep(10 * time.Second)
+
+	doneChan <- true
+
+	// then
+	select {
+	case err := <-errChan:
+		t.Fatalf("Error: %v", err)
+	default:
+	}
+
+	_, err = coordinatorClient.GetTask(context.TODO(), 1*time.Second, coordinator_client.CoordinatorClientTaskTopicRag)
+	if err != coordinator_client.ErrNoTasksToComplete {
+		t.Fatal("There should be no tasks to complete error")
+	}
+
+	storedRagSources, err := storage.GetAll[storage.RagSource](store, nil)
+	if err != nil {
+		t.Fatalf("Error getting stored rag source: %v", err)
+	}
+
+	assert.Equal(t, len(storedRagSources), 1)
+	assert.Equal(t, storedRagSources[0].URL, "https://example.com")
+
+	contacts, err := storage.GetAll[storage.RagContact](store, nil)
+	if err != nil {
+		t.Fatalf("Error getting contacts: %v", err)
+	}
+
+	assert.Equal(t, len(contacts), 1)
+	assert.Equal(t, contacts[0].Context, markdown)
+	assert.Equal(t, contacts[0].Contact, "johndoe@example.com")
+	assert.Equal(t, contacts[0].ContactType, "email")
+	assert.Equal(t, contacts[0].RagSourceId, storedRagSources[0].ID)
+	assert.Equal(t, contacts[0].Embedding, []float32{7.0, 8.0, 9.0})
+
+	rags, err := storage.GetAll[storage.RagChunk](store, nil)
+	if err != nil {
+		t.Fatalf("Error getting rags: %v", err)
+	}
+
+	assert.Equal(t, len(rags), 2)
+	assert.Equal(t, rags[0].Text, chunks1[0])
+	assert.Equal(t, rags[1].Text, chunks1[1])
+	assert.Equal(t, rags[0].Embedding, embeddings1[0])
+	assert.Equal(t, rags[1].Embedding, embeddings1[1])
+	assert.Equal(t, rags[0].RagSourceId, storedRagSources[0].ID)
+	assert.Equal(t, rags[1].RagSourceId, storedRagSources[0].ID)
+}
+
 func TestWorkerManagerRedis(t *testing.T) {
 	if os.Getenv("CICD") == "true" {
 		t.Skip("Skipping test because CICD is true")
@@ -94,6 +194,10 @@ func TestWorkerManagerRedis(t *testing.T) {
 }
 
 func TestCreateWorkers(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test because CICD is true")
+	}
+
 	scraper := scraper.NewHttpScraper()
 	redisClient := coordinator_client.NewRedisCoordinatorClient(context.TODO(), "localhost:6379", "", 0)
 	scraperWorkerManager := NewScraperWorkerManager(context.TODO(), redisClient, scraper, 1)
@@ -106,6 +210,10 @@ func TestCreateWorkers(t *testing.T) {
 }
 
 func TestRedisWorkerManager2(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test because CICD is true")
+	}
+
 	var (
 		scraper                = scraper.NewHttpScraper()
 		redisCoordinatorClient = coordinator_client.NewRedisCoordinatorClient(context.TODO(), "localhost:6379", "", 0)
@@ -121,7 +229,7 @@ func TestRedisWorkerManager2(t *testing.T) {
 
 	err = redisCoordinatorClient.CreateTask(context.TODO(), coordinator_client.CoordinatorClientTaskTopicUrls, mockTask1)
 	if err != nil {
-		t.Fatalf("Error creating mock  task: %v", err)
+		t.Fatalf("Error creating mock task: %v", err)
 	}
 
 	doneChan, errChan := scraperWorkerManager.Start()

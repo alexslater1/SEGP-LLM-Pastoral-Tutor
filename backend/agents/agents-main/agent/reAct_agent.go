@@ -224,7 +224,7 @@ func (a *ReActAgent) decide(requestId string, thought string) (*tools.ToolCall, 
 	prompt := fmt.Sprintf(decidePrompt, thought)
 
 	toolChoice := tools.ToolChoice{
-		Type: tools.ToolChoiceTypeAuto,
+		Type: tools.ToolChoiceTypeRequired,
 	}
 
 	chosenTool, err := a.LLM.ChatCompletionWithTools(context.Background(), prompt, a.ToolHandler.ToolDefinitions(), toolChoice)

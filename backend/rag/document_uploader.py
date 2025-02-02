@@ -18,12 +18,10 @@ def upload_doc(url):
     mkdwn_pdf = pdf_to_text(url)
 
     # upload file to bucket storage
-    try:
-        with open(url, "rb") as file:
-            response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).upload(file_name, file)
-    except Exception as e:
-        print(f"An error uploading the file occurred: {str(e)}")
-        return None
+    
+    with open(url, "rb") as file:
+        response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).upload(file_name, file)
+
     public_url = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).get_public_url(file_name)
     print("2")
     #add entry for file in documents table

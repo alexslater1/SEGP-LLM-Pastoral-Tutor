@@ -21,10 +21,9 @@ def search(query, tokenizer, model, chunks, k=5):
 
 def get_supabase_rag_chunks(query, tokenizer, model, k=5, similarity_threshold=0.5):
     embedded_query = embed(query, tokenizer, model)
-    
     try:
         chunks = supabase.rpc(
-            'match_chunks',
+            'match_rag_chunks',
             {
                 'query_embedding': embedded_query.tolist(),
                 'match_count': k,
@@ -33,7 +32,7 @@ def get_supabase_rag_chunks(query, tokenizer, model, k=5, similarity_threshold=0
         ).execute()
 
         contacts = supabase.rpc(
-            'match_contacts',
+            'match_rag_contacts',
             {
                 'query_embedding': embedded_query.tolist(),
                 'match_count': k,

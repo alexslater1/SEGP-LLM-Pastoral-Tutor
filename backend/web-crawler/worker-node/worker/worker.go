@@ -10,6 +10,7 @@ type WorkerType string
 
 const (
 	WorkerTypeScraper WorkerType = "scraper"
+	WorkerTypeRag     WorkerType = "rag"
 )
 
 type Worker interface {

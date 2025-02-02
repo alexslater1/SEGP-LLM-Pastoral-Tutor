@@ -2,6 +2,7 @@ package coordinator_client
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -102,4 +103,23 @@ func TestMockCoordinatorClient_CreateTask(t *testing.T) {
 	assert.Equal(t, parsedParams.Name, "a name")
 
 	t.Logf("createdTask: %+v", createdTask)
+}
+
+func TestMockCoordinatorClient_StoreError(t *testing.T) {
+	client := NewMockCoordinatorClient()
+	ctx := context.Background()
+
+	params := map[string]string{
+		"url": "https://ethanhosier.com",
+	}
+
+	task, err := NewTask("test-id", "test-data", params)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	client.StoreError(ctx, CoordinatorClientTaskTopicUrls, task, fmt.Errorf("an error"))
+
+	assert.Equal(t, len(client.errors), 1)
+	t.Logf("errors: %+v", client.errors)
 }

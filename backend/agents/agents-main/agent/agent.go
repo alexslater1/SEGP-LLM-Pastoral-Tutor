@@ -21,7 +21,7 @@ type Agent interface {
 func NewDefaultReActAgent() Agent {
 	var (
 		toolHandler = tools.NewDefaultToolHandler(googleSearch.NewRodClient(), knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL")))
-		llm         = llm.NewDeepSeekLLM(os.Getenv("DEEPSEEK_API_KEY"))
+		llm         = llm.NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
 		memory      = memory.NewReActMemory()
 		history     = history.NewLocalHistory()
 		knowledge   = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))

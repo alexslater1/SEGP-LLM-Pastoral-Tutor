@@ -133,8 +133,8 @@ func chatCompletionV2StatusResponseFromEvents(events []storage.AgentEvent) *Chat
 
 	switch lastEvent.Type {
 	case "error":
-		metadata := lastEvent.Metadata.(map[string]string)
-		return newErrorResponse(metadata["error"])
+		metadata := lastEvent.Metadata.(map[string]interface{})
+		return newErrorResponse(metadata["error"].(string))
 
 	case "observation":
 		return newPendingResponse("Thinking")
