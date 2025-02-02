@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 
 	"github.com/segp/agents-main/knowledge"
@@ -118,6 +119,8 @@ func (a *FastAgent) thinkAndChooseTool(isFirstIteration bool, query string, know
 	}
 
 	a.publish(NewToolCallChoiceEvent(requestId, toolCalls[0]))
+
+	log.Printf("toolCalls: %+v", toolCalls)
 
 	if len(toolCalls) != 1 {
 		return nil, nil, fmt.Errorf("expected 1 tool call, got %d", len(toolCalls))

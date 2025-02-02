@@ -86,5 +86,3 @@ def delete_doc(name):
 
     except Exception as e:
         print(f"An error occurred deleting the document: {e}")
-
-upload_doc("rag/pdfs/Computing-UG-Handbook-2425-v1b.pdf")

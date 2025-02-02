@@ -143,3 +143,14 @@ func TestUnsubscribe(t *testing.T) {
 	_, ok := <-ch
 	assert.False(t, ok)
 }
+
+func TestFastAgentRun(t *testing.T) {
+	agent := NewDefaultLoggingFastAgent()
+	answer, reason, err := agent.Run("what is the current USD price ?", "test_request_id")
+	if err != nil {
+		t.Fatalf("error running agent: %v", err)
+	}
+
+	t.Logf("answer: %s", *answer)
+	t.Logf("reason: %s", *reason)
+}
