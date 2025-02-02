@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 
 	"github.com/segp/agents-main/knowledge"
@@ -102,6 +101,40 @@ func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string,
 	return nil, nil, fmt.Errorf("failed to find answer after 10 iterations")
 }
 
+type StructuredOutput struct {
+	Thoughts     string `json:"_thoughts"`
+	ToolCallName string `json:"tool_call_name"`
+	ToolCallArgs []struct {
+		ToolCallArgName  string `json:"tool_call_arg_name"`
+		ToolCallArgValue string `json:"tool_call_arg_value"`
+	} `json:"tool_call_args"`
+}
+
+func structuredOutputToToolCall(structuredOutputCompletion *string) *tools.ToolCall {
+	var structuredOutput StructuredOutput
+	err := json.Unmarshal([]byte(*structuredOutputCompletion), &structuredOutput)
+	if err != nil {
+		return nil
+	}
+
+	argsMap := make(map[string]string)
+	for _, arg := range structuredOutput.ToolCallArgs {
+		argsMap[arg.ToolCallArgName] = arg.ToolCallArgValue
+	}
+
+	argsMap["_thoughts"] = structuredOutput.Thoughts
+
+	argsJson, err := json.Marshal(argsMap)
+	if err != nil {
+		return nil
+	}
+
+	return &tools.ToolCall{
+		Name:      structuredOutput.ToolCallName,
+		Arguments: string(argsJson),
+	}
+}
+
 func (a *FastAgent) thinkAndChooseTool(isFirstIteration bool, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, requestId string) (*string, *tools.ToolCall, error) {
 	kc := ""
 	if knowledgeContext != nil {
@@ -113,21 +146,20 @@ func (a *FastAgent) thinkAndChooseTool(isFirstIteration bool, query string, know
 		return nil, nil, err
 	}
 
-	toolCalls, err := a.LLM.ChatCompletionWithTools(context.TODO(), *prompt, a.ToolHandler.ToolDefinitionsWithThoughts(a.ToolHandler.ToolDefinitionsWithDescribingAction()), tools.ToolChoice{Type: tools.ToolChoiceTypeRequired})
+	structuredCompletion, err := a.LLM.StructuredOutputCompletion(context.TODO(), *prompt, StructuredOutput{})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	a.publish(NewToolCallChoiceEvent(requestId, toolCalls[0]))
-
-	log.Printf("toolCalls: %+v", toolCalls)
-
-	if len(toolCalls) != 1 {
-		return nil, nil, fmt.Errorf("expected 1 tool call, got %d", len(toolCalls))
+	toolCall := structuredOutputToToolCall(structuredCompletion)
+	if toolCall == nil {
+		return nil, nil, fmt.Errorf("failed to parse tool call from structured output")
 	}
 
+	a.publish(NewToolCallChoiceEvent(requestId, *toolCall))
+
 	var parsedArgs map[string]interface{}
-	err = json.Unmarshal([]byte(toolCalls[0].Arguments), &parsedArgs)
+	err = json.Unmarshal([]byte(toolCall.Arguments), &parsedArgs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -141,7 +173,7 @@ func (a *FastAgent) thinkAndChooseTool(isFirstIteration bool, query string, know
 		return nil, nil, fmt.Errorf("conversion of thoughts field to string failed")
 	}
 
-	return &thoughts, &toolCalls[0], nil
+	return &thoughts, toolCall, nil
 }
 
 func (a *FastAgent) thinkingAndActPrompt(isFirstIteration bool, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, requestId string) (*string, error) {
