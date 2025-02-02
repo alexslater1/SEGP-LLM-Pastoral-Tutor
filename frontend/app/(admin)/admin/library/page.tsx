@@ -4,41 +4,49 @@ import { Download, Trash2 } from 'lucide-react';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import type { RAGDocument } from "@/types/document";
 import { getRelativeTimeString } from "@/lib/utils";
+import { RagDocument } from "@/lib/db/schema";
 
 export default function LibraryPage() {
-  const [documents] = useState<RAGDocument[]>([
-    // TODO: Replace with actual documents from the database
+  const [documents] = useState<RagDocument[]>([
     {
       id: '1',
       name: 'Computing-UG-Handbook-2425-v1b.pdf',
       uploadedAt: new Date('2024-03-15T10:00:00'),
       size: '2.4 MB',
-      type: 'PDF'
+      type: 'PDF',
+      status: 'ready',
+      userId: 'dummy-user-id',
+      backendSourceId: 1
     },
     {
-      id: '2', 
+      id: '2',
       name: 'student-guidelines.docx',
       uploadedAt: new Date('2024-03-14T15:30:00'),
       size: '1.2 MB',
-      type: 'DOCX'
+      type: 'DOCX',
+      status: 'ready',
+      userId: 'dummy-user-id',
+      backendSourceId: 2
     },
     {
       id: '3',
       name: 'course-outline.txt',
       uploadedAt: new Date('2024-03-13T09:15:00'),
       size: '156 KB',
-      type: 'TXT'
+      type: 'TXT',
+      status: 'ready',
+      userId: 'dummy-user-id',
+      backendSourceId: 3
     }
   ]);
 
-  const handleDownload = (doc: RAGDocument) => {
+  const handleDownload = (doc: RagDocument) => {
     // TODO: Implement download logic here
     toast.success(`Downloading ${doc.name}`);
   };
 
-  const handleDelete = (doc: RAGDocument) => {
+  const handleDelete = (doc: RagDocument) => {
     // TODO: Implement delete logic here
     toast.success(`Deleted ${doc.name}`);
   };
@@ -91,17 +99,17 @@ export default function LibraryPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDownload(doc)}
-                        className="h-8 w-8 hover:text-blue-500"
+                        className="size-8 hover:text-blue-500"
                       >
-                        <Download className="h-4 w-4" />
+                        <Download className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(doc)}
-                        className="h-8 w-8 text-destructive hover:text-red-500"
+                        className="size-8 text-destructive hover:text-red-500"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </div>
                   </td>

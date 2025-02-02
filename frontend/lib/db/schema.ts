@@ -9,6 +9,7 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  integer,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -116,3 +117,20 @@ export const suggestion = pgTable(
 );
 
 export type Suggestion = InferSelectModel<typeof suggestion>;
+
+export const ragDocument = pgTable('RagDocument', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  name: text('name').notNull(),
+  uploadedAt: timestamp('uploadedAt').notNull().defaultNow(),
+  size: text('size').notNull(),
+  type: varchar('type', { enum: ['PDF', 'DOCX', 'TXT', 'PPTX'] }).notNull(),
+  status: varchar('status', { enum: ['processing', 'ready', 'failed'] })
+    .notNull()
+    .default('processing'),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  backendSourceId: integer('backendSourceId'),
+});
+
+export type RagDocument = InferSelectModel<typeof ragDocument>;

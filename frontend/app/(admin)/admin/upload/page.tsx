@@ -5,21 +5,24 @@ import { File, CloudUpload } from 'lucide-react';
 import { useState } from "react";
 import { toast } from "sonner";
 import { getRelativeTimeString } from "@/lib/utils";
-import type { RAGDocument } from "@/types/document";
+import { RagDocument } from "@/lib/db/schema";
 
 const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
 };
 
 export default function UploadPage() {
-  const [documents, setDocuments] = useState<RAGDocument[]>([
+  const [documents, setDocuments] = useState<RagDocument[]>([
     // TODO: Replace with actual documents from the database
     {
       id: '1',
       name: 'dummy-doc.pdf',
       uploadedAt: new Date(),
       size: '2.4 MB',
-      type: 'PDF'
+      type: 'PDF',
+      status: 'ready',
+      userId: 'dummy-user-id',
+      backendSourceId: 1
     }
   ]);
   const [isDragging, setIsDragging] = useState(false);
@@ -67,18 +70,6 @@ export default function UploadPage() {
        1. Save file metadata to NextJS DB with status 'processing'
        2. Upload file to backend for RAG processing
        3. Update NextJS DB record status to 'ready' when complete
-       This requires a new table in the NextJS database.
-       Possible schema?:
-       interface RAGDocumentTable {
-         id: string;
-         name: string;
-         uploadedAt: Date;
-         size: string;
-         type: 'PDF' | 'DOCX' | 'TXT' | 'PPTX';
-         status: 'processing' | 'ready' | 'failed';
-         userId: string;
-         backendiSourceId?: string; (Reference to backend RagSource)
-       }
     */
     toast.success(`Uploaded ${files.length} file(s)`);
   };
@@ -106,7 +97,10 @@ export default function UploadPage() {
       name: file.name,
       uploadedAt: new Date(),
       size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      type: getFileExtension(file.name).toUpperCase() as 'PDF' | 'DOCX' | 'TXT' | 'PPTX'
+      type: getFileExtension(file.name).toUpperCase() as 'PDF' | 'DOCX' | 'TXT' | 'PPTX',
+      status: 'processing' as const,
+      userId: 'dummy-user-id',
+      backendSourceId: null
     }));
   
     setDocuments(prev => [...prev, ...newDocuments]);
@@ -143,7 +137,7 @@ export default function UploadPage() {
         onDrop={handleDrop}
       >
         <div className="flex flex-col items-center justify-center gap-4">
-          <CloudUpload className={`h-12 w-12 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+          <CloudUpload className={`size-12 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
           <p className="text-lg">Drag and drop files here</p>
           <p className="text-muted-foreground">or</p>
           <Button>
@@ -182,7 +176,7 @@ export default function UploadPage() {
                   className="p-4 flex items-center hover:bg-muted/50"
                 >
                   <div className="flex items-center gap-3">
-                    <File className="h-5 w-5 text-muted-foreground" />
+                    <File className="size-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium">{doc.name}</p>
                       <p className="text-sm text-muted-foreground">

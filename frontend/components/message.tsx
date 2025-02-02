@@ -14,12 +14,11 @@ import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
 import equal from 'fast-deep-equal';
-import { cn } from '@/lib/utils';
+import { cn, getMessageAnnotationContent } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
-import { getMessageAnnotationContent } from '@/lib/utils';
 
 const PurePreviewMessage = ({
   chatId,
