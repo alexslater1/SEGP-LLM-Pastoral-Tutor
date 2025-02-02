@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"os"
 
 	googleSearch "github.com/segp/agents-main/google_search"
@@ -33,9 +34,10 @@ func NewDefaultReActAgent() Agent {
 
 func NewDefaultFastAgent() Agent {
 	var (
-		toolHandler = tools.NewDefaultToolHandler(googleSearch.NewNonHeadlessRodClient(), knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL")))
-		llm         = llm.NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
-		knowledge   = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+		googleSearchClient = googleSearch.NewRodClient()
+		toolHandler        = tools.NewGoogleSearchToolHandler(googleSearchClient)
+		llm                = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
+		knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
 	)
 
 	return NewFastAgent(
@@ -60,4 +62,12 @@ func NewDefaultEventStoringLoggingReActAgent() Agent {
 
 func NewDefaultLoggingFastAgent() Agent {
 	return NewLoggingAgent(NewDefaultFastAgent())
+}
+
+func NewDefaultEventStoringFastAgent() Agent {
+	return NewEventStoringAgent(NewDefaultFastAgent(), storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY")))
+}
+
+func NewDefaultEventStoringLoggingFastAgent() Agent {
+	return NewLoggingAgent(NewDefaultEventStoringFastAgent())
 }

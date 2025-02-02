@@ -2,10 +2,10 @@ package llm
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"reflect"
 	"strings"
-
-	"fmt"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/segp/agents-main/tools"
@@ -20,15 +20,15 @@ type GeminiLLM struct {
 	client *genai.Client
 }
 
-func NewGeminiLLM(ctx context.Context, apiKey string) (*GeminiLLM, error) {
+func NewGeminiLLM(ctx context.Context, apiKey string) *GeminiLLM {
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %v", err)
+		log.Fatalf("failed to create client: %v", err)
 	}
 
 	return &GeminiLLM{
 		client: client,
-	}, nil
+	}
 }
 
 func (g *GeminiLLM) ChatCompletion(ctx context.Context, prompt string) (*string, error) {

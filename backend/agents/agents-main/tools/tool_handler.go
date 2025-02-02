@@ -26,8 +26,7 @@ func NewDefaultToolHandler(googleSearch googleSearch.GoogleSearchClient, knowled
 func NewGoogleSearchToolHandler(googleSearch googleSearch.GoogleSearchClient) *ToolHandler {
 	return NewToolHandler(
 		[]Tool{
-			NewGoogleSearchUrlTool(googleSearch),
-			NewGoogleSearchResultsTool(googleSearch),
+			NewGoogleSearchFirstResultsPageContentsTool(googleSearch, 3),
 		},
 	)
 }

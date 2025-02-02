@@ -412,10 +412,7 @@ func TestGemini(t *testing.T) {
 		t.Skip("Skipping test in CICD environment")
 	}
 
-	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
-	if err != nil {
-		t.Fatalf("Error creating GeminiLLM: %v", err)
-	}
+	geminiClient := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
 
 	prompt := "What is the capital of France?"
 
@@ -432,10 +429,7 @@ func TestGeminiStructuredOutput(t *testing.T) {
 		t.Skip("Skipping test in CICD environment")
 	}
 
-	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
-	if err != nil {
-		t.Fatalf("Error creating GeminiLLM: %v", err)
-	}
+	geminiClient := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
 
 	prompt := "Give me a random address"
 
@@ -459,10 +453,7 @@ func TestGeminiChatCompletionWithTools(t *testing.T) {
 		t.Skip("Skipping test in CICD environment")
 	}
 
-	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
-	if err != nil {
-		t.Fatalf("Error creating GeminiLLM: %v", err)
-	}
+	geminiClient := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
 
 	prompt := "What is the weather in San Francisco on 10/10/2024 and in New York on 10/10/2024?"
 
@@ -481,10 +472,7 @@ func TestGeminiChatCompletionLLMThinking(t *testing.T) {
 		t.Skip("Skipping test in CICD environment")
 	}
 
-	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
-	if err != nil {
-		t.Fatalf("Error creating GeminiLLM: %v", err)
-	}
+	geminiClient := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
 
 	prompt := "You are given a list of tools. Pick the best tool for this query `what is the current price of the usd`. Tools: [`no_tool`:`pick no tool, either as know the answer or no relevant tool`, `google search`: `get the contents of the top 3 search results for a query`, `google_maps`: `get the contents of the top 3 search results for a query`] Include thinking in <thoughts> </thoughts> tags and then answer in <answer> </answer> tags. Answer must include the tool name and the tool input."
 
@@ -501,10 +489,7 @@ func TestGeminiChatCompletionLLMThinkingWithStructuredOutput(t *testing.T) {
 		t.Skip("Skipping test in CICD environment")
 	}
 
-	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
-	if err != nil {
-		t.Fatalf("Error creating GeminiLLM: %v", err)
-	}
+	geminiClient := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
 
 	prompt := "You are to answer the query `what is the weather in the home country of yesterday's new richest man`. It is essential that you first think about all steps required to solve this problem, and must pick the next ONE tool which should be called to help next. Tools: [`no_tool`:`pick no tool, either as know the answer or no relevant tool`, `google search`: `get the contents of the top 3 search results for a query`, `google_maps`: `get the contents of the top 3 search results for a query`]"
 
@@ -544,10 +529,7 @@ func TestStructuredOutputCompletionWithTools(t *testing.T) {
 		t.Skip("Skipping test in CICD environment")
 	}
 
-	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
-	if err != nil {
-		t.Fatalf("Error creating GeminiLLM: %v", err)
-	}
+	geminiClient := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
 
 	gs := googleSearch.NewRodClient()
 
