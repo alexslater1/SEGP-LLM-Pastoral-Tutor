@@ -28,7 +28,7 @@ def upload_doc(url):
     response = supabase.table(DOCUMENTS_TABLE_NAME).insert([
             {"url": public_url, "name": file_name, "type": "DOCUMENT"}
         ]).execute()
-    doc_id = response.data[0].get('id')
+    source_id = response.data[0].get('id')
 
     text = file_to_text(url)
     print("3")
@@ -38,7 +38,7 @@ def upload_doc(url):
     index = 1
     for text in chunks:
         supabase.table(RAG_TABLE_NAME).insert([
-            {"text": text, "rag_source_id": doc_id, "pos_in_source": index, "embedding": embed(text, tokenizer, model).tolist()}
+            {"text": text, "rag_source_id": source_id, "pos_in_source": index, "embedding": embed(text, tokenizer, model).tolist()}
         ]).execute()
         index += 1
     print("4")
@@ -47,12 +47,8 @@ def upload_doc(url):
     contact_index = 1
     for (email, email_context) in contacts[0]:
         supabase.table(CONTACT_TABLE_NAME).insert([
-            {"context": email_context,
-            "rag_source_id": doc_id, 
-            "pos_in_source": contact_index,
-            "contact_type": "email", 
-            "embedding": embed(email_context, tokenizer, model).tolist(),
-            "contact": email}
+            {"context": email_context, "rag_source_id": source_id, "pos_in_source": contact_index, "contact_type": "email", 
+             "embedding": embed(email_context, tokenizer, model).tolist(), "contact": email}
         ]).execute()
 
         print(f" - {contact_index}")
@@ -60,12 +56,8 @@ def upload_doc(url):
     
     for (phone, phone_context) in contacts[1]:
         supabase.table(CONTACT_TABLE_NAME).insert([
-            {"context": phone_context,
-             "rag_source_id": doc_id,
-             "pos_in_source": contact_index,
-             "contact_type": "phone number", 
-             "embedding": embed(phone_context, tokenizer, model).tolist(), 
-             "contact": phone}
+            {"context": phone_context, "rag_source_id": source_id, "pos_in_source": contact_index, "contact_type": "phone number", 
+             "embedding": embed(phone_context, tokenizer, model).tolist(), "contact": phone}
         ]).execute()
 
         print(f" - {contact_index}")
@@ -75,9 +67,9 @@ def upload_doc(url):
         supabase.table(CONTACT_TABLE_NAME).insert([
             {
             "context": url_context, 
-            "rag_source_id": doc_id, 
+            "rag_source_id": source_id, 
             "pos_in_source": contact_index, 
-            "contact_type": "url", 
+            "contact_type": "website", 
             "embedding": embed(url_context, tokenizer, model).tolist(),
             "contact": url
             }
@@ -94,3 +86,5 @@ def delete_doc(name):
 
     except Exception as e:
         print(f"An error occurred deleting the document: {e}")
+
+upload_doc("rag/pdfs/Computing-UG-Handbook-2425-v1b.pdf")
