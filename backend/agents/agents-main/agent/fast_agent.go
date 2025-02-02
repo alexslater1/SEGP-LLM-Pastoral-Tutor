@@ -32,10 +32,11 @@ func (a *FastAgent) Run(query string, requestId string) (*string, *string, error
 }
 
 func (a *FastAgent) Subscribe() <-chan AgentEvent {
-	return nil
+	panic("not implemented")
 }
 
 func (a *FastAgent) Unsubscribe(ch <-chan AgentEvent) {
+	panic("not implemented")
 }
 
 func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string, error) {
@@ -122,7 +123,7 @@ func (a *FastAgent) thinkingAndActPrompt(isFirstIteration bool, query string, kn
 
 	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem."
 
-	toolChoiceString, err := a.toolChoiceString()
+	toolChoiceString, err := a.toolChoicesString()
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (a *FastAgent) thinkingAndActPrompt(isFirstIteration bool, query string, kn
 	return &prompt, nil
 }
 
-func (a *FastAgent) toolChoiceString() (string, error) {
+func (a *FastAgent) toolChoicesString() (string, error) {
 	availableTools := a.ToolHandler.ToolDefinitions()
 
 	toolChoiceString, err := json.Marshal(availableTools)
