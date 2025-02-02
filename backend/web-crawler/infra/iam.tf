@@ -11,10 +11,14 @@ resource "aws_iam_role_policy" "ecs_task_role_policy" {
         Action = [
           "ecs:RunTask",
           "ecs:StopTask",
-          "ecs:DescribeTasks"
+          "ecs:DescribeTasks",
+          "ecs:ListTasks",
+          "ecs:DescribeTaskDefinition",
+          "ecs:DescribeClusters",
+          "ecs:DescribeServices"
         ]
         Resource = "*"
       }
     ]
   })
-} 
+}
