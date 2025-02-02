@@ -11,7 +11,7 @@ import (
 
 func TestMain(m *testing.M) {
 	// Load .env file before running tests
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load("../../../.env")
 	if err != nil {
 		// Don't fail if .env file is not found, just log it
 		println("Warning: .env file not found")
@@ -28,6 +28,23 @@ func TestOpenAIChatCompletion(t *testing.T) {
 	ocClient := NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
 
 	prompt := "What is the capital of France?"
+
+	response, err := ocClient.ChatCompletion(context.Background(), prompt)
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletion: %v", err)
+	}
+
+	t.Logf("Response: %v", *response)
+}
+
+func TestOpenaiChatCompletionThinking(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	ocClient := NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
+
+	prompt := "You are given a list of tools. Pick the best tool for this query `what is the current price of the usd`. Tools: [`no_tool`:`pick no tool, either as know the answer or no relevant tool`, `google search`: `get the contents of the top 3 search results for a query`, `google_maps`: `get the contents of the top 3 search results for a query`] Include thinking in <thoughts> </thoughts> tags and then answer in <answer> </answer> tags. Answer must include the tool name and the tool input."
 
 	response, err := ocClient.ChatCompletion(context.Background(), prompt)
 	if err != nil {

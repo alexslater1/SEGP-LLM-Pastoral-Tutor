@@ -2,10 +2,12 @@ package llm
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/google/generative-ai-go/genai"
+	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/tools"
 	"github.com/stretchr/testify/assert"
 )
@@ -472,4 +474,91 @@ func TestGeminiChatCompletionWithTools(t *testing.T) {
 	}
 
 	t.Logf("Response: %+v", response)
+}
+
+func TestGeminiChatCompletionLLMThinking(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+	if err != nil {
+		t.Fatalf("Error creating GeminiLLM: %v", err)
+	}
+
+	prompt := "You are given a list of tools. Pick the best tool for this query `what is the current price of the usd`. Tools: [`no_tool`:`pick no tool, either as know the answer or no relevant tool`, `google search`: `get the contents of the top 3 search results for a query`, `google_maps`: `get the contents of the top 3 search results for a query`] Include thinking in <thoughts> </thoughts> tags and then answer in <answer> </answer> tags. Answer must include the tool name and the tool input."
+
+	response, err := geminiClient.ChatCompletion(context.Background(), prompt)
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletion: %v", err)
+	}
+
+	t.Logf("Response: %v", *response)
+}
+
+func TestGeminiChatCompletionLLMThinkingWithStructuredOutput(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+	if err != nil {
+		t.Fatalf("Error creating GeminiLLM: %v", err)
+	}
+
+	prompt := "You are given a list of tools.  Pick the best tool for this query `what is the current price of the usd`. Tools: [`no_tool`:`pick no tool, either as know the answer or no relevant tool`, `google search`: `get the contents of the top 3 search results for a query`, `google_maps`: `get the contents of the top 3 search results for a query`] Include the thinking in the thoughts field, tags and then answer in <answer> </answer> field. Answer must include the tool name and the tool input.  "
+
+	type ToolParam struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+
+	type Response struct {
+		Thoughts string `json:"_thoughts"`
+		Answer   struct {
+			ToolName   string      `json:"tool_name"`
+			ToolParams []ToolParam `json:"tool_params"`
+		} `json:"answer"`
+	}
+
+	ts := []tools.ToolDefinition{tools.NewGoogleSearchResultsTool(nil).Definition(), tools.NewNoTool().Definition()}
+	definitionStr := ""
+
+	for _, t := range ts {
+		definitionStr += fmt.Sprintf("%s: %s\n", t.Name, t.Description)
+		for _, p := range t.Parameters {
+			definitionStr += fmt.Sprintf("%s: %s\n", p.Name, p.Description)
+		}
+	}
+
+	response, err := geminiClient.StructuredOutputCompletion(context.Background(), prompt, Response{})
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletion: %v", err)
+	}
+
+	t.Logf("Response: %+v", *response)
+}
+
+func TestStructuredOutputCompletionWithTools(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD environment")
+	}
+
+	geminiClient, err := NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+	if err != nil {
+		t.Fatalf("Error creating GeminiLLM: %v", err)
+	}
+
+	gs := googleSearch.NewRodClient()
+
+	ts := []tools.ToolDefinition{tools.NewGoogleSearchResultsTool(gs).Definition(), tools.NewNoTool().Definition()}
+
+	prompt := "What is the current price of the usd"
+
+	response, err := geminiClient.ChatCompletionWithTools(context.Background(), prompt, ts, tools.ToolChoice{Type: tools.ToolChoiceTypeRequired})
+	if err != nil {
+		t.Fatalf("Error calling ChatCompletionWithTools: %v", err)
+	}
+
+	t.Logf("Response: %+v", response[0])
 }
