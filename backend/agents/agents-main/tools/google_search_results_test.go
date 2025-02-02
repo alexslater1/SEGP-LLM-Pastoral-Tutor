@@ -34,12 +34,12 @@ func TestParseGoogleSearchResults(t *testing.T) {
 }
 
 func TestCallGoogleSearchResultsTool(t *testing.T) {
-	tool := NewGoogleSearchResultsTool(googleSearch.NewRodClient())
-	result, err := tool.GoogleSearchResultsFor("what is the weather in japan")
+	tool := NewGoogleSearchResultsTool(googleSearch.NewNonHeadlessRodClient())
+	result, err := tool.GoogleSearchResultsFor("what is the weather in lagos")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(*result)
+	t.Log(*result + "\n\n")
 }
 
 func TestCall(t *testing.T) {

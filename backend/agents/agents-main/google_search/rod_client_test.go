@@ -1,9 +1,15 @@
 package googleSearch
 
 import (
+	"bytes"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
+
+	markdown "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/PuerkitoBio/goquery"
 )
 
 func TestRodClientHtmlFromQuery(t *testing.T) {
@@ -76,4 +82,49 @@ func TestRodClientNavigate(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(*html)
+}
+
+func TestRodClientFromUrl2(t *testing.T) {
+	url := "https://www.exchangerates.org.uk/US-Dollar-USD-currency-table.html"
+
+	client := NewNonHeadlessRodClient()
+	html, err := client.HtmlFromURL(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("###html:")
+	t.Log(*html)
+
+	mdContent, err := relevantPageMarkdownContent(html)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("###mdContent:")
+	t.Log(*mdContent)
+}
+
+func relevantPageMarkdownContent(html *string) (*string, error) {
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(*html))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse HTML: %v", err)
+	}
+
+	// Extract the relevant content
+	var buffer bytes.Buffer
+	doc.Find("body").Each(func(i int, s *goquery.Selection) {
+		htmlContent, err := s.Html()
+		if err == nil {
+			buffer.WriteString(htmlContent)
+		}
+	})
+
+	// Convert the extracted HTML content to markdown
+	converter := markdown.NewConverter("", true, nil)
+	markdownStr, err := converter.ConvertString(buffer.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert HTML to markdown: %v", err)
+	}
+
+	return &markdownStr, nil
 }

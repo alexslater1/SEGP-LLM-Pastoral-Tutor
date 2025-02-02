@@ -59,7 +59,7 @@ func NewNonHeadlessRodClient() *RodClient {
 
 func (r *RodClient) HtmlFromQuery(query string, actions ...Action) (*string, error) {
 	encodedQuery := url.QueryEscape(query)
-	url := "https://www.bing.com/search?form=&q=" + encodedQuery
+	url := "https://www.bing.com/search?form=&q=" + encodedQuery + "&form=QBLH&sp=-1&lq=0&pq=" + encodedQuery + "&sc=12-18&qs=n&sk=&cvid=CD45C64E103445449518EF0A5C1C3315&ghsh=0&ghacc=0&ghpl="
 
 	fmt.Println("url", url)
 	return r.htmlFromURL(url, actions...)
@@ -73,9 +73,11 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 	html := ""
 	var error error
 	err := rod.Try(func() {
-		// Create page with URL directly, like in HtmlFromUrlCloseCookies
 		page := r.browser.MustPage(url)
 		defer page.Close()
+
+		// Add initial wait for page load
+		page.MustWaitLoad()
 
 		for _, action := range actions {
 			switch action.Type() {
@@ -117,13 +119,12 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 				navigateAction := action.(*NavigateAction)
 				page.MustNavigate(navigateAction.URL)
 				page.MustWaitNavigation()
-				page.MustWaitLoad()
 			}
+			page.MustWaitLoad()
 		}
 
-		// Wait for the page to fully load
-		page.MustWaitLoad()
-		page.WaitRequestIdle(time.Second*3, []string{""}, []string{}, excludeTypes)
+		// Increase timeout for request idle
+		page.WaitRequestIdle(5*time.Second, []string{""}, []string{}, excludeTypes)
 
 		h, err := page.HTML()
 		if err != nil {
@@ -134,7 +135,9 @@ func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) 
 		html = h
 	})
 	if err != nil {
-		return nil, err
+		log.Println("Warning: there was an error in rod client. Returning error html but continuing.")
+		h := fmt.Sprintf(`<html><body><h1>Error accessing page %s</h1></body></html>`, url)
+		return &h, nil
 	}
 
 	return &html, error

@@ -15,8 +15,7 @@ type ToolHandler struct {
 func NewDefaultToolHandler(googleSearch googleSearch.GoogleSearchClient, knowledge knowledge.Knowledge) *ToolHandler {
 	return NewToolHandler(
 		[]Tool{
-			NewGoogleSearchUrlTool(googleSearch),
-			NewGoogleSearchResultsTool(googleSearch),
+			NewGoogleSearchFirstResultsPageContentsTool(googleSearch, 3),
 			NewRagTool(knowledge),
 			NewGoogleMapsResultsTool(googleSearch),
 			NewGoogleMapsPlaceTool(googleSearch),
@@ -96,8 +95,14 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 			return nil, fmt.Errorf("google_maps_place_url is required")
 		}
 		return typedTool.PlaceDetailsFor(googleMapsPlaceURL.(string))
-	}
 
+	case *GoogleSearchFirstResultsPageContentsTool:
+		query, ok := parsedArgs["query"]
+		if !ok {
+			return nil, fmt.Errorf("query is required")
+		}
+		return typedTool.GoogleSearchFirstResultsPageContentsFor(query.(string))
+	}
 	return nil, fmt.Errorf("no tool matched the name %s", toolCall.Name)
 }
 
