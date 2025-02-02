@@ -224,20 +224,3 @@ export function getMessageIdFromAnnotations(message: Message) {
   // @ts-expect-error messageIdFromServer is not defined in MessageAnnotation
   return annotation.messageIdFromServer;
 }
-
-export function getMessageAnnotationContent(message: Message) {
-    type MessageObject = {
-      messageIdFromServer: string;
-      message: string;
-      pastMessage: boolean;
-    };
-    const [{ messageIdFromServer, message: messageContent, pastMessage }] = 
-      message.annotations as MessageObject[] || [{ messageIdFromServer: "", message: "", pastMessage: false }];
-    if (pastMessage) {
-      return message.content;
-    } else if (messageIdFromServer == "") {
-      return null;
-    } else {
-      return messageContent;
-    }
-  }

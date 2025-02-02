@@ -19,7 +19,6 @@ import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
-import { getMessageAnnotationContent } from '@/lib/utils';
 
 const PurePreviewMessage = ({
   chatId,
@@ -107,10 +106,7 @@ const PurePreviewMessage = ({
                   })}
                 >
                   <Markdown>
-                    {(message.role == "user"
-                      ? message.content
-                      : (!getMessageAnnotationContent(message) ? "Loading..." : 
-                        getMessageAnnotationContent(message)) as string)}
+                    {message.content}
                   </Markdown>
                 </div>
               </div>
