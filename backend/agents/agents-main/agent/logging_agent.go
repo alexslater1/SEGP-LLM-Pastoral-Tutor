@@ -37,5 +37,5 @@ func (a *LoggingAgent) loggingLoop(ch <-chan AgentEvent) {
 }
 
 func (a *LoggingAgent) handleLoggingEvent(event AgentEvent) {
-	log.Printf("%s (%s):\n%+v", strings.ToUpper(string(event.Type)), event.RequestID, event.Data)
+	log.Printf("%s (%s):\n%+v\n\n", strings.ToUpper(string(event.Type)), event.RequestID, event.Data)
 }

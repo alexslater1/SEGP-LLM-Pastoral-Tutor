@@ -125,6 +125,7 @@ func (a *ReActAgent) Subscribe() <-chan AgentEvent {
 func (a *ReActAgent) Unsubscribe(ch <-chan AgentEvent) {
 	for i, subscriber := range a.subscribers {
 		if subscriber == ch {
+			close(subscriber)
 			a.subscribers = append(a.subscribers[:i], a.subscribers[i+1:]...)
 			break
 		}
