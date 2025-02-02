@@ -128,7 +128,7 @@ func (a *FastAgent) thinkingAndActPrompt(isFirstIteration bool, query string, kn
 		return nil, err
 	}
 
-	prompt += `You have these tools at your disposal: ` + toolChoiceString + `It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you have found the answer, pick the no_tool tool.`
+	prompt += ` You have these tools at your disposal: ` + toolChoiceString + ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool.`
 
 	return &prompt, nil
 }
