@@ -4,51 +4,22 @@ import { Button } from "@/components/ui/button";
 import { File, CloudUpload } from 'lucide-react';
 import { useState } from "react";
 import { toast } from "sonner";
-
-interface Document {
-  id: string;
-  name: string;
-  uploadedAt: Date;
-  size: string;
-}
-
-const getRelativeTimeString = (date: Date) => {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  // A few seconds ago
-  if (diffInSeconds < 60) {
-    return 'Uploaded a few seconds ago';
-  }
-  
-  // Minutes ago
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) {
-    return `Uploaded ${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-  }
-  
-  // Hours ago
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) {
-    return `Uploaded ${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
-  }
-  
-  // Days ago
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `Uploaded ${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
-};
+import { getRelativeTimeString } from "@/lib/utils";
+import type { RAGDocument } from "@/types/document";
 
 const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
 };
 
-export default function DocumentsPage() {
-  const [documents, setDocuments] = useState<Document[]>([
+export default function UploadPage() {
+  const [documents, setDocuments] = useState<RAGDocument[]>([
+    // TODO: Replace with actual documents from the database
     {
       id: '1',
       name: 'dummy-doc.pdf',
       uploadedAt: new Date(),
-      size: '2.4 MB'
+      size: '2.4 MB',
+      type: 'PDF'
     }
   ]);
   const [isDragging, setIsDragging] = useState(false);
@@ -85,11 +56,33 @@ export default function DocumentsPage() {
     const supportedTypes = [
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'text/plain'
     ];
     return supportedTypes.includes(file.type);
   };
 
+  const handleUpload = (files: File[]) => {
+    /* TODO: Implement RAG upload logic here
+       1. Save file metadata to NextJS DB with status 'processing'
+       2. Upload file to backend for RAG processing
+       3. Update NextJS DB record status to 'ready' when complete
+       This requires a new table in the NextJS database.
+       Possible schema?:
+       interface RAGDocumentTable {
+         id: string;
+         name: string;
+         uploadedAt: Date;
+         size: string;
+         type: 'PDF' | 'DOCX' | 'TXT' | 'PPTX';
+         status: 'processing' | 'ready' | 'failed';
+         userId: string;
+         backendiSourceId?: string; (Reference to backend RagSource)
+       }
+    */
+    toast.success(`Uploaded ${files.length} file(s)`);
+  };
+  
   const handleFiles = (files: File[]) => {
     const invalidFiles = files.filter(file => !isValidFileType(file));
     
@@ -100,22 +93,22 @@ export default function DocumentsPage() {
             Unsupported file format{invalidFiles.length > 1 ? 's' : ''}:   
             {invalidFiles.map(f => ` ${getFileExtension(f.name).toUpperCase()}`).join(', ')}
           </p>
-          <p>Only PDF, DOCX, and TXT files are supported.</p>
+          <p>Only PDF, DOCX, PPTX, and TXT files are supported.</p>
         </div>
       );
       return;
     }
-
-    // For now, just log the files and add them to the documents list
-    console.log('Files received:', files);
-    
+  
+    handleUpload(files);
+  
     const newDocuments = files.map(file => ({
       id: Math.random().toString(36).slice(2, 11),
       name: file.name,
       uploadedAt: new Date(),
-      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      type: getFileExtension(file.name).toUpperCase() as 'PDF' | 'DOCX' | 'TXT' | 'PPTX'
     }));
-
+  
     setDocuments(prev => [...prev, ...newDocuments]);
   };
 
@@ -133,7 +126,7 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Upload Documents</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Document Upload</h2>
         <p className="text-muted-foreground">
           Upload documents for the AI pastoral tutor to learn from.
         </p>
@@ -160,13 +153,13 @@ export default function DocumentsPage() {
                 className="hidden"
                 multiple
                 onChange={handleFileInput}
-                accept=".pdf,.docx,.txt"
+                accept=".pdf,.docx,.txt,.pptx"
               />
               Browse Files
             </label>
           </Button>
           <p className="text-sm text-muted-foreground">
-            Supported formats: PDF, DOCX, TXT
+            Supported formats: PDF, DOCX, TXT, PPTX
           </p>
         </div>
       </div>

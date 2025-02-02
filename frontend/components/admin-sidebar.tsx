@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Home, FileUp } from 'lucide-react';
+import { Home, FileUp, Library } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function AdminSidebar({ user }: { user: User | undefined }) {
@@ -57,7 +57,10 @@ export function AdminSidebar({ user }: { user: User | undefined }) {
                 className="flex items-center gap-3"
               >
                 <Home size={24} />
-                <span className="text-base font-semibold">Dashboard</span>
+                <span className={cn(
+                  "text-base",
+                  getSelectedStyles('/admin') ? "font-semibold" : "font-normal"
+                )}>Dashboard</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -67,16 +70,41 @@ export function AdminSidebar({ user }: { user: User | undefined }) {
               className={cn(
                 "w-full px-5 py-5 rounded-lg transition-colors",
                 "hover:bg-muted/50",
-                getSelectedStyles('/admin/documents')
+                getSelectedStyles('/admin/upload')
               )}
             >
               <Link 
-                href="/admin/documents" 
+                href="/admin/upload" 
                 onClick={() => setOpenMobile(false)}
                 className="flex items-center gap-3"
               >
                 <FileUp size={24} />
-                <span className="text-base font-semibold">Document Upload</span>
+                <span className={cn(
+                  "text-base",
+                  getSelectedStyles('/admin/upload') ? "font-semibold" : "font-normal"
+                )}>Document Upload</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              asChild
+              className={cn(
+                "w-full px-5 py-5 rounded-lg transition-colors",
+                "hover:bg-muted/50",
+                getSelectedStyles('/admin/library')
+              )}
+            >
+              <Link 
+                href="/admin/library" 
+                onClick={() => setOpenMobile(false)}
+                className="flex items-center gap-3"
+              >
+                <Library size={24} />
+                <span className={cn(
+                  "text-base",
+                  getSelectedStyles('/admin/library') ? "font-semibold" : "font-normal"
+                )}>Document Library</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -241,3 +241,34 @@ export function getMessageAnnotationContent(message: Message) {
       return messageContent;
     }
   }
+
+export const getRelativeTimeString = (date: Date, prefix: string = '') => {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return `${prefix}A few seconds ago`;
+  }
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${prefix}${diffInMinutes}m ago`;
+  }
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${prefix}${diffInHours}h ago`;
+  }
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${prefix}${diffInDays}d ago`;
+  }
+  
+  // After 7 days, show dd/mm/yy format
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit'
+  });
+};
