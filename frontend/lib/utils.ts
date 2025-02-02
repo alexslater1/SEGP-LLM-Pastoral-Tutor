@@ -240,7 +240,7 @@ export function getMessageAnnotationContent(message: Message) {
     } else {
       return messageContent;
     }
-  }
+}
 
 export const getRelativeTimeString = (date: Date, prefix: string = '') => {
   const now = new Date();
