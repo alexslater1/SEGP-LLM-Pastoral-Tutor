@@ -124,3 +124,22 @@ func TestThinkAndChooseTool(t *testing.T) {
 	assert.Equal(t, "rag_tool", toolCall.Name)
 	assert.Equal(t, "test thoughts", *thoughts)
 }
+
+func TestSubscribe(t *testing.T) {
+	agent := NewFastAgent("test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge())
+	ch := agent.Subscribe()
+	agent.publish(NewToolCallChoiceEvent("test_request_id", tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}))
+	event := <-ch
+	assert.Equal(t, AgentEventTypeToolCallChoice, event.Type)
+	assert.Equal(t, "test_request_id", event.RequestID)
+	assert.Equal(t, tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}, event.Data["toolCallChoice"])
+}
+
+func TestUnsubscribe(t *testing.T) {
+	agent := NewFastAgent("test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge())
+	ch := agent.Subscribe()
+	agent.Unsubscribe(ch)
+	agent.publish(NewToolCallChoiceEvent("test_request_id", tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}))
+	_, ok := <-ch
+	assert.False(t, ok)
+}

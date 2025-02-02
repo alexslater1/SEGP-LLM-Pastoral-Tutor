@@ -11,11 +11,17 @@ import (
 	"github.com/segp/agents-main/tools"
 )
 
+const (
+	maxIterations = 10
+)
+
 type FastAgent struct {
 	Background  string
 	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
 	Knowledge   knowledge.Knowledge
+
+	subscribers []chan AgentEvent
 }
 
 func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge) *FastAgent {
@@ -24,6 +30,8 @@ func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Knowledge:   knowledge,
+
+		subscribers: []chan AgentEvent{},
 	}
 }
 
@@ -32,11 +40,29 @@ func (a *FastAgent) Run(query string, requestId string) (*string, *string, error
 }
 
 func (a *FastAgent) Subscribe() <-chan AgentEvent {
-	panic("not implemented")
+	ch := make(chan AgentEvent, defaultSubscriberBufferSize)
+	a.subscribers = append(a.subscribers, ch)
+	return ch
 }
 
 func (a *FastAgent) Unsubscribe(ch <-chan AgentEvent) {
-	panic("not implemented")
+	for i, subscriber := range a.subscribers {
+		if subscriber == ch {
+			close(subscriber)
+			a.subscribers = append(a.subscribers[:i], a.subscribers[i+1:]...)
+			break
+		}
+	}
+}
+
+func (a *FastAgent) publish(event AgentEvent) {
+	for _, subscriber := range a.subscribers {
+		select {
+		case subscriber <- event:
+		default:
+			slog.Warn("Subscriber buffer is full, skipping event", "event", event)
+		}
+	}
 }
 
 func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string, error) {
@@ -46,7 +72,7 @@ func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string,
 	var prevToolCallResult *string
 	var prevToolCall *tools.ToolCall
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < maxIterations; i++ {
 		knowledgeContext, err := a.Knowledge.Get(query)
 		if err != nil {
 			return nil, nil, err
@@ -65,6 +91,7 @@ func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string,
 		if err != nil {
 			return nil, nil, err
 		}
+		a.publish(NewToolCallResultEvent(requestId, result))
 
 		prevThoughts = thoughts
 		prevToolCallResult = result
@@ -89,6 +116,8 @@ func (a *FastAgent) thinkAndChooseTool(isFirstIteration bool, query string, know
 	if err != nil {
 		return nil, nil, err
 	}
+
+	a.publish(NewToolCallChoiceEvent(requestId, toolCalls[0]))
 
 	if len(toolCalls) != 1 {
 		return nil, nil, fmt.Errorf("expected 1 tool call, got %d", len(toolCalls))

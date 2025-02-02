@@ -31,6 +31,21 @@ func NewDefaultReActAgent() Agent {
 	return agent
 }
 
+func NewDefaultFastAgent() Agent {
+	var (
+		toolHandler = tools.NewDefaultToolHandler(googleSearch.NewNonHeadlessRodClient(), knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL")))
+		llm         = llm.NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
+		knowledge   = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+	)
+
+	return NewFastAgent(
+		"You are a ReAct agent",
+		toolHandler,
+		llm,
+		knowledge,
+	)
+}
+
 func NewDefaultLoggingReActAgent() Agent {
 	return NewLoggingAgent(NewDefaultReActAgent())
 }
@@ -41,4 +56,8 @@ func NewDefaultEventStoringReActAgent() Agent {
 
 func NewDefaultEventStoringLoggingReActAgent() Agent {
 	return NewLoggingAgent(NewDefaultEventStoringReActAgent())
+}
+
+func NewDefaultLoggingFastAgent() Agent {
+	return NewLoggingAgent(NewDefaultFastAgent())
 }
