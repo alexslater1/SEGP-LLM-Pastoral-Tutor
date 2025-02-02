@@ -18,7 +18,7 @@ type FastAgent struct {
 	Knowledge   knowledge.Knowledge
 }
 
-func NewAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge) *FastAgent {
+func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge) *FastAgent {
 	return &FastAgent{
 		Background:  background,
 		ToolHandler: toolHandler,
