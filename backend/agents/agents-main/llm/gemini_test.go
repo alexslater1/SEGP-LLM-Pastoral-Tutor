@@ -506,7 +506,7 @@ func TestGeminiChatCompletionLLMThinkingWithStructuredOutput(t *testing.T) {
 		t.Fatalf("Error creating GeminiLLM: %v", err)
 	}
 
-	prompt := "You are given a list of tools.  Pick the best tool for this query `what is the current price of the usd`. Tools: [`no_tool`:`pick no tool, either as know the answer or no relevant tool`, `google search`: `get the contents of the top 3 search results for a query`, `google_maps`: `get the contents of the top 3 search results for a query`] Include the thinking in the thoughts field, tags and then answer in <answer> </answer> field. Answer must include the tool name and the tool input.  "
+	prompt := "You are to answer the query `what is the weather in the home country of yesterday's new richest man`. It is essential that you first think about all steps required to solve this problem, and must pick the next ONE tool which should be called to help next. Tools: [`no_tool`:`pick no tool, either as know the answer or no relevant tool`, `google search`: `get the contents of the top 3 search results for a query`, `google_maps`: `get the contents of the top 3 search results for a query`]"
 
 	type ToolParam struct {
 		Name  string `json:"name"`

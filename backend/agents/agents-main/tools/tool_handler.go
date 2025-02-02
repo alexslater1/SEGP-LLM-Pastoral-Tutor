@@ -107,6 +107,14 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 }
 
 func (t *ToolHandler) ToolDefinitions() []ToolDefinition {
+	toolDefinitions := []ToolDefinition{}
+	for _, tool := range t.Tools {
+		toolDefinitions = append(toolDefinitions, tool.Definition())
+	}
+	return toolDefinitions
+}
+
+func (t *ToolHandler) ToolDefinitionsWithDescribingAction() []ToolDefinition {
 	return t.toolDefinitionsWithDescribingAction()
 }
 
@@ -129,4 +137,23 @@ func (t *ToolHandler) toolDefinitionsWithDescribingAction() []ToolDefinition {
 		toolDefinitions = append(toolDefinitions, newDefinition)
 	}
 	return toolDefinitions
+}
+
+func (t *ToolHandler) ToolDefinitionsWithThoughts(toolDefinitions []ToolDefinition) []ToolDefinition {
+	tds := []ToolDefinition{}
+
+	thinkingParameter := Parameter{
+		Name:        "_thinking",
+		Description: "Put your thoughts here",
+		Type:        ParameterTypeString,
+	}
+
+	for _, tool := range toolDefinitions {
+		tds = append(tds, ToolDefinition{
+			Name:        tool.Name,
+			Description: tool.Description,
+			Parameters:  append([]Parameter{thinkingParameter}, tool.Parameters...),
+		})
+	}
+	return tds
 }
