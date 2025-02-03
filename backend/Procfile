@@ -1,0 +1,2 @@
+web: ./run-agents-server.sh
+rag: python rag/main.py

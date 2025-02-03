@@ -1,0 +1,21 @@
+image: docker.io/uselagoon/python-3.12:latest
+deploy_to_heroku:
+  stage: deploy
+  script:
+    - touch .env
+    - echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+    - echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> .env
+    - echo "DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" >> .env
+    - echo "SUPABASE_URL=$SUPABASE_URL" >> .env
+    - echo "SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY" >> .env
+    - echo "CICD=true" >> .env
+    - apk update
+    - apk add git
+    - apk add curl
+    - apk add ruby
+    - gem install dpl
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'master'
+    - if: $CI_COMMIT_BRANCH == 'heroku_CICD_deployment'
+
