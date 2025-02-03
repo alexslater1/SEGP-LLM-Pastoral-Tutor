@@ -15,6 +15,7 @@ deploy_to_heroku:
     - apk add --no-cache build-base
     - apk add ruby
     - apk add ruby-dev
+    - gem install bundler
     - gem install dpl
     - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
   rules:
