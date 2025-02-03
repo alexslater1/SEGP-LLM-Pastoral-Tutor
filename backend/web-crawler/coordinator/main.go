@@ -1,11 +1,13 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	// "context"
+	// "fmt"
 	"log"
 	"os"
+	// "os"
 
+	"github.com/ethanhosier/web-crawler-coordinator/aws"
 	"github.com/ethanhosier/web-crawler-coordinator/coordinator_client"
 	"github.com/ethanhosier/web-crawler-coordinator/utils"
 	"github.com/google/uuid"
@@ -26,16 +28,29 @@ func main() {
 	redisPassword := utils.Required(os.Getenv("REDIS_PASSWORD"), "REDIS_PASSWORD")
 	redisDB := utils.RequiredInt(os.Getenv("REDIS_DB"), "REDIS_DB")
 
-	coordinatorClient := coordinator_client.NewRedisCoordinatorClient(context.Background(), fmt.Sprintf("%s:%s", redisAddress, redisPort), redisPassword, redisDB)
+	// coordinatorClient := coordinator_client.NewMockCoordinatorClient(context.Background(), fmt.Sprintf("%s:%s", redisAddress, redisPort), redisPassword, redisDB)
 
-	urlParams := ScraperWorkerParams{
-		URL: "https://www.google.com",
-	}
+	// urlParams := ScraperWorkerParams{
+	// 	URL: "https://www.google.com",
+	// }
 
-	urlTask, err := coordinator_client.NewTask(uuid.New().String(), "scraper", urlParams)
+	// urlTask, err := coordinator_client.NewTask(uuid.New().String(), "scraper", urlParams)
+	// if err != nil {
+	// 	log.Fatalf("Error creating task: %v", err)
+	// }
+
+	// coordinatorClient.CreateTask(context.Background(), coordinator_client.CoordinatorClientTaskTopicUrls, urlTask)
+
+	awsClient := aws.NewAwsClient()
+	err := awsClient.LaunchWorkerNode(aws.WorkerTypeScraper, &aws.WorkerNodeParams{
+		NumberOfNodes: 1,
+		Concurrency:   1,
+		RedisAddress:  redisAddress,
+		RedisPassword: redisPassword,
+		RedisDB:       redisDB,
+		RedisPort:     redisPort,
+	})
 	if err != nil {
-		log.Fatalf("Error creating task: %v", err)
+		log.Fatalf("Error launching worker node: %v", err)
 	}
-
-	coordinatorClient.CreateTask(context.Background(), coordinator_client.CoordinatorClientTaskTopicUrls, urlTask)
 }
