@@ -1,2 +1,2 @@
-web: wget -q -O - https://git.io/vQhTU | bash && ./run-agents-server.sh
+web: wget -q -O - https://git.io/vQhTU | bash && source /app/.bashrc && ./run-agents-server.sh
 rag: python rag/main.py
