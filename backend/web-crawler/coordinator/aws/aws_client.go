@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 )
 
+//    redisAddress := "redis.worker-node-cluster.local"  // ECS service discovery name
+
 type WorkerType string
 
 const (
@@ -19,7 +21,6 @@ const (
 
 const (
 	defaultRegion = "eu-west-2"
-	containerName = "scraper-node"
 )
 
 type AwsClient struct {
@@ -55,11 +56,11 @@ func (a *AwsClient) LaunchWorkerNode(workerType WorkerType, params *WorkerNodePa
 	networkConfig := types.NetworkConfiguration{
 		AwsvpcConfiguration: &types.AwsVpcConfiguration{
 			Subnets: []string{
-				"subnet-03b76ef8b4be740fb", // from your terraform.tfstate
-				"subnet-00641fa920f166f87",
+				"subnet-05e199e9936541db1", // public subnet 1 from terraform state
+				"subnet-08f965812c1d5ae98", // public subnet 2 from terraform state
 			},
 			SecurityGroups: []string{
-				"sg-08486ae38a810a36b", // worker-node security group from terraform.tfstate
+				"sg-0c04d2d1be1d7183d", // worker-node security group from terraform state
 			},
 			AssignPublicIp: types.AssignPublicIpEnabled,
 		},
@@ -88,7 +89,7 @@ func (a *AwsClient) LaunchWorkerNode(workerType WorkerType, params *WorkerNodePa
 		return err
 	}
 
-	fmt.Printf("%+v\n", output)
+	logInfo(output, workerType, params)
 	return nil
 }
 
@@ -103,6 +104,8 @@ func taskDefinitionFromWorkerType(workerType WorkerType) string {
 }
 
 func containerOverridesFrom(workerType WorkerType, params *WorkerNodeParams) ([]types.ContainerOverride, error) {
+	taskDefinitionName := taskDefinitionFromWorkerType(workerType)
+
 	switch workerType {
 	case WorkerTypeScraper:
 		if params.Concurrency < 1 {
@@ -110,7 +113,7 @@ func containerOverridesFrom(workerType WorkerType, params *WorkerNodeParams) ([]
 		}
 		return []types.ContainerOverride{
 			{
-				Name: aws.String(containerName),
+				Name: aws.String(taskDefinitionName),
 				Command: []string{
 					"-worker=scraper",
 					fmt.Sprintf("-concurrency=%d", params.Concurrency),
@@ -124,7 +127,7 @@ func containerOverridesFrom(workerType WorkerType, params *WorkerNodeParams) ([]
 	case WorkerTypeRag:
 		return []types.ContainerOverride{
 			{
-				Name: aws.String(containerName),
+				Name: aws.String(taskDefinitionName),
 				Command: []string{
 					"-worker=rag",
 					fmt.Sprintf("-redis-addr=%s:%s", params.RedisAddress, params.RedisPort),
@@ -135,4 +138,20 @@ func containerOverridesFrom(workerType WorkerType, params *WorkerNodeParams) ([]
 		}, nil
 	}
 	return nil, fmt.Errorf("invalid worker type: %s", workerType)
+}
+
+func logInfo(output *ecs.RunTaskOutput, workerType WorkerType, params *WorkerNodeParams) {
+	if len(output.Tasks) > 0 {
+		fmt.Printf("Successfully launched %d %s worker node(s)\n", params.NumberOfNodes, workerType)
+		for i, task := range output.Tasks {
+			fmt.Printf("Task %d ARN: %s\n", i+1, *task.TaskArn)
+		}
+	}
+
+	if len(output.Failures) > 0 {
+		fmt.Println("\nWarning: Some tasks failed to launch:")
+		for _, failure := range output.Failures {
+			fmt.Printf("- %s: %s\n", *failure.Arn, *failure.Reason)
+		}
+	}
 }

@@ -8,9 +8,9 @@ import (
 	// "os"
 
 	"github.com/ethanhosier/web-crawler-coordinator/aws"
-	"github.com/ethanhosier/web-crawler-coordinator/coordinator_client"
+	// "github.com/ethanhosier/web-crawler-coordinator/coordinator_client"
 	"github.com/ethanhosier/web-crawler-coordinator/utils"
-	"github.com/google/uuid"
+	// "github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -42,7 +42,7 @@ func main() {
 	// coordinatorClient.CreateTask(context.Background(), coordinator_client.CoordinatorClientTaskTopicUrls, urlTask)
 
 	awsClient := aws.NewAwsClient()
-	err := awsClient.LaunchWorkerNode(aws.WorkerTypeScraper, &aws.WorkerNodeParams{
+	err := awsClient.LaunchWorkerNode(aws.WorkerTypeRag, &aws.WorkerNodeParams{
 		NumberOfNodes: 1,
 		Concurrency:   1,
 		RedisAddress:  redisAddress,
