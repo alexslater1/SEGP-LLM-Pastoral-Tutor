@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+    "os"
 
 	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/api"
@@ -13,7 +14,12 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	listenAddr := flag.String("listen", ":8080", "HTTP server listen address")
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
+
+    listenAddr := flag.String("listen", ":" + port, "HTTP server listen address")
 	flag.Parse()
 
 	server := api.NewServer(*listenAddr)

@@ -8,14 +8,20 @@ fi
 # If Go is installed, run the program
 cd ./agents/agents-main
 
-echo "To test the server send a POST request to http://localhost:8080/completion with body"
+if [ -z "$PORT" ]; then
+    port="8080"
+else
+    port="$PORT"
+fi
+
+echo "To test the server send a POST request to http://localhost:$port/completion with body"
 echo "{
     \"query\": String
 }"
 
 echo ""
 echo "FOR EXAMPLE (in a seperate terminal):"
-echo "curl -X POST -H \"Content-Type: application/json\" -d '{\"query\": \"What is the weather in San Francisco?\"}' http://localhost:8080/completion"
+echo "curl -X POST -H \"Content-Type: application/json\" -d '{\"query\": \"What is the weather in San Francisco?\"}' http://localhost:$port/completion"
 echo ""
 
 go run main.go
