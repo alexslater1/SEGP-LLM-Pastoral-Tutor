@@ -18,9 +18,13 @@ deploy_to_heroku:
     - gem install net-http
     - gem install dpl
     - gem install json
-    - cat /usr/lib/ruby/gems/3.3.0/extensions/x86_64-linux-musl/3.3.0/json-2.9.1/mkmf.log
     - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
   rules:
     - if: $CI_COMMIT_BRANCH == 'master'
     - if: $CI_COMMIT_BRANCH == 'heroku_CICD_deployment'
+  artifacts:
+    when: always
+    paths:
+      - /usr/lib/ruby/gems/3.3.0/extensions/x86_64-linux-musl/3.3.0/json-2.9.1/*
+
 
