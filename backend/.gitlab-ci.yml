@@ -13,9 +13,10 @@ deploy_to_heroku:
     - apk add git
     - apk add curl
     - apk add ruby
-    - apk add ruby-devel
-    - gem install dpl
+    - apk add ruby-dev
     - gem install bundler
+    - gem install net-http
+    - gem install dpl
     - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_PRODUCTION_KEY
   rules:
     - if: $CI_COMMIT_BRANCH == 'master'
