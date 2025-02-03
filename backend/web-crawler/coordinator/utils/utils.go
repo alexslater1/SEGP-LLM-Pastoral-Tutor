@@ -8,8 +8,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	md "github.com/JohannesKaufmann/html-to-markdown"
 )
 
 func Required[T any](value T, name string) T {
@@ -78,17 +76,4 @@ func FormatUrl(uri string) (string, error) {
 	}
 
 	return parsedUrl.String(), nil
-}
-
-func HtmlToMarkdown(html *string) (string, error) {
-	// Create a new converter with default options
-	converter := md.NewConverter("", true, nil)
-
-	// Convert HTML to Markdown
-	markdown, err := converter.ConvertString(*html)
-	if err != nil {
-		return "", err
-	}
-
-	return markdown, nil
 }
