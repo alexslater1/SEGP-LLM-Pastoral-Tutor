@@ -6,6 +6,7 @@ deploy_to_heroku:
     - echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
     - echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> .env
     - echo "DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" >> .env
+    - echo "RAG_BASE_URL=http://localhost:8000" >> .env
     - echo "SUPABASE_URL=$SUPABASE_URL" >> .env
     - echo "SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY" >> .env
     - echo "CICD=true" >> .env
