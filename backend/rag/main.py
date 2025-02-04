@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from searcher import get_supabase_rag_chunks
 from dotenv import load_dotenv
 from document_uploader import upload_doc, delete_doc
@@ -55,47 +55,24 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/rag")
-async def upload_rag_document(url: str):
-    # Clean url of extra whitespace
-    url = url.strip()
-
-    # Validate url
-    if not url:
-        raise HTTPException(
-            status_code=400, 
-            detail="Url parameter cannot be empty or only whitespace"
-        )
-
-    if not url.endswith((".pdf", ".docx", ".txt", ".pptx")):
-        raise HTTPException(
-            status_code=400, 
-            detail="Document must be a .pdf, .docx, .txt or .pptx"
-        )
-    
-    if not url.rsplit('.', 1)[0]:
-        raise HTTPException(
-            status_code=400, 
-            detail="Document name must exist"
-        )
-    
+@app.post("/rag-doc")
+async def upload_rag_document(file: UploadFile = File(...)):
     try:
         # Embed and upload document chunks to database
-        print("A")
-        upload_doc(url)
-        print("B")
+        await upload_doc(file)
         return {"response": "Document uploaded"}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/rag")
+@app.delete("/rag-doc")
 async def delete_rag_document(name: str):
+    name = name.strip()
     # Validate url
-    if not name or name.isspace():
+    if not name:
         raise HTTPException(
             status_code=400, 
-            detail="Url parameter cannot be empty or only whitespace"
+            detail="Url parameter cannot be empty"
         )
 
     if not name.endswith((".pdf", ".docx", ".txt", ".pptx")):
@@ -104,19 +81,14 @@ async def delete_rag_document(name: str):
             detail="Document must be a .pdf, .docx, .txt or .pptx"
         )
     
-    if not name.strip()[:-4]:
+    if not name.rsplit('.', 1)[0]:
         raise HTTPException(
             status_code=400, 
             detail="Document name must exist"
         )
     
     try:
-        # Clean url of extra whitespace
-        name = name.strip()
-        
-        # Embed and upload document chunks to database
         delete_doc(name)
-       
         return {"response": "Document deleted"}
     
     except Exception as e:
