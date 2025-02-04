@@ -30,7 +30,7 @@ func TestOpenaiToolPropertyTypeFrom(t *testing.T) {
 	openaiTool := openaiToolFrom(tool)
 
 	// Verify the basic tool properties
-	assert.Equal(t, openaiTool, openai.Tool{
+	assert.Equal(t, openai.Tool{
 		Type: openai.ToolTypeFunction,
 		Function: &openai.FunctionDefinition{
 			Name:        "get_weather",
@@ -38,15 +38,15 @@ func TestOpenaiToolPropertyTypeFrom(t *testing.T) {
 			Parameters: OpenaiToolParameters{
 				Type: "object",
 				Properties: map[string]OpenaiToolProperty{
-					"latitude":  {Type: OpenaiToolPropertyTypeNumber},
-					"longitude": {Type: OpenaiToolPropertyTypeNumber},
+					"latitude":  {Type: OpenaiToolPropertyTypeNumber, Description: "Latitude coordinate"},
+					"longitude": {Type: OpenaiToolPropertyTypeNumber, Description: "Longitude coordinate"},
 				},
 				Required:             []string{"latitude", "longitude"},
 				AdditionalProperties: false,
 			},
 			Strict: true,
 		},
-	})
+	}, openaiTool)
 }
 
 func TestOpenaiToolChoiceFrom(t *testing.T) {

@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"os"
 	"testing"
 
 	googleSearch "github.com/segp/agents-main/google_search"
@@ -11,8 +12,6 @@ import (
 )
 
 func TestToolCallChoiceString(t *testing.T) {
-	t.Skip()
-
 	var (
 		knowledge    = knowledge.NewLocalKnowledge()
 		googleSearch = googleSearch.NewMockGoogleSearchClient()
@@ -34,8 +33,6 @@ func TestToolCallChoiceString(t *testing.T) {
 }
 
 func TestThinkingAndActPromptFirstIteration(t *testing.T) {
-	t.Skip()
-
 	var (
 		knowledge   = knowledge.NewLocalKnowledge()
 		toolHandler = tools.NewToolHandler([]tools.Tool{
@@ -58,14 +55,12 @@ func TestThinkingAndActPromptFirstIteration(t *testing.T) {
 	prompt, err := agent.thinkingAndActPrompt(0, query, &knowledgeContext, &prevThoughts, &prevToolCall, &prevToolCallResult, requestId)
 	assert.NoError(t, err)
 
-	expectedPrompt := `You are a reAct agent. Your goal is to solve the following query: ` + "`test query`" + `. Here is some (potentially relevant) knowledge from a rag source: ` + "`test knowledge context`" + `.  Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem. You have these tools at your disposal: [{"Name":"rag_tool","Description":"Get more relevant context and/or important links/contact information about the given query in respect to Imperial College London. Uses RAG","Parameters":[{"Name":"query","Description":"The query to send to the RAG model.","Type":"string"}]},{"Name":"no_tool","Description":"Do not use any tools. This could be because you have an answer, or you deem that after sufficient attempts, it will not be possible to feasibly find an accurate answer.","Parameters":[{"Name":"reason","Description":"The reason why no tool was used","Type":"string"},{"Name":"answer","Description":"The answer to the question / reason why not possible to answer the question","Type":"string"}]}] It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool.`
-
-	assert.Equal(t, expectedPrompt, *prompt)
+	// Only check the static parts of the prompt (i.e. not the date)
+	assert.Contains(t, *prompt, "You are a reAct agent. Your goal is to solve the following query: `test query`. Here is some (potentially relevant) knowledge from a rag source: `test knowledge context`.  Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem. You have these tools at your disposal: [{\"Name\":\"rag_tool\",\"Description\":\"Get more relevant context and/or important links/contact information about the given query in respect to Imperial College London. Uses RAG\",\"Parameters\":[{\"Name\":\"query\",\"Description\":\"The query to send to the RAG model.\",\"Type\":\"string\"}]},{\"Name\":\"no_tool\",\"Description\":\"Do not use any tools. This could be because you have an answer, or you deem that after sufficient attempts, it will not be possible to feasibly find an accurate answer.\",\"Parameters\":[{\"Name\":\"reason\",\"Description\":\"The reason why no tool was used\",\"Type\":\"string\"},{\"Name\":\"answer\",\"Description\":\"The answer to the question / reason why not possible to answer the question\",\"Type\":\"string\"}]}] It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool. Information: The date and time is")
+	assert.Contains(t, *prompt, "Ensure to also provide a \"description_of_action\" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator.")
 }
 
 func TestThinkingAndActPromptSubsequentIteration(t *testing.T) {
-	t.Skip()
-
 	var (
 		knowledge   = knowledge.NewLocalKnowledge()
 		toolHandler = tools.NewToolHandler([]tools.Tool{
@@ -88,14 +83,12 @@ func TestThinkingAndActPromptSubsequentIteration(t *testing.T) {
 	prompt, err := agent.thinkingAndActPrompt(1, query, &knowledgeContext, &prevThoughts, &prevToolCall, &prevToolCallResult, requestId)
 	assert.NoError(t, err)
 
-	expectedPrompt := "You are a reAct agent, currently in the process of solving the query: `test query`. In the previous iteration, you thought `test prev thoughts` and then called the tool `{test_tool_call {\"x\": 1, \"y\": 2}}`. The results of this tool where `test prev tool call result`.Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem. You have these tools at your disposal: [{\"Name\":\"rag_tool\",\"Description\":\"Get more relevant context and/or important links/contact information about the given query in respect to Imperial College London. Uses RAG\",\"Parameters\":[{\"Name\":\"query\",\"Description\":\"The query to send to the RAG model.\",\"Type\":\"string\"}]},{\"Name\":\"no_tool\",\"Description\":\"Do not use any tools. This could be because you have an answer, or you deem that after sufficient attempts, it will not be possible to feasibly find an accurate answer.\",\"Parameters\":[{\"Name\":\"reason\",\"Description\":\"The reason why no tool was used\",\"Type\":\"string\"},{\"Name\":\"answer\",\"Description\":\"The answer to the question / reason why not possible to answer the question\",\"Type\":\"string\"}]}] It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool."
-
-	assert.Equal(t, expectedPrompt, *prompt)
+	// Only check the static parts of the prompt (i.e. not the date)
+	assert.Contains(t, *prompt, "You are a reAct agent, currently in the process of solving the query: `test query`. In the previous iteration, you thought `test prev thoughts` and then called the tool `{test_tool_call {\"x\": 1, \"y\": 2}}`. The results of this tool where `test prev tool call result`.Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem. You have these tools at your disposal: [{\"Name\":\"rag_tool\",\"Description\":\"Get more relevant context and/or important links/contact information about the given query in respect to Imperial College London. Uses RAG\",\"Parameters\":[{\"Name\":\"query\",\"Description\":\"The query to send to the RAG model.\",\"Type\":\"string\"}]},{\"Name\":\"no_tool\",\"Description\":\"Do not use any tools. This could be because you have an answer, or you deem that after sufficient attempts, it will not be possible to feasibly find an accurate answer.\",\"Parameters\":[{\"Name\":\"reason\",\"Description\":\"The reason why no tool was used\",\"Type\":\"string\"},{\"Name\":\"answer\",\"Description\":\"The answer to the question / reason why not possible to answer the question\",\"Type\":\"string\"}]}] It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool. Information: The date and time is")
+	assert.Contains(t, *prompt, "This is now your second iteration in attempting to solve the query. Ensure to also provide a \"description_of_action\" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator.")
 }
 
 func TestThinkAndChooseTool(t *testing.T) {
-	t.Skip()
-
 	var (
 		knowledge   = knowledge.NewLocalKnowledge()
 		toolHandler = tools.NewToolHandler([]tools.Tool{
@@ -114,15 +107,12 @@ func TestThinkAndChooseTool(t *testing.T) {
 		prevToolCallResult = "test prev tool call result"
 		requestId          = "test_request_id"
 
-		prompt = "You are a reAct agent. Your goal is to solve the following query: `test query`. Here is some (potentially relevant) knowledge from a rag source: `test knowledge context`.  Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem. You have these tools at your disposal: [{\"Name\":\"rag_tool\",\"Description\":\"Get more relevant context and/or important links/contact information about the given query in respect to Imperial College London. Uses RAG\",\"Parameters\":[{\"Name\":\"query\",\"Description\":\"The query to send to the RAG model.\",\"Type\":\"string\"}]},{\"Name\":\"no_tool\",\"Description\":\"Do not use any tools. This could be because you have an answer, or you deem that after sufficient attempts, it will not be possible to feasibly find an accurate answer.\",\"Parameters\":[{\"Name\":\"reason\",\"Description\":\"The reason why no tool was used\",\"Type\":\"string\"},{\"Name\":\"answer\",\"Description\":\"The answer to the question / reason why not possible to answer the question\",\"Type\":\"string\"}]}] It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool."
+		// prompt = "You are a reAct agent. Your goal is to solve the following query: `test query`. Here is some (potentially relevant) knowledge from a rag source: `test knowledge context`.  Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem. You have these tools at your disposal: [{\"Name\":\"rag_tool\",\"Description\":\"Get more relevant context and/or important links/contact information about the given query in respect to Imperial College London. Uses RAG\",\"Parameters\":[{\"Name\":\"query\",\"Description\":\"The query to send to the RAG model.\",\"Type\":\"string\"}]},{\"Name\":\"no_tool\",\"Description\":\"Do not use any tools. This could be because you have an answer, or you deem that after sufficient attempts, it will not be possible to feasibly find an accurate answer.\",\"Parameters\":[{\"Name\":\"reason\",\"Description\":\"The reason why no tool was used\",\"Type\":\"string\"},{\"Name\":\"answer\",\"Description\":\"The answer to the question / reason why not possible to answer the question\",\"Type\":\"string\"}]}] It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool."
 	)
-
-	llm.SetToolResponse(prompt, []tools.ToolCall{
-		{
-			Name:      "rag_tool",
-			Arguments: `{"query": "test query", "_thoughts": "test thoughts"}`,
-		},
-	})
+	
+	llm.NewCallChain().
+		ThenStructured(`{"_thoughts": "test thoughts", "tool_call_name": "rag_tool", "tool_call_args": [{"tool_call_arg_name": "query", "tool_call_arg_value": "test query"}], "description_of_action": "test description of action"}`).
+		Set()
 
 	thoughts, toolCall, err := agent.thinkAndChooseTool(0, query, &knowledgeContext, &prevThoughts, &prevToolCall, &prevToolCallResult, requestId)
 	assert.NoError(t, err)
@@ -132,8 +122,6 @@ func TestThinkAndChooseTool(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
-	t.Skip()
-
 	agent := NewFastAgent("test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge())
 	ch := agent.Subscribe()
 	agent.publish(NewToolCallChoiceEvent("test_request_id", tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}))
@@ -144,8 +132,6 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestUnsubscribe(t *testing.T) {
-	t.Skip()
-
 	agent := NewFastAgent("test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge())
 	ch := agent.Subscribe()
 	agent.Unsubscribe(ch)
@@ -155,6 +141,10 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestFastAgentRun(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("skipping test in CI")
+	}
+
 	agent := NewDefaultLoggingFastAgent()
 	answer, reason, err := agent.Run("What is the current usd price?", "test_request_id")
 	if err != nil {

@@ -30,7 +30,7 @@ func TestGenaiToolPropertyTypeFrom(t *testing.T) {
 	genaiTool := genaiToolFrom(tool)
 
 	// Verify the basic tool properties
-	assert.Equal(t, *genaiTool, genai.Tool{
+	assert.Equal(t, genai.Tool{
 		FunctionDeclarations: []*genai.FunctionDeclaration{
 			{
 				Name:        "get_weather",
@@ -38,14 +38,14 @@ func TestGenaiToolPropertyTypeFrom(t *testing.T) {
 				Parameters: &genai.Schema{
 					Type: genai.TypeObject,
 					Properties: map[string]*genai.Schema{
-						"latitude":  {Type: genai.TypeNumber},
-						"longitude": {Type: genai.TypeNumber},
+						"latitude":  {Type: genai.TypeNumber, Description: "Latitude coordinate"},
+						"longitude": {Type: genai.TypeNumber, Description: "Longitude coordinate"},
 					},
 					Required: []string{"latitude", "longitude"},
 				},
 			},
 		},
-	})
+	}, *genaiTool)
 }
 
 func TestFunctionCallingConfig(t *testing.T) {
