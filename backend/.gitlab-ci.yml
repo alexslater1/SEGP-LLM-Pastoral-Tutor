@@ -2,6 +2,7 @@ image: docker.io/uselagoon/python-3.12:latest
 deploy_to_heroku:
   stage: deploy
   script:
+    - apk add curl
     - curl -X POST https://portainer.serve.freemyip.com/api/webhooks/770e3cbc-186d-4d5e-af90-f6b6bf717ca5
   rules:
     - if: $CI_COMMIT_BRANCH == 'master'
