@@ -1,8 +1,8 @@
-#! /bin/sh
+#! /bin/bash
 
 # Installing Go
-wget -q -O - https://git.io/vQhTU | sh -s -- --version 1.23.5
-source /app/.bashrc
+wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.23.5
+source /root/.bashrc
 
 # Installing Python Dependencies
 cd rag
