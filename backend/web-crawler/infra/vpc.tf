@@ -79,7 +79,7 @@ resource "aws_security_group" "worker_node" {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]
+    cidr_blocks = [aws_vpc.main.cidr_block] # Allow Redis access within VPC
   }
 
   tags = {
@@ -101,7 +101,7 @@ resource "aws_security_group" "redis" {
     security_groups = [aws_security_group.worker_node.id]
   }
 
-  # No outbound rules needed for Redis
+  # Allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0

@@ -31,6 +31,7 @@ export const handler = async (
     socket: {
       host: redisHost,
       port: Number(redisPort),
+      tls: true,
     },
     password: redisPassword,
   });

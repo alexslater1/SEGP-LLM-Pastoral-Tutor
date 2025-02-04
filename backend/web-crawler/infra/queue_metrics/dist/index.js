@@ -24,6 +24,7 @@ const handler = async (_event) => {
         socket: {
             host: redisHost,
             port: Number(redisPort),
+            tls: true,
         },
         password: redisPassword,
     });
