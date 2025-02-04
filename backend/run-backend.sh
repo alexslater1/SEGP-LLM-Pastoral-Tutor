@@ -13,4 +13,4 @@ pip install -r ../requirements.txt
 # Starting services
 python main.py > /segp/rag-log.txt 2>&1 &
 cd ..
-./run-agents-server.sh > /segp/agent-log.txt
+./run-agents-server.sh > /segp/agent-log.txt 2>&1
