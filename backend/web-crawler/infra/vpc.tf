@@ -82,6 +82,15 @@ resource "aws_security_group" "worker_node" {
     cidr_blocks = [aws_vpc.main.cidr_block] # Allow Redis access within VPC
   }
 
+  # **Add an inbound rule for port 443 from the security group itself**
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    self        = true
+    description = "Allow CloudWatch endpoint responses"
+  }
+
   tags = {
     Name = "worker-node-sg"
   }
