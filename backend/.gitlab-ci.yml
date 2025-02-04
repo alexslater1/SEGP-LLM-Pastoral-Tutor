@@ -1,0 +1,9 @@
+image: docker.io/uselagoon/python-3.12:latest
+deploy_to_server:
+  stage: deploy
+  script:
+    - apk add curl
+    - curl -X POST $PORTAINER_RECREATE_WEBHOOK
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'master'
+    - if: $CI_COMMIT_BRANCH == 'heroku_CICD_deployment'

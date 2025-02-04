@@ -1,42 +1,45 @@
+from io import BytesIO
+import PyPDF2
 from docx import Document
 from pptx import Presentation
-import pymupdf4llm
+import io
 
-def pdf_to_text(pdf_path):
-        
-    return pymupdf4llm.to_markdown(pdf_path)
+async def pdf_to_text(file_contents):
+    pdf_file = io.BytesIO(file_contents)
+    pdf_reader = PyPDF2.PdfReader(pdf_file)
+    text = ""
+    for page in pdf_reader.pages:
+        text += page.extract_text()
+    return text
 
-def docx_to_text(file_path):
-    doc = Document(file_path)
+async def docx_to_text(file_contents):
+    doc = Document(BytesIO(file_contents))
     full_text = []
     for paragraph in doc.paragraphs:
         full_text.append(paragraph.text)
     return '\n'.join(full_text)
 
-def txt_to_text(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        text = file.read()
-    return text
+async def txt_to_text(file_contents):
+    return file_contents.decode('utf-8')
 
-def pptx_to_text(file_path):
-    presentation = Presentation(file_path)
+async def pptx_to_text(file_contents):
+    presentation = Presentation(BytesIO(file_contents))
     text = []
-    
     for slide in presentation.slides:
         for shape in slide.shapes:
             if hasattr(shape, "text"):
                 text.append(shape.text)
-    
     return '\n'.join(text)
+    
 
-def file_to_text(path):
-    if path.endswith(".pdf"):
-        return pdf_to_text(path)
-    elif path.endswith(".docx"):
-        return docx_to_text(path)
-    elif path.endswith(".txt"):
-        return txt_to_text(path)
-    elif path.endswith(".pptx"):
-        return pptx_to_text(path)
+async def file_to_text(file_contents, file_name):
+    if file_name.endswith('.pdf'):
+        return await pdf_to_text(file_contents)
+    elif file_name.endswith('.docx'):
+        return await docx_to_text(file_contents)
+    elif file_name.endswith('.txt'):
+        return await txt_to_text(file_contents)
+    elif file_name.endswith('.pptx'):
+        return await pptx_to_text(file_contents)
     else:
-        print("Unsupported file type")
+        raise ValueError(f"Unsupported file type")
