@@ -1,6 +1,15 @@
 package api
 
-import "net/http"
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/ethanhosier/web-crawler-coordinator/api/handlers"
+	"github.com/ethanhosier/web-crawler-coordinator/coordinator_client"
+	"github.com/ethanhosier/web-crawler-coordinator/utils"
+)
 
 type Server struct {
 	listenAddr string
@@ -35,10 +44,22 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 }
 
 func (s *Server) routes() {
+	var (
+		redisAddress  = utils.Required(os.Getenv("REDIS_ADDRESS"), "REDIS_ADDRESS")
+		redisPort     = utils.RequiredInt(os.Getenv("REDIS_PORT"), "REDIS_PORT")
+		redisDB       = utils.RequiredInt(os.Getenv("REDIS_DB"), "REDIS_DB")
+		redisPassword = os.Getenv("REDIS_PASSWORD")
+
+		redisConnectionUrl = fmt.Sprintf("%s:%d", redisAddress, redisPort)
+	)
+
+	coordinatorClient := coordinator_client.NewRedisCoordinatorClient(context.Background(), redisConnectionUrl, redisPassword, redisDB)
 
 	s.router.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
 	})
+
+	s.router.HandleFunc("POST /scrape-rag-task", handlers.ScrapeRagTask(coordinatorClient))
 }
 
 func (s *Server) Start() error {
