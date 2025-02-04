@@ -126,3 +126,19 @@ func (r *RedisCoordinatorClient) StoreError(ctx context.Context, topic Coordinat
 
 	return r.redisClient.RPush(ctx, "errors", storedErrorString).Err()
 }
+
+func (r *RedisCoordinatorClient) NumTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error) {
+	numTasks, err := r.redisClient.LLen(ctx, topic.String()).Result()
+	if err != nil {
+		return 0, err
+	}
+	return int(numTasks), nil
+}
+
+func (r *RedisCoordinatorClient) NumProcessingTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error) {
+	numProcessingTasks, err := r.redisClient.LLen(ctx, topic.ProcessingTopicString()).Result()
+	if err != nil {
+		return 0, err
+	}
+	return int(numProcessingTasks), nil
+}

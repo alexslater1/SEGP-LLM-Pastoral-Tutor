@@ -324,3 +324,33 @@ func TestRedisCoordinatorClientCreateTasks(t *testing.T) {
 
 	client.CreateTasks(context.Background(), CoordinatorClientTaskTopicUrls, []*Task{task1, task2})
 }
+
+func TestRedisCoordinatorClientNumTasks(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	numTasks, err := client.NumTasks(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of tasks: %v", err)
+	}
+
+	assert.Equal(t, numTasks, 5)
+}
+
+func TestRedisCoordinatorClientNumProcessingTasks(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	numProcessingTasks, err := client.NumProcessingTasks(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of processing tasks: %v", err)
+	}
+
+	assert.Equal(t, numProcessingTasks, 0)
+}

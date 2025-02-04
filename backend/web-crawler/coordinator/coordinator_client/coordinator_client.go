@@ -93,6 +93,9 @@ type CoordinatorClient interface {
 	SetProcessed(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task) error
 
 	StoreError(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task, err error) error
+
+	NumTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error)
+	NumProcessingTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error)
 }
 
 type CoordinatorClientNoTasksToComplete struct {

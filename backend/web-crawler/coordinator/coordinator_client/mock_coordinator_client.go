@@ -163,3 +163,17 @@ func (m *MockCoordinatorClient) StoreError(ctx context.Context, topic Coordinato
 
 	return nil
 }
+
+func (m *MockCoordinatorClient) NumTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	return len(m.tasks[topic.String()]), nil
+}
+
+func (m *MockCoordinatorClient) NumProcessingTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	return len(m.processing[topic.ProcessingTopicString()]), nil
+}

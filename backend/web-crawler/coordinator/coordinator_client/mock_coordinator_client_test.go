@@ -148,3 +148,66 @@ func TestMockCoordinatorClient_CreateTasks(t *testing.T) {
 
 	assert.Equal(t, len(client.tasks[CoordinatorClientTaskTopicUrls.String()]), 2)
 }
+
+func TestMockCoordinatorClient_NumTasks(t *testing.T) {
+	client := NewMockCoordinatorClient()
+	ctx := context.Background()
+
+	numTasks, err := client.NumTasks(ctx, CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of tasks: %v", err)
+	}
+
+	assert.Equal(t, numTasks, 0)
+
+	task1, err := NewTask("test-id-1", "test-data-1", nil)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	client.CreateTask(ctx, CoordinatorClientTaskTopicUrls, task1)
+
+	numTasks, err = client.NumTasks(ctx, CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of tasks: %v", err)
+	}
+
+	assert.Equal(t, numTasks, 1)
+}
+
+func TestMockCoordinatorClient_NumProcessingTasks(t *testing.T) {
+	client := NewMockCoordinatorClient()
+	ctx := context.Background()
+
+	numProcessingTasks, err := client.NumProcessingTasks(ctx, CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of processing tasks: %v", err)
+	}
+
+	assert.Equal(t, numProcessingTasks, 0)
+
+	task1, err := NewTask("test-id-1", "test-data-1", nil)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	if err := client.CreateTask(ctx, CoordinatorClientTaskTopicUrls, task1); err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	numProcessingTasks, err = client.NumProcessingTasks(ctx, CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of processing tasks: %v", err)
+	}
+
+	assert.Equal(t, numProcessingTasks, 0)
+
+	client.GetTaskAndSetProcessing(ctx, 1*time.Second, CoordinatorClientTaskTopicUrls)
+
+	numProcessingTasks, err = client.NumProcessingTasks(ctx, CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of processing tasks: %v", err)
+	}
+
+	assert.Equal(t, numProcessingTasks, 1)
+}
