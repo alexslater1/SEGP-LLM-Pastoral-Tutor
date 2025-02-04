@@ -1,5 +1,5 @@
-variable "redis_password" {
-  description = "Password for Redis authentication"
+variable "redis_auth_token" {
+  description = "Auth token for Redis authentication (must be at least 16 characters)"
   type        = string
-  sensitive   = true # Marks this variable as sensitive in logs
+  sensitive   = true
 }

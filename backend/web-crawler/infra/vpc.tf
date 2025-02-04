@@ -65,7 +65,7 @@ resource "aws_security_group" "worker_node" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # Allow HTTPS to anywhere instead of using prefix list
   }
 
   egress {
@@ -75,12 +75,70 @@ resource "aws_security_group" "worker_node" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
   tags = {
     Name = "worker-node-sg"
+  }
+}
+
+# Security Group for Redis
+resource "aws_security_group" "redis" {
+  name        = "redis-sg"
+  description = "Security group for Redis"
+  vpc_id      = aws_vpc.main.id
+
+  # Allow inbound traffic on Redis port from worker nodes and Lambda
+  ingress {
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.worker_node.id]
+  }
+
+  # No outbound rules needed for Redis
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "redis-sg"
   }
 }
 
 # Data source for availability zones
 data "aws_availability_zones" "available" {
   state = "available"
+}
+
+# VPC Endpoint for CloudWatch
+resource "aws_vpc_endpoint" "cloudwatch" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.monitoring"
+  vpc_endpoint_type = "Interface"
+
+  subnet_ids         = aws_subnet.public[*].id
+  security_group_ids = [aws_security_group.worker_node.id]
+
+  private_dns_enabled = true
+}
+
+# VPC Endpoint for CloudWatch Logs (needed for Lambda logging)
+resource "aws_vpc_endpoint" "cloudwatch_logs" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.logs"
+  vpc_endpoint_type = "Interface"
+
+  subnet_ids         = aws_subnet.public[*].id
+  security_group_ids = [aws_security_group.worker_node.id]
+
+  private_dns_enabled = true
 }

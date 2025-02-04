@@ -175,7 +175,7 @@ https://www.imperial.ac.uk/study/fees-and-funding/scholarships-search/
 https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/ib-excellence/
 https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/presidential-scholarships-black-heritage-students/`
 
-	client := NewRedisCoordinatorClient(context.Background(), "35.179.182.185:6379", "password", 0)
+	client := NewRedisCoordinatorClient(context.Background(), "18.133.156.65:6379", "password", 0)
 	urls := strings.Split(links, "\n")
 
 	for _, url := range urls {
