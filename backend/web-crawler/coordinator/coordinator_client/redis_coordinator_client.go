@@ -37,6 +37,23 @@ func (r *RedisCoordinatorClient) CreateTask(ctx context.Context, topic Coordinat
 	return r.redisClient.RPush(ctx, topic.String(), taskString).Err()
 }
 
+func (r *RedisCoordinatorClient) CreateTasks(ctx context.Context, topic CoordinatorClientTaskTopic, tasks []*Task) error {
+	taskStrings := make([]string, 0, len(tasks))
+	for _, task := range tasks {
+		taskString, err := task.toString()
+		if err != nil {
+			return err
+		}
+		taskStrings = append(taskStrings, taskString)
+	}
+
+	taskInterfaces := make([]interface{}, len(taskStrings))
+	for i, v := range taskStrings {
+		taskInterfaces[i] = v
+	}
+	return r.redisClient.RPush(ctx, topic.String(), taskInterfaces...).Err()
+}
+
 func (r *RedisCoordinatorClient) GetTask(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error) {
 	result, err := r.redisClient.BLPop(ctx, timeout, topic.String()).Result()
 	if err == redis.Nil {

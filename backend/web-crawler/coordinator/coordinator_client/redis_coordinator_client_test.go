@@ -298,3 +298,29 @@ func TestRedisCoordinatorClientStoreError(t *testing.T) {
 		t.Fatalf("Failed to store error : %v", err)
 	}
 }
+
+func TestRedisCoordinatorClientCreateTasks(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	params1 := map[string]string{
+		"url": "https://ethanhosier.com",
+	}
+	task1, err := NewTask("37407602-a309-4afd-8b77-efa91d808bf3", "asdasdasd", params1)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	params2 := map[string]string{
+		"url": "https://ethanhosier.com/blog",
+	}
+	task2, err := NewTask("37407602-a309-4afd-8b77-efa91d808bf3", "asdasdasd", params2)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	client.CreateTasks(context.Background(), CoordinatorClientTaskTopicUrls, []*Task{task1, task2})
+}

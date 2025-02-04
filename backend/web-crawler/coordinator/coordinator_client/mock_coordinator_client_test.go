@@ -123,3 +123,28 @@ func TestMockCoordinatorClient_StoreError(t *testing.T) {
 	assert.Equal(t, len(client.errors), 1)
 	t.Logf("errors: %+v", client.errors)
 }
+
+func TestMockCoordinatorClient_CreateTasks(t *testing.T) {
+	client := NewMockCoordinatorClient()
+	ctx := context.Background()
+
+	params1 := map[string]string{
+		"url": "https://ethanhosier.com",
+	}
+	task1, err := NewTask("test-id-1", "test-data-1", params1)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	params2 := map[string]string{
+		"url": "https://ethanhosier.com/blog",
+	}
+	task2, err := NewTask("test-id-2", "test-data-2", params2)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	client.CreateTasks(ctx, CoordinatorClientTaskTopicUrls, []*Task{task1, task2})
+
+	assert.Equal(t, len(client.tasks[CoordinatorClientTaskTopicUrls.String()]), 2)
+}

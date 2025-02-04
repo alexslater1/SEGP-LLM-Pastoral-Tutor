@@ -86,6 +86,8 @@ var (
 
 type CoordinatorClient interface {
 	CreateTask(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task) error
+	CreateTasks(ctx context.Context, topic CoordinatorClientTaskTopic, tasks []*Task) error
+
 	GetTask(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error)
 	GetTaskAndSetProcessing(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error)
 	SetProcessed(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task) error

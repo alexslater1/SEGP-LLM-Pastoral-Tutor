@@ -40,6 +40,25 @@ func (m *MockCoordinatorClient) CreateTask(ctx context.Context, topic Coordinato
 	return nil
 }
 
+func (m *MockCoordinatorClient) CreateTasks(ctx context.Context, topic CoordinatorClientTaskTopic, tasks []*Task) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	for _, task := range tasks {
+		taskString, err := task.toString()
+		if err != nil {
+			return err
+		}
+
+		if _, exists := m.tasks[topic.String()]; !exists {
+			m.tasks[topic.String()] = make([]string, 0)
+		}
+		m.tasks[topic.String()] = append(m.tasks[topic.String()], taskString)
+	}
+
+	return nil
+}
+
 func (m *MockCoordinatorClient) GetTask(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
