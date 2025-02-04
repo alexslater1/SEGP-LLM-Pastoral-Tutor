@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { getRelativeTimeString } from "@/lib/utils";
 import { RagDocument } from "@/lib/db/schema";
+import { useRagUploadDocs } from "@/hooks/use-rag";
 
 const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
@@ -26,6 +27,8 @@ export default function UploadPage() {
     }
   ]);
   const [isDragging, setIsDragging] = useState(false);
+  
+  const uploadMutation = useRagUploadDocs();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -65,16 +68,10 @@ export default function UploadPage() {
     return supportedTypes.includes(file.type);
   };
 
-  const handleUpload = (files: File[]) => {
-    /* TODO: Implement RAG upload logic here
-       1. Save file metadata to NextJS DB with status 'processing'
-       2. Upload file to backend for RAG processing
-       3. Update NextJS DB record status to 'ready' when complete
-    */
-    toast.success(`Uploaded ${files.length} file(s)`);
-  };
-  
-  const handleFiles = (files: File[]) => {
+  const handleFiles = async (files: File[]) => {
+    console.log("Uploading files:", files);
+    console.log("File type:", files[0].type);
+
     const invalidFiles = files.filter(file => !isValidFileType(file));
     
     if (invalidFiles.length > 0) {
@@ -90,20 +87,26 @@ export default function UploadPage() {
       return;
     }
   
-    handleUpload(files);
-  
-    const newDocuments = files.map(file => ({
-      id: Math.random().toString(36).slice(2, 11),
-      name: file.name,
-      uploadedAt: new Date(),
-      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      type: getFileExtension(file.name).toUpperCase() as 'PDF' | 'DOCX' | 'TXT' | 'PPTX',
-      status: 'processing' as const,
-      userId: 'dummy-user-id',
-      backendSourceId: null
-    }));
-  
-    setDocuments(prev => [...prev, ...newDocuments]);
+    try {
+      await uploadMutation.mutateAsync(files);
+      toast.success(`Uploaded ${files.length} file(s)`);
+      
+      const newDocuments = files.map(file => ({
+        id: Math.random().toString(36).slice(2, 11),
+        name: file.name,
+        uploadedAt: new Date(),
+        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+        type: getFileExtension(file.name).toUpperCase() as 'PDF' | 'DOCX' | 'TXT' | 'PPTX',
+        status: 'processing' as const,
+        userId: 'dummy-user-id',
+        backendSourceId: null
+      }));
+    
+      setDocuments(prev => [...prev, ...newDocuments]);
+    } catch (error) {
+      toast.error('Failed to upload files');
+      console.error('Upload error:', error);
+    }
   };
 
   const getRecentDocuments = () => {
