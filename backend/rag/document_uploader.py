@@ -10,19 +10,23 @@ model = AutoModel.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 async def upload_doc(file):
-    
+    print("Uploading document:", file.filename)
     file_name = file.filename
     file_contents = await file.read()
     
     # upload file to bucket storage
     response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).upload(file_name, file_contents)
     public_url = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).get_public_url(file_name)
+    size = len(file_contents)
+    print("Size:", size)
     
     #add entry for file in documents table
     response = supabase.table(RAG_SOURCES_TABLE_NAME).insert([
         {"url": public_url,
          "name": file_name,
-         "type": "DOCUMENT"}
+         "type": "DOCUMENT",
+         "document_size": size,
+         "document_type": file_name.split(".")[-1].upper()}
         ]).execute()
     
     doc_id = response.data[0].get('id')
@@ -75,6 +79,10 @@ async def upload_doc(file):
             }
         ]).execute()
         contact_index += 1
+
+def fetch_docs():
+    response = supabase.table(RAG_SOURCES_TABLE_NAME).select("*").execute()
+    return response.data
 
 def delete_doc(name):
     try:
