@@ -12,8 +12,14 @@ import { z } from 'zod';
 
 import {ResponseData, createResponse} from './response-generation';
 
+import { 
+  StatusResponse,
+  Status,
+  makeV2InitialQuery, 
+  makeV2StatusQuery 
+} from './api-queries';
+
 import { auth } from '@/app/(auth)/auth';
-import { customModel, imageGenerationModel } from '@/lib/ai';
 import { models } from '@/lib/ai/models';
 import {
   codePrompt,
@@ -52,9 +58,9 @@ const blocksTools: AllowedTools[] = [
 
 const weatherTools: AllowedTools[] = ['getWeather'];
 
-const API_FETCH_TIMEOUT_SECONDS: number = 120;
-
 const allTools: AllowedTools[] = [...blocksTools, ...weatherTools];
+
+const STATUS_QUERY_INTERVAL_SECONDS = 0.5
 
 export async function POST(request: Request) {
   const {
@@ -98,43 +104,6 @@ export async function POST(request: Request) {
     ],
   });
 
-  async function makeCompletion(previousMessages: Message[], userMessage: CoreUserMessage): Promise<string> {
-    type CompletionResponse = {
-      response: string;
-      reason: string;
-    }
-    try {
-      let query = "Previous messages (oldest to most recent): " + previousMessages.slice(0, -1).map(message => {
-        if (message.role == "user") {
-          return "User: " + message.content;
-        } else {
-          return "Assistant: " + message.content;
-        }
-      }).join("\n");
-      query += "\nMost recent user message to respond and answer to now: " + userMessage.content;
-
-      const response = await fetch(process.env.BACKEND_URL || "", {
-        method: 'POST',
-        signal: AbortSignal.timeout(1000 * API_FETCH_TIMEOUT_SECONDS),
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          query: query
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return (await response.json() as CompletionResponse).response;
-    } catch (error) {
-      console.error('Error:', error);
-      return "Error fetching from backend";
-    }
-  }
-
   let result = createResponse({
     execute: async (response) => {
       response.addData ({
@@ -142,7 +111,23 @@ export async function POST(request: Request) {
         content: userMessageId,
       })
 
-      await response.setMessage(await makeCompletion(messages, userMessage));
+      let queryID = await makeV2InitialQuery(messages, userMessage);
+      let status: StatusResponse = {type: Status.PENDING, current_action: "Thinking"};
+      response.addAnnotation(status)
+      while (status.type === Status.PENDING) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * STATUS_QUERY_INTERVAL_SECONDS));
+        let newStatus = await makeV2StatusQuery(queryID);
+       
+        if (newStatus.type === Status.FAILED || newStatus.type === Status.COMPLETED) {
+          status = newStatus
+          await response.setMessage(newStatus.type === Status.COMPLETED ?
+            status.answer as string : status.error as string)
+        } else if (newStatus.current_action !== undefined && 
+                   status.current_action !== newStatus.current_action) {
+          status = newStatus
+          response.addAnnotation(status)
+        }
+      }
     },
     onFinish: async (response) => {
       if (session.user?.id) {
@@ -170,7 +155,6 @@ export async function POST(request: Request) {
       }
     },
   })
-
   return result;
 }
 

@@ -1,5 +1,8 @@
 enum MessageRole {
-    USER, ASSISTANT, SYSTEM, DATA
+    USER = "user",
+    ASSISTANT = "assistant",
+    SYSTEM = "system",
+    DATA = "data",
 }
 
 const TOKEN_MILLISECOND_DELAY = 30
@@ -20,21 +23,7 @@ export class ResponseData {
             },
         });
         this.controller = controller as unknown as ReadableStreamDefaultController<string>;
-
-        switch (messageType) {
-            case MessageRole.USER:
-                this.messageRole = "user"
-                break
-            case MessageRole.ASSISTANT:
-                this.messageRole = "assistant"
-                break
-            case MessageRole.SYSTEM:
-                this.messageRole = "system"
-                break
-            case MessageRole.DATA:
-                this.messageRole = "data"
-                break
-        }
+        this.messageRole = messageType
     }
 
     safeEnqueue(data: string) {
@@ -55,12 +44,15 @@ export class ResponseData {
         this.safeEnqueue("8:" + JSON.stringify([annotation]) + "\n")
     }
 
-    async setMessage(message: string) {
+    async setMessage(message: string, delayed: boolean = true) {
+        if (!message) {
+            message = "Error: server provided no answer"
+        }
         this.message = message;
         let tokens = this.message.split(" ")
         for (let token of tokens) {
             this.safeEnqueue("0:" + JSON.stringify(token + " ") + "\n")
-            await new Promise(resolve => setTimeout(resolve, TOKEN_MILLISECOND_DELAY));
+            delayed && await new Promise(resolve => setTimeout(resolve, TOKEN_MILLISECOND_DELAY));
         }
     }
 

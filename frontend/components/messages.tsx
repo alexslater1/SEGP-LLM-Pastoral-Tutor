@@ -41,20 +41,27 @@ function PureMessages({
       {/* {messages.length === 0 && <Overview />} */}
 
       {messages.map((message, index) => (
-        <PreviewMessage
-          key={message.id}
-          chatId={chatId}
-          message={message}
-          isLoading={isLoading && messages.length - 1 === index}
-          vote={
-            votes
-              ? votes.find((vote) => vote.messageId === message.id)
-              : undefined
-          }
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-        />
+        /*
+        <div>
+          <div key={message.id + "annotation"}>
+            {message.annotations && <>{JSON.stringify(message.annotations)}</>}
+          </div>
+        */
+          <PreviewMessage
+            key={message.id}
+            chatId={chatId}
+            message={message}
+            isLoading={isLoading && messages.length - 1 === index}
+            vote={
+              votes
+                ? votes.find((vote) => vote.messageId === message.id)
+                : undefined
+            }
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+          />
+        //</div>
       ))}
 
       {isLoading &&
