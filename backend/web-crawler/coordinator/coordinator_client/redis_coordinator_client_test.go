@@ -354,3 +354,30 @@ func TestRedisCoordinatorClientNumProcessingTasks(t *testing.T) {
 
 	assert.Equal(t, numProcessingTasks, 0)
 }
+
+func TestRedisCoordinatorClientGetErrors(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	errors, err := client.GetErrors(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get errors: %v", err)
+	}
+
+	assert.Equal(t, len(errors), 0)
+
+	if err := client.StoreError(context.Background(), CoordinatorClientTaskTopicUrls, nil, fmt.Errorf("an error")); err != nil {
+		t.Fatalf("Failed to store error: %v", err)
+	}
+
+	errors, err = client.GetErrors(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get errors: %v", err)
+	}
+
+	assert.Equal(t, len(errors), 1)
+	assert.Equal(t, errors[0].Error, "an error")
+}

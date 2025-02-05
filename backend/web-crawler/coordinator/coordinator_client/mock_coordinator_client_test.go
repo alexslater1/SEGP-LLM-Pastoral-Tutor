@@ -14,7 +14,7 @@ func TestMockCoordinatorClient(t *testing.T) {
 	ctx := context.Background()
 
 	// Test CreateTask
-	task, err := NewTask("test-id", "test-data", "test-type")
+	task, err := NewTask("test-id", "test-data", nil)
 	if err != nil {
 		t.Fatalf("Failed to create task: %v", err)
 	}
@@ -34,7 +34,7 @@ func TestMockCoordinatorClient(t *testing.T) {
 	}
 
 	// Test GetTaskAndSetProcessing
-	task2, err := NewTask("test-id-2", "test-data-2", "test-type-2")
+	task2, err := NewTask("test-id-2", "test-data-2", nil)
 	if err != nil {
 		t.Fatalf("Failed to create second task: %v", err)
 	}
@@ -210,4 +210,27 @@ func TestMockCoordinatorClient_NumProcessingTasks(t *testing.T) {
 	}
 
 	assert.Equal(t, numProcessingTasks, 1)
+}
+
+func TestMockCoordinatorClient_GetErrors(t *testing.T) {
+	client := NewMockCoordinatorClient()
+	ctx := context.Background()
+
+	if err := client.StoreError(ctx, CoordinatorClientTaskTopicUrls, nil, fmt.Errorf("an error")); err != nil {
+		t.Fatalf("Failed to store error: %v", err)
+	}
+
+	if err := client.StoreError(ctx, CoordinatorClientTaskTopicUrls, nil, fmt.Errorf("an error 2")); err != nil {
+		t.Fatalf("Failed to store error: %v", err)
+	}
+
+	errors, err := client.GetErrors(ctx, CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get errors: %v", err)
+	}
+
+	assert.Equal(t, len(errors), 2)
+
+	assert.Equal(t, errors[0].Error, "an error")
+	assert.Equal(t, errors[1].Error, "an error 2")
 }

@@ -93,6 +93,7 @@ type CoordinatorClient interface {
 	SetProcessed(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task) error
 
 	StoreError(ctx context.Context, topic CoordinatorClientTaskTopic, task *Task, err error) error
+	GetErrors(ctx context.Context, topic CoordinatorClientTaskTopic) ([]*StoredError, error)
 
 	NumTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error)
 	NumProcessingTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error)

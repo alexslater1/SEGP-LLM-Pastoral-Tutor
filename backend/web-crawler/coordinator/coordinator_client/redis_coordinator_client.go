@@ -142,3 +142,21 @@ func (r *RedisCoordinatorClient) NumProcessingTasks(ctx context.Context, topic C
 	}
 	return int(numProcessingTasks), nil
 }
+
+func (r *RedisCoordinatorClient) GetErrors(ctx context.Context, topic CoordinatorClientTaskTopic) ([]*StoredError, error) {
+	errors, err := r.redisClient.LRange(ctx, "errors", 0, -1).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	storedErrors := make([]*StoredError, 0, len(errors))
+	for _, error := range errors {
+		var storedError StoredError
+		err = json.Unmarshal([]byte(error), &storedError)
+		if err != nil {
+			return nil, err
+		}
+		storedErrors = append(storedErrors, &storedError)
+	}
+	return storedErrors, nil
+}

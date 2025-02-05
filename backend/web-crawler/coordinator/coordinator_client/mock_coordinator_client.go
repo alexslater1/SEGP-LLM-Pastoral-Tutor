@@ -11,7 +11,7 @@ import (
 type MockCoordinatorClient struct {
 	tasks      map[string][]string // topic -> tasks
 	processing map[string][]string // topic -> processing tasks
-	errors     []string
+	errors     []*StoredError
 	mutex      sync.Mutex
 }
 
@@ -20,7 +20,7 @@ func NewMockCoordinatorClient() *MockCoordinatorClient {
 	return &MockCoordinatorClient{
 		tasks:      make(map[string][]string),
 		processing: make(map[string][]string),
-		errors:     make([]string, 0),
+		errors:     make([]*StoredError, 0),
 	}
 }
 
@@ -154,12 +154,7 @@ func (m *MockCoordinatorClient) StoreError(ctx context.Context, topic Coordinato
 		Created: time.Now(),
 	}
 
-	b, err := json.Marshal(storedError)
-	if err != nil {
-		return err
-	}
-
-	m.errors = append(m.errors, string(b))
+	m.errors = append(m.errors, &storedError)
 
 	return nil
 }
@@ -176,4 +171,11 @@ func (m *MockCoordinatorClient) NumProcessingTasks(ctx context.Context, topic Co
 	defer m.mutex.Unlock()
 
 	return len(m.processing[topic.ProcessingTopicString()]), nil
+}
+
+func (m *MockCoordinatorClient) GetErrors(ctx context.Context, topic CoordinatorClientTaskTopic) ([]*StoredError, error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	return m.errors, nil
 }

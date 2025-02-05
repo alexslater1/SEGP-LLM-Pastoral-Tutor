@@ -74,6 +74,48 @@ func ScrapeRagTask(coordinatorClient coordinator_client.CoordinatorClient) http.
 	}
 }
 
+type TasksStatusResponse struct {
+	NumUrlsTasks          int `json:"num_urls_tasks"`
+	NumProcessingUrlTasks int `json:"num_processing_url_tasks"`
+	NumRagTasks           int `json:"num_rag_tasks"`
+	NumProcessingRagTasks int `json:"num_processing_rag_tasks"`
+}
+
+func TasksStatus(coordinatorClient coordinator_client.CoordinatorClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		numUrlsTasks, err := coordinatorClient.NumTasks(r.Context(), coordinator_client.CoordinatorClientTaskTopicUrls)
+		if err != nil {
+			WriteJSONError(w, "Failed to get number of tasks", http.StatusInternalServerError)
+			return
+		}
+
+		numProcessingUrlTasks, err := coordinatorClient.NumProcessingTasks(r.Context(), coordinator_client.CoordinatorClientTaskTopicUrls)
+		if err != nil {
+			WriteJSONError(w, "Failed to get number of processing tasks", http.StatusInternalServerError)
+			return
+		}
+
+		numRagTasks, err := coordinatorClient.NumTasks(r.Context(), coordinator_client.CoordinatorClientTaskTopicRag)
+		if err != nil {
+			WriteJSONError(w, "Failed to get number of tasks", http.StatusInternalServerError)
+			return
+		}
+
+		numProcessingRagTasks, err := coordinatorClient.NumProcessingTasks(r.Context(), coordinator_client.CoordinatorClientTaskTopicRag)
+		if err != nil {
+			WriteJSONError(w, "Failed to get number of processing tasks", http.StatusInternalServerError)
+			return
+		}
+
+		WriteJSON(w, TasksStatusResponse{
+			NumUrlsTasks:          numUrlsTasks,
+			NumProcessingUrlTasks: numProcessingUrlTasks,
+			NumRagTasks:           numRagTasks,
+			NumProcessingRagTasks: numProcessingRagTasks,
+		})
+	}
+}
+
 func WriteJSON(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)

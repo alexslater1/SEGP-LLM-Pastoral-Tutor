@@ -60,6 +60,7 @@ func (s *Server) routes() {
 	})
 
 	s.router.HandleFunc("POST /scrape-rag-task", handlers.ScrapeRagTask(coordinatorClient))
+	s.router.HandleFunc("GET /tasks-status", handlers.TasksStatus(coordinatorClient))
 }
 
 func (s *Server) Start() error {
