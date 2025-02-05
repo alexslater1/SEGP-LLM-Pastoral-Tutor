@@ -368,8 +368,15 @@ func TestRedisCoordinatorClientGetErrors(t *testing.T) {
 	}
 
 	assert.Equal(t, len(errors), 0)
+	params := map[string]string{
+		"url": "https://ethanhosier.com",
+	}
+	task, err := NewTask("37407602-a309-4afd-8b77-efa91d808bf3", "asdasdasd", params)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
 
-	if err := client.StoreError(context.Background(), CoordinatorClientTaskTopicUrls, nil, fmt.Errorf("an error")); err != nil {
+	if err := client.StoreError(context.Background(), CoordinatorClientTaskTopicUrls, task, fmt.Errorf("an error")); err != nil {
 		t.Fatalf("Failed to store error: %v", err)
 	}
 

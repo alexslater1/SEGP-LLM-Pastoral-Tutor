@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ethanhosier/web-crawler-coordinator/coordinator_client"
 	"github.com/ethanhosier/web-crawler-coordinator/utils"
@@ -74,11 +75,19 @@ func ScrapeRagTask(coordinatorClient coordinator_client.CoordinatorClient) http.
 	}
 }
 
+type TaskStatusError struct {
+	TaskID    string    `json:"task_id"`
+	Error     string    `json:"error"`
+	CreatedAt time.Time `json:"created_at"`
+	Topic     string    `json:"topic"`
+}
+
 type TasksStatusResponse struct {
-	NumUrlsTasks          int `json:"num_urls_tasks"`
-	NumProcessingUrlTasks int `json:"num_processing_url_tasks"`
-	NumRagTasks           int `json:"num_rag_tasks"`
-	NumProcessingRagTasks int `json:"num_processing_rag_tasks"`
+	NumUrlsTasks          int               `json:"num_urls_tasks"`
+	NumProcessingUrlTasks int               `json:"num_processing_url_tasks"`
+	NumRagTasks           int               `json:"num_rag_tasks"`
+	NumProcessingRagTasks int               `json:"num_processing_rag_tasks"`
+	Errors                []TaskStatusError `json:"errors"`
 }
 
 func TasksStatus(coordinatorClient coordinator_client.CoordinatorClient) http.HandlerFunc {
@@ -107,11 +116,28 @@ func TasksStatus(coordinatorClient coordinator_client.CoordinatorClient) http.Ha
 			return
 		}
 
+		errors, err := coordinatorClient.GetErrors(r.Context(), coordinator_client.CoordinatorClientTaskTopicUrls)
+		if err != nil {
+			WriteJSONError(w, "Failed to get errors", http.StatusInternalServerError)
+			return
+		}
+
+		taskErrors := make([]TaskStatusError, 0, len(errors))
+		for _, err := range errors {
+			taskErrors = append(taskErrors, TaskStatusError{
+				TaskID:    err.Task.ID,
+				Error:     err.Error,
+				CreatedAt: err.Created,
+				Topic:     string(err.Topic),
+			})
+		}
+
 		WriteJSON(w, TasksStatusResponse{
 			NumUrlsTasks:          numUrlsTasks,
 			NumProcessingUrlTasks: numProcessingUrlTasks,
 			NumRagTasks:           numRagTasks,
 			NumProcessingRagTasks: numProcessingRagTasks,
+			Errors:                taskErrors,
 		})
 	}
 }
