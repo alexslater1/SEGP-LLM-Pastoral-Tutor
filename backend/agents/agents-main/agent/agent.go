@@ -34,7 +34,7 @@ func NewDefaultReActAgent() Agent {
 
 func NewDefaultFastAgent() Agent {
 	var (
-		googleSearchClient = googleSearch.NewNonHeadlessRodClient()
+		googleSearchClient = googleSearch.NewRodClient()
 		toolHandler        = tools.NewGoogleSearchToolHandler(googleSearchClient)
 		llm                = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
 		knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
