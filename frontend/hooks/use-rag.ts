@@ -144,3 +144,53 @@ export function useDeleteRagDoc() {
 
   return mutation;
 }
+
+
+const downloadRagDocument = async (name: string) => {
+  try { 
+    console.log('Starting download for:', name);
+    
+    const response = await fetch(`http://127.0.0.1:8000/rag-doc/download?name=${encodeURIComponent(name)}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Download failed with status: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    // Create a temporary link and trigger download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name; // Set downloaded file name
+    document.body.appendChild(a);
+    a.click();
+
+    // Cleanup
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+  } catch (error) {
+    console.error('Download error details:', error);
+    throw error;
+  }
+};
+
+export function useDownloadRagDoc() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: downloadRagDocument,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rag-documents'] });
+    },
+    onError: (error: Error) => {
+      console.error("Download failed", error);
+    },
+  });
+
+  return mutation;
+}

@@ -6,16 +6,22 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getRelativeTimeString } from "@/lib/utils";
 import { RagDocument } from "@/lib/db/schema";
-import { useDeleteRagDoc, useRagDocuments } from '@/hooks/use-rag';
+import { useDeleteRagDoc, useDownloadRagDoc, useRagDocuments } from '@/hooks/use-rag';
 
 export default function LibraryPage() {
   const { data: documents, error } = useRagDocuments();
   const deleteMutation = useDeleteRagDoc();
+  const downloadMutation = useDownloadRagDoc();
 
   const handleDownload = async (doc: RagDocument) => {
     // TODO: Implement download logic here
-    
-    toast.success(`Downloading ${doc.name}`);
+    try {
+      await downloadMutation.mutateAsync(doc.name);
+      toast.success(`Downloaded ${doc.name}`);
+    } catch (error) {
+      toast.error('Failed to download file');
+      console.error('Download error:', error);
+    }
   };
 
   const handleDelete = async(doc: RagDocument) => {
