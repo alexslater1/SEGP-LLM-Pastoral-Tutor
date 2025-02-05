@@ -3,7 +3,7 @@
 import type { ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, useEffect } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
@@ -19,6 +19,7 @@ import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
+import { Status, StatusResponse } from '@/app/(chat)/api/chat/api-queries';
 
 const PurePreviewMessage = ({
   chatId,
@@ -42,6 +43,27 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+
+  function getLastStatusOrMessage(): string {
+    if (!message.annotations || message.content.trim() !== "") {
+      return message.content.trim()
+    }
+    if (!message.annotations.length || message.annotations.length == 0) {
+      return message.content.trim()
+    }
+
+    let lastAnnotation = message.annotations[message.annotations.length - 1]
+    if (!(lastAnnotation as StatusResponse)) {
+      return message.content.trim()
+    }
+
+    let parsedAnnotation = lastAnnotation as StatusResponse
+    if (!parsedAnnotation.type || parsedAnnotation.type !== Status.PENDING) {
+      return message.content.trim()
+    }
+        
+    return parsedAnnotation.current_action || "Thinking"
+  }
 
   return (
     <AnimatePresence>
@@ -106,7 +128,7 @@ const PurePreviewMessage = ({
                   })}
                 >
                   <Markdown>
-                    {message.content}
+                    {getLastStatusOrMessage()}
                   </Markdown>
                 </div>
               </div>

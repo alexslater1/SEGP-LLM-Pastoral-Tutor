@@ -60,7 +60,7 @@ const weatherTools: AllowedTools[] = ['getWeather'];
 
 const allTools: AllowedTools[] = [...blocksTools, ...weatherTools];
 
-const STATUS_QUERY_INTERVAL_SECONDS = 0.5
+const STATUS_QUERY_INTERVAL_SECONDS = 1
 
 export async function POST(request: Request) {
   const {
@@ -122,10 +122,11 @@ export async function POST(request: Request) {
           status = newStatus
           await response.setMessage(newStatus.type === Status.COMPLETED ?
             status.answer as string : status.error as string)
-        } else if (newStatus.current_action !== undefined && 
+        } else if (newStatus.current_action && 
                    status.current_action !== newStatus.current_action) {
           status = newStatus
           response.addAnnotation(status)
+          response.updateUIMessage()
         }
       }
     },

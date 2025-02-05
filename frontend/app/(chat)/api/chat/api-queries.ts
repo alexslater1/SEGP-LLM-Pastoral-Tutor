@@ -21,7 +21,11 @@ export type StatusResponse = {
     current_action?: string,
 }
 
-function createQueryText(previousMessages: Message[], userMessage: CoreUserMessage): string {
+function createQueryText(previousMessages: Message[], userMessage: CoreUserMessage, 
+    includeHistory: boolean = true): string {
+    if (!includeHistory) {
+        return userMessage.content as string;
+    }
     let query = "Previous messages (oldest to most recent): " + previousMessages.slice(0, -1).map(message => {
             if (message.role == "user") {
                 return "User: " + message.content;
@@ -67,7 +71,7 @@ export async function makeV1Completion(previousMessages: Message[], userMessage:
 export async function makeV2InitialQuery(previousMessages: Message[], userMessage: CoreUserMessage): Promise<queryID> {
     try {
         const completionEndpoint = "/completion/v2"
-        let query = createQueryText(previousMessages, userMessage);
+        let query = createQueryText(previousMessages, userMessage, false);
         const response = await fetch(process.env.BACKEND_URL + completionEndpoint, {
             method: 'POST',
             headers: {

@@ -44,6 +44,12 @@ export class ResponseData {
         this.safeEnqueue("8:" + JSON.stringify([annotation]) + "\n")
     }
 
+    // The UI will continue to show "Thinking..." until some message content is pushed to
+    // the stream. This is a workaround to ensure the UI will update if an annotation was sent
+    updateUIMessage() {
+        this.safeEnqueue("0:\" \"\n")
+    }
+
     async setMessage(message: string, delayed: boolean = true) {
         if (!message) {
             message = "Error: server provided no answer"

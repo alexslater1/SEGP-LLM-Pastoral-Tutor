@@ -41,12 +41,12 @@ function PureMessages({
       {/* {messages.length === 0 && <Overview />} */}
 
       {messages.map((message, index) => (
-        /*
         <div>
+          {/*
           <div key={message.id + "annotation"}>
             {message.annotations && <>{JSON.stringify(message.annotations)}</>}
           </div>
-        */
+          */}
           <PreviewMessage
             key={message.id}
             chatId={chatId}
@@ -61,7 +61,7 @@ function PureMessages({
             reload={reload}
             isReadonly={isReadonly}
           />
-        //</div>
+        </div>
       ))}
 
       {isLoading &&
