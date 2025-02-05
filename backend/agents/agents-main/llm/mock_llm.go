@@ -9,55 +9,108 @@ import (
 
 type MockLLM struct {
 	// Maps to store expected responses for different inputs
-	chatResponses       map[string]*string
-	structuredResponses map[string]*string
-	toolResponses       map[string][]tools.ToolCall
+	responses []LLMResponse
+}
+
+type MockLLMResponseType string 
+
+const (
+	ChatResponse MockLLMResponseType = "ChatResponse"
+	StructuredResponse MockLLMResponseType = "StructuredResponse"
+	ToolResponse MockLLMResponseType = "ToolResponse"
+)
+
+type LLMResponse struct {
+	Type MockLLMResponseType
+	Response any
+}
+
+type MockLLMCallChainBuilder struct {
+	llm *MockLLM
+	responses []LLMResponse
 }
 
 // NewMockLLM creates a new MockLLM instance
 func NewMockLLM() *MockLLM {
 	return &MockLLM{
-		chatResponses:       make(map[string]*string),
-		structuredResponses: make(map[string]*string),
-		toolResponses:       make(map[string][]tools.ToolCall),
+		responses: make([]LLMResponse, 0),
 	}
 }
 
-// SetChatResponse sets the expected response for a given chat prompt
-func (m *MockLLM) SetChatResponse(prompt string, response string) {
-	m.chatResponses[prompt] = &response
+func (m *MockLLM) NewCallChain() *MockLLMCallChainBuilder {
+	return &MockLLMCallChainBuilder{
+		llm: m,
+		responses: make([]LLMResponse, 0),
+	}
 }
 
-// SetStructuredResponse sets the expected response for a structured output prompt
-func (m *MockLLM) SetStructuredResponse(prompt string, response string) {
-	m.structuredResponses[prompt] = &response
+func (m *MockLLMCallChainBuilder) ThenChat(response string) *MockLLMCallChainBuilder {
+	m.responses = append(m.responses, LLMResponse{Type: ChatResponse, Response: response})
+	return m
 }
 
-// SetToolResponse sets the expected tool calls for a given prompt
-func (m *MockLLM) SetToolResponse(prompt string, response []tools.ToolCall) {
-	m.toolResponses[prompt] = response
+func (m *MockLLMCallChainBuilder) ThenStructured(response string) *MockLLMCallChainBuilder {
+	m.responses = append(m.responses, LLMResponse{Type: StructuredResponse, Response: response})
+	return m
+}
+
+func (m *MockLLMCallChainBuilder) ThenTool(response []tools.ToolCall) *MockLLMCallChainBuilder {
+	m.responses = append(m.responses, LLMResponse{Type: ToolResponse, Response: response})
+	return m
+}
+
+func (m *MockLLMCallChainBuilder) Set() *MockLLM {
+	m.llm.responses = append(m.llm.responses, m.responses...)
+	return m.llm
 }
 
 // ChatCompletion implements the LLM interface
 func (m *MockLLM) ChatCompletion(ctx context.Context, prompt string) (*string, error) {
-	if response, ok := m.chatResponses[prompt]; ok {
-		return response, nil
+    response := m.responses[0]
+    m.responses = m.responses[1:]
+    
+    if response.Type != ChatResponse {
+        panic(fmt.Sprintf("expected ChatResponse, got %s", response.Type))
+    }
+    
+	str, ok := response.Response.(string)
+	if !ok {
+		panic(fmt.Sprintf("expected string, got %T", response.Response))
 	}
-	return nil, fmt.Errorf("no mock response set for prompt: %s", prompt)
+
+	return &str, nil
 }
 
 // StructuredOutputCompletion implements the LLM interface
 func (m *MockLLM) StructuredOutputCompletion(ctx context.Context, prompt string, schema interface{}) (*string, error) {
-	if response, ok := m.structuredResponses[prompt]; ok {
-		return response, nil
+    response := m.responses[0]
+    m.responses = m.responses[1:]
+
+	if response.Type != StructuredResponse {
+		panic(fmt.Sprintf("expected StructuredResponse, got %s", response.Type))
 	}
-	return nil, fmt.Errorf("no mock response set for prompt: %s", prompt)
+
+	str, ok := response.Response.(string)
+	if !ok {
+		panic(fmt.Sprintf("expected string, got %T", response.Response))
+	}
+
+	return &str, nil
 }
 
 // ChatCompletionWithTools implements the LLM interface
 func (m *MockLLM) ChatCompletionWithTools(ctx context.Context, prompt string, ts []tools.ToolDefinition, toolChoice tools.ToolChoice) ([]tools.ToolCall, error) {
-	if response, ok := m.toolResponses[prompt]; ok {
-		return response, nil
+	response := m.responses[0]
+	m.responses = m.responses[1:]
+
+	if response.Type != ToolResponse {
+		panic(fmt.Sprintf("expected ToolResponse, got %s", response.Type))
 	}
-	return nil, fmt.Errorf("no mock response set for prompt: %s", prompt)
+
+	toolCalls, ok := response.Response.([]tools.ToolCall)
+	if !ok {
+		panic(fmt.Sprintf("expected []tools.ToolCall, got %T", response.Response))
+	}
+
+	return toolCalls, nil
 }

@@ -40,6 +40,7 @@ func genaiToolPropertyTypeFrom(paramType tools.ParameterType) genai.Type {
 func genaiParamsFrom(params []tools.Parameter) *genai.Schema {
 	properties := map[string]*genai.Schema{}
 	for _, param := range params {
+		fmt.Println("param", param.Description)
 		properties[param.Name] = &genai.Schema{
 			Type:        genaiToolPropertyTypeFrom(param.Type),
 			Description: param.Description,

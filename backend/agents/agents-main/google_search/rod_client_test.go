@@ -85,6 +85,10 @@ func TestRodClientNavigate(t *testing.T) {
 }
 
 func TestRodClientFromUrl2(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("skipping test in CI")
+	}
+	
 	url := "https://www.exchangerates.org.uk/US-Dollar-USD-currency-table.html"
 
 	client := NewNonHeadlessRodClient()

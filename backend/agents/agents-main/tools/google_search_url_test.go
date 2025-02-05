@@ -8,7 +8,7 @@ import (
 )
 
 func TestCallGoogleSearchUrlTool(t *testing.T) {
-	if os.Getenv("CICD") == "True" {
+	if os.Getenv("CICD") == "true" {
 		t.Skip("Skipping test due to CICDs")
 	}
 

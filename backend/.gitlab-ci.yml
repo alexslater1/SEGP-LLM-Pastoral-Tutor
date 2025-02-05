@@ -1,5 +1,5 @@
 image: docker.io/uselagoon/python-3.12:latest
-deploy_to_heroku:
+deploy_to_server:
   stage: deploy
   script:
     - apk add curl
