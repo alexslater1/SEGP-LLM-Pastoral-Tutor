@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, FileUp, Library, MessageSquare } from "lucide-react";
+import { Home, FileUp, Library, Activity, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AdminSidebar({ user }: { user: User | undefined }) {
@@ -132,7 +132,7 @@ export function AdminSidebar({ user }: { user: User | undefined }) {
               className={cn(
                 "w-full px-5 py-5 rounded-lg transition-colors",
                 "hover:bg-muted/50",
-                getSelectedStyles("/admin/chat-history")
+                getSelectedStyles("/admin/agent-events")
               )}
             >
               <Link
@@ -140,16 +140,44 @@ export function AdminSidebar({ user }: { user: User | undefined }) {
                 onClick={() => setOpenMobile(false)}
                 className="flex items-center gap-3"
               >
-                <MessageSquare size={24} />
+                <Activity size={24} />
                 <span
                   className={cn(
                     "text-base",
-                    getSelectedStyles("/admin/chat-history")
+                    getSelectedStyles("/admin/agent-events")
                       ? "font-semibold"
                       : "font-normal"
                   )}
                 >
                   Agent Events
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className={cn(
+                "w-full px-5 py-5 rounded-lg transition-colors",
+                "hover:bg-muted/50",
+                getSelectedStyles("/admin/agent-requests")
+              )}
+            >
+              <Link
+                href="/admin/agent-requests"
+                onClick={() => setOpenMobile(false)}
+                className="flex items-center gap-3"
+              >
+                <MessageSquare size={24} />
+                <span
+                  className={cn(
+                    "text-base",
+                    getSelectedStyles("/admin/agent-requests")
+                      ? "font-semibold"
+                      : "font-normal"
+                  )}
+                >
+                  Agent Requests
                 </span>
               </Link>
             </SidebarMenuButton>
