@@ -6,40 +6,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getRelativeTimeString } from "@/lib/utils";
 import { RagDocument } from "@/lib/db/schema";
+import { useRagDocuments } from '@/hooks/use-rag';
 
 export default function LibraryPage() {
-  const [documents] = useState<RagDocument[]>([
-    {
-      id: '1',
-      name: 'Computing-UG-Handbook-2425-v1b.pdf',
-      uploadedAt: new Date('2024-03-15T10:00:00'),
-      size: '2.4 MB',
-      type: 'PDF',
-      status: 'ready',
-      userId: 'dummy-user-id',
-      backendSourceId: 1
-    },
-    {
-      id: '2',
-      name: 'student-guidelines.docx',
-      uploadedAt: new Date('2024-03-14T15:30:00'),
-      size: '1.2 MB',
-      type: 'DOCX',
-      status: 'ready',
-      userId: 'dummy-user-id',
-      backendSourceId: 2
-    },
-    {
-      id: '3',
-      name: 'course-outline.txt',
-      uploadedAt: new Date('2024-03-13T09:15:00'),
-      size: '156 KB',
-      type: 'TXT',
-      status: 'ready',
-      userId: 'dummy-user-id',
-      backendSourceId: 3
-    }
-  ]);
+  const { data: documents, error } = useRagDocuments();
 
   const handleDownload = (doc: RagDocument) => {
     // TODO: Implement download logic here
@@ -80,7 +50,7 @@ export default function LibraryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {documents.map((doc) => (
+              {documents?.map((doc: RagDocument) => (
                 <tr key={doc.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center">
@@ -117,7 +87,7 @@ export default function LibraryPage() {
               ))}
             </tbody>
           </table>
-          {documents.length === 0 && (
+          {documents?.length === 0 && (
             <div className="text-center py-4 text-muted-foreground">
               No documents found
             </div>
