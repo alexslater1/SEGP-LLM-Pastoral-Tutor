@@ -91,3 +91,10 @@ def delete_doc(name):
 
     except Exception as e:
         print(f"An error occurred deleting the document: {e}")
+
+def download_doc(name):
+    try:
+        response = supabase.storage.from_(DOCUMENTS_BUCKET_NAME).download(name)
+        return response
+    except Exception as e:
+        print(f"An error occurred downloading the document: {e}")

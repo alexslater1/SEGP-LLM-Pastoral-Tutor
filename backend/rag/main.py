@@ -1,23 +1,25 @@
+from io import BytesIO
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from searcher import get_supabase_rag_chunks
 from dotenv import load_dotenv
-from document_uploader import fetch_docs, upload_doc, delete_doc
+from document_uploader import download_doc, fetch_docs, upload_doc, delete_doc
 from transformers import AutoTokenizer, AutoModel
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
 
-# Add CORS middleware configuration
+# Update CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Add any other frontend URLs as needed
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"]  # Important for file downloads
 )
 
 @app.get("/rag")
@@ -115,6 +117,26 @@ async def delete_rag_document(name: str):
         delete_doc(name)
         return {"response": "Document deleted"}
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/rag-doc/download")
+async def fetch_rag_documents(name: str):
+    print("Downloading documents")
+    try:
+        file = download_doc(name)
+        
+        # Create BytesIO object that can be streamed
+        file_stream = BytesIO(file)
+        
+        return StreamingResponse(
+            file_stream,
+            media_type="application/octet-stream",
+            headers={
+                "Content-Disposition": f"attachment; filename={name}"
+            }
+        )
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
