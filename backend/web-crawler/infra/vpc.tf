@@ -59,13 +59,22 @@ resource "aws_security_group" "worker_node" {
   description = "Security group for worker node"
   vpc_id      = aws_vpc.main.id
 
-  # No inbound rules needed since we're only making outbound requests
+  # Allow inbound HTTPS (443) from the security group itself for VPC endpoints
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    self        = true
+    description = "Allow HTTPS from tasks to VPC endpoints"
+  }
 
+  # Update the HTTPS egress rule to be more permissive
   egress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow HTTPS to anywhere instead of using prefix list
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow outbound HTTPS traffic"
   }
 
   egress {
@@ -79,16 +88,7 @@ resource "aws_security_group" "worker_node" {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    cidr_blocks = [aws_vpc.main.cidr_block] # Allow Redis access within VPC
-  }
-
-  # **Add an inbound rule for port 443 from the security group itself**
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    self        = true
-    description = "Allow CloudWatch endpoint responses"
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   tags = {
@@ -133,9 +133,45 @@ resource "aws_security_group" "redis" {
   }
 }
 
-# Data source for availability zones
-data "aws_availability_zones" "available" {
-  state = "available"
+# Security Group for AWS Service VPC Endpoints
+resource "aws_security_group" "vpc_endpoints" {
+  name        = "vpc-endpoints-sg"
+  description = "Security group for AWS service VPC endpoints"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port = 443
+    to_port   = 443
+    protocol  = "tcp"
+    security_groups = [
+      aws_security_group.worker_node.id,
+      aws_security_group.coordinator.id
+    ]
+    description = "Allow HTTPS from ECS tasks"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "vpc-endpoints-sg"
+  }
+}
+
+# VPC Endpoint for CloudWatch Logs
+resource "aws_vpc_endpoint" "cloudwatch_logs" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.logs"
+  vpc_endpoint_type = "Interface"
+
+  subnet_ids         = aws_subnet.public[*].id
+  security_group_ids = [aws_security_group.vpc_endpoints.id]
+
+  private_dns_enabled = true
 }
 
 # VPC Endpoint for CloudWatch
@@ -145,19 +181,39 @@ resource "aws_vpc_endpoint" "cloudwatch" {
   vpc_endpoint_type = "Interface"
 
   subnet_ids         = aws_subnet.public[*].id
-  security_group_ids = [aws_security_group.worker_node.id]
+  security_group_ids = [aws_security_group.vpc_endpoints.id]
 
   private_dns_enabled = true
 }
 
-# VPC Endpoint for CloudWatch Logs (needed for Lambda logging)
-resource "aws_vpc_endpoint" "cloudwatch_logs" {
-  vpc_id            = aws_vpc.main.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.logs"
-  vpc_endpoint_type = "Interface"
-
-  subnet_ids         = aws_subnet.public[*].id
-  security_group_ids = [aws_security_group.worker_node.id]
-
+# Update ECR endpoints to use the same security group
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.ecr.api"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.public[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.ecr.dkr"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.public[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  private_dns_enabled = true
+}
+
+# Add VPC Endpoint for S3 (needed for ECR to pull container images)
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.public.id]
+}
+
+# Data source for availability zones
+data "aws_availability_zones" "available" {
+  state = "available"
 }

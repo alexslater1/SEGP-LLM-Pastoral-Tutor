@@ -149,6 +149,15 @@ resource "aws_ecs_service" "coordinator" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
+  # Add explicit depends_on
+  depends_on = [
+    aws_cloudwatch_log_group.coordinator,
+    aws_lb_listener.coordinator,
+    aws_vpc_endpoint.cloudwatch_logs,
+    aws_vpc_endpoint.ecr_api,
+    aws_vpc_endpoint.ecr_dkr
+  ]
+
   network_configuration {
     subnets          = aws_subnet.public[*].id
     security_groups  = [aws_security_group.coordinator.id]
@@ -172,9 +181,9 @@ resource "aws_secretsmanager_secret_version" "redis_auth_token" {
   secret_string = var.redis_auth_token
 }
 
-# Add necessary permissions to ECS execution role for Secrets Manager
-resource "aws_iam_role_policy" "ecs_task_execution_role_policy_secrets" {
-  name = "ecs-task-execution-role-policy-secrets"
+# Update the ECS execution role policy
+resource "aws_iam_role_policy" "ecs_task_execution_role_policy" {
+  name = "ecs-task-execution-role-policy"
   role = aws_iam_role.ecs_execution_role.id
 
   policy = jsonencode({
@@ -183,17 +192,16 @@ resource "aws_iam_role_policy" "ecs_task_execution_role_policy_secrets" {
       {
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetSecretValue"
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
         ]
-        Resource = [
-          aws_secretsmanager_secret.redis_auth_token.arn
-        ]
+        Resource = "*"
       }
     ]
   })
-}
-
-# Output the ALB DNS name
-output "coordinator_endpoint" {
-  value = "http://${aws_lb.coordinator.dns_name}"
 }
