@@ -3,7 +3,7 @@ import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 import type { User } from 'next-auth';
 import { useTheme } from 'next-themes';
-import { signOutAction } from '@/app/(auth)/actions';
+import { signOutAction } from '@/app/(auth)/nextauth_actions';
 
 import {
   DropdownMenu,
