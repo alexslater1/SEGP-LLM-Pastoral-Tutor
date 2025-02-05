@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -46,14 +45,11 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 func (s *Server) routes() {
 	var (
 		redisAddress  = utils.Required(os.Getenv("REDIS_ADDRESS"), "REDIS_ADDRESS")
-		redisPort     = utils.RequiredInt(os.Getenv("REDIS_PORT"), "REDIS_PORT")
 		redisDB       = utils.RequiredInt(os.Getenv("REDIS_DB"), "REDIS_DB")
 		redisPassword = os.Getenv("REDIS_PASSWORD")
-
-		redisConnectionUrl = fmt.Sprintf("%s:%d", redisAddress, redisPort)
 	)
 
-	coordinatorClient := coordinator_client.NewRedisCoordinatorClient(context.Background(), redisConnectionUrl, redisPassword, redisDB)
+	coordinatorClient := coordinator_client.NewRedisCoordinatorClient(context.Background(), redisAddress, redisPassword, redisDB)
 
 	s.router.HandleFunc("GET /ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))

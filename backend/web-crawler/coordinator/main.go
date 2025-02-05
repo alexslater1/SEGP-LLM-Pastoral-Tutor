@@ -8,6 +8,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// docker run -p 8080:8080 -e REDIS_ADDRESS=host.docker.internal:6379 coordinator
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
