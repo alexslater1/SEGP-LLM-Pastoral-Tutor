@@ -6,18 +6,27 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getRelativeTimeString } from "@/lib/utils";
 import { RagDocument } from "@/lib/db/schema";
-import { useRagDocuments } from '@/hooks/use-rag';
+import { useDeleteRagDoc, useRagDocuments } from '@/hooks/use-rag';
 
 export default function LibraryPage() {
   const { data: documents, error } = useRagDocuments();
+  const deleteMutation = useDeleteRagDoc();
 
-  const handleDownload = (doc: RagDocument) => {
+  const handleDownload = async (doc: RagDocument) => {
     // TODO: Implement download logic here
+    
     toast.success(`Downloading ${doc.name}`);
   };
 
-  const handleDelete = (doc: RagDocument) => {
+  const handleDelete = async(doc: RagDocument) => {
     // TODO: Implement delete logic here
+    try {
+      await deleteMutation.mutateAsync(doc.name);
+      toast.success(`Deleted ${doc.name}`);
+    } catch (error) {
+      toast.error('Failed to delete files');
+      console.error('Delete error:', error);
+    }
     toast.success(`Deleted ${doc.name}`);
   };
 

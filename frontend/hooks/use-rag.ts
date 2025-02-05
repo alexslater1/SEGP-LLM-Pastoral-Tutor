@@ -109,3 +109,38 @@ export function useRagDocuments() {
     staleTime: 1000 * 60,
   });
 }
+
+const deleteRagDocument = async (name: string) => {
+  try {
+    console.log('Starting delete for:', name);
+    
+    const response = await fetch(`http://127.0.0.1:8000/rag-doc?name=${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Delete failed with status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Delete error details:', error);
+    throw error;
+  }
+};
+
+
+export function useDeleteRagDoc() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: deleteRagDocument,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rag-documents'] });
+    },
+    onError: (error: Error) => {
+      console.error("Delete failed", error);
+    },
+  });
+
+  return mutation;
+}
