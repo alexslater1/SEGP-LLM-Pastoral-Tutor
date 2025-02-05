@@ -110,6 +110,16 @@ resource "aws_security_group" "redis" {
     security_groups = [aws_security_group.worker_node.id]
   }
 
+  # GET RID OF THIS WHEN IN PRODUCTION -> set to whatever server is handling the scrape rag requests
+  # Temporary: Allow Redis access from anywhere (FOR TESTING ONLY)
+  ingress {
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "TEMPORARY - Allow Redis access from anywhere for testing"
+  }
+
   # Allow all outbound traffic
   egress {
     from_port   = 0
