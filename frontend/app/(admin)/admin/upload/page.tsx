@@ -2,32 +2,28 @@
 
 import { Button } from "@/components/ui/button";
 import { File, CloudUpload } from 'lucide-react';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getRelativeTimeString } from "@/lib/utils";
 import { RagDocument } from "@/lib/db/schema";
-import { useRagUploadDocs } from "@/hooks/use-rag";
+import { useRagDocuments, useRagUploadDocs } from "@/hooks/use-rag";
 
 const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
 };
 
 export default function UploadPage() {
-  const [documents, setDocuments] = useState<RagDocument[]>([
-    // TODO: Replace with actual documents from the database
-    {
-      id: '1',
-      name: 'dummy-doc.pdf',
-      uploadedAt: new Date(),
-      size: '2.4 MB',
-      type: 'PDF',
-      status: 'ready',
-      userId: 'dummy-user-id',
-      backendSourceId: 1
-    }
-  ]);
+  const { data: documents, error } = useRagDocuments();
   const [isDragging, setIsDragging] = useState(false);
   
+  useEffect(() => {
+    if (error) {
+      toast.error("Error fetching documents", {
+        description: error.message
+      });
+    }
+  }, [error]);
+
   const uploadMutation = useRagUploadDocs();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -90,19 +86,6 @@ export default function UploadPage() {
     try {
       await uploadMutation.mutateAsync(files);
       toast.success(`Uploaded ${files.length} file(s)`);
-      
-      const newDocuments = files.map(file => ({
-        id: Math.random().toString(36).slice(2, 11),
-        name: file.name,
-        uploadedAt: new Date(),
-        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-        type: getFileExtension(file.name).toUpperCase() as 'PDF' | 'DOCX' | 'TXT' | 'PPTX',
-        status: 'processing' as const,
-        userId: 'dummy-user-id',
-        backendSourceId: null
-      }));
-    
-      setDocuments(prev => [...prev, ...newDocuments]);
     } catch (error) {
       toast.error('Failed to upload files');
       console.error('Upload error:', error);
@@ -113,9 +96,10 @@ export default function UploadPage() {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    return documents
+    return documents ? documents
       .filter(doc => doc.uploadedAt > sevenDaysAgo)
-      .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime());
+      .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime())
+      : [];
   };
 
   const recentDocuments = getRecentDocuments();

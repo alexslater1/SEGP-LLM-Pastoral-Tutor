@@ -124,9 +124,9 @@ export const ragDocument = pgTable('RagDocument', {
   uploadedAt: timestamp('uploadedAt').notNull().defaultNow(),
   size: text('size').notNull(),
   type: varchar('type', { enum: ['PDF', 'DOCX', 'TXT', 'PPTX'] }).notNull(),
-  status: varchar('status', { enum: ['processing', 'ready', 'failed'] })
-    .notNull()
-    .default('processing'),
+  // status: varchar('status', { enum: ['processing', 'ready', 'failed'] })
+  //   .notNull()
+  //   .default('processing'),
   userId: uuid('userId')
     .notNull()
     .references(() => user.id),

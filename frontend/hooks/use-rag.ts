@@ -1,6 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { RagDocument } from "@/lib/db/schema";
+
+function humanReadableSize(sizeInBytes: number): string {
+  const units = ["B", "KB", "MB", "GB", "TB", "PB"];
+  let size = sizeInBytes;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+  }
+  return `${size.toFixed(2)} ${units[unitIndex]}`;
+}
 
 const uploadRagDocument = async (file: File) => {
   try {
@@ -28,17 +38,62 @@ const uploadRagDocument = async (file: File) => {
   }
 };
 
+type RagDocumentResponse = {
+    documents: Document[];
+}
 
+type Document = {
+  id: number;
+  name: string;
+  date_uploaded: string;
+  document_size: number;
+  document_type: string;
+  user_id?: number;
+  backend_source_id?: number;
+};
+
+const fetchRagDocuments = async (): Promise<RagDocument[]> => {
+  console.log("fetching docs");
+  const response = await fetch('http://127.0.0.1:8000/rag-doc', {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch RAG documents: ${response.status}`);
+  }
+
+  const resp = await response.json() as RagDocumentResponse;
+ 
+  console.log("RESP:", resp);
+  // Map over the array of documents from the API
+ 
+  const ragDocs: RagDocument[] = resp.documents.map((doc: Document) => ({
+      id: doc.id.toString(),
+      name: doc.name,
+      uploadedAt: new Date(doc.date_uploaded),
+      size: humanReadableSize(doc.document_size),
+      type: doc.document_type as "PDF" | "DOCX" | "TXT" | "PPTX",
+      userId: doc.user_id?.toString() ?? '-1',
+      backendSourceId: doc.backend_source_id ?? -1
+  }));
+
+  console.log("RagDocs:", ragDocs);
+  return ragDocs;
+};
 
 export function useRagUploadDocs() {
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async (files: File[]) => {
       const uploads = await Promise.all(files.map(uploadRagDocument));
       return uploads;
     },
-
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['rag-documents'] });
+    },
     onError: (error: Error) => {
       console.error("Upload failed", error);
     },
@@ -47,3 +102,10 @@ export function useRagUploadDocs() {
   return mutation;
 }
 
+export function useRagDocuments() {
+  return useQuery({
+    queryKey: ['rag-documents'],
+    queryFn: fetchRagDocuments,
+    staleTime: 1000 * 60,
+  });
+}
