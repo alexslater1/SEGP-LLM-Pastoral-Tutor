@@ -117,6 +117,7 @@ export async function POST(request: Request) {
       while (status.type === Status.PENDING) {
         await new Promise(resolve => setTimeout(resolve, 1000 * STATUS_QUERY_INTERVAL_SECONDS));
         let newStatus = await makeV2StatusQuery(queryID);
+        console.log(newStatus)
        
         if (newStatus.type === Status.FAILED || newStatus.type === Status.COMPLETED) {
           status = newStatus
