@@ -47,7 +47,7 @@ func NewToolCallResultEvent(requestId string, toolCallResult *string) AgentEvent
 		Type:      AgentEventTypeToolCallResult,
 		RequestID: requestId,
 		Data: map[string]interface{}{
-			"toolCallResult": toolCallResult,
+			"toolCallResult": *toolCallResult,
 		},
 	}
 }

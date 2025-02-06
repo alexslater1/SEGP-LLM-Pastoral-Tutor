@@ -77,8 +77,12 @@ func CleanText(text string) string {
 	var cleanedLines []string
 
 	for _, line := range lines {
+		// Collapse multiple spaces into a single space and trim
 		trimmed := strings.TrimSpace(line)
 		if trimmed != "" {
+			// Add regexp to replace multiple spaces with a single space
+			re := regexp.MustCompile(`\s+`)
+			trimmed = re.ReplaceAllString(trimmed, " ")
 			cleanedLines = append(cleanedLines, trimmed)
 		}
 	}

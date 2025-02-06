@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/segp/agents-main/clock"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/tools"
@@ -21,16 +22,18 @@ type FastAgent struct {
 	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
 	Knowledge   knowledge.Knowledge
+	Clock       clock.Clock
 
 	subscribers []chan AgentEvent
 }
 
-func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge) *FastAgent {
+func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock) *FastAgent {
 	return &FastAgent{
 		Background:  background,
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Knowledge:   knowledge,
+		Clock:       clock,
 
 		subscribers: []chan AgentEvent{},
 	}
@@ -82,13 +85,15 @@ func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string,
 	var prevToolCallResult *string
 	var prevToolCall *tools.ToolCall
 
+	var prevToolCalls []tools.ToolCall
+
 	for i := 0; i < maxIterations; i++ {
 		knowledgeContext, err := a.Knowledge.Get(query)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		thoughts, toolChoice, err := a.thinkAndChooseTool(i, query, knowledgeContext, prevThoughts, prevToolCall, prevToolCallResult, requestId)
+		thoughts, toolChoice, err := a.thinkAndChooseTool(i, query, knowledgeContext, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls, requestId)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -106,6 +111,7 @@ func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string,
 		prevThoughts = thoughts
 		prevToolCallResult = result
 		prevToolCall = toolChoice
+		prevToolCalls = append(prevToolCalls, *toolChoice)
 	}
 
 	return nil, nil, fmt.Errorf("failed to find answer after 10 iterations")
@@ -147,13 +153,13 @@ func structuredOutputToToolCall(structuredOutputCompletion *string) *tools.ToolC
 	}
 }
 
-func (a *FastAgent) thinkAndChooseTool(iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, requestId string) (*string, *tools.ToolCall, error) {
+func (a *FastAgent) thinkAndChooseTool(iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall, requestId string) (*string, *tools.ToolCall, error) {
 	kc := ""
 	if knowledgeContext != nil {
 		kc = *knowledgeContext
 	}
 
-	prompt, err := a.thinkingAndActPrompt(iteration, query, &kc, prevThoughts, prevToolCall, prevToolCallResult, requestId)
+	prompt, err := a.thinkingAndActPrompt(iteration, query, &kc, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls, requestId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -188,13 +194,13 @@ func (a *FastAgent) thinkAndChooseTool(iteration int, query string, knowledgeCon
 	return &thoughts, toolCall, nil
 }
 
-func (a *FastAgent) thinkingAndActPrompt(iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, requestId string) (*string, error) {
+func (a *FastAgent) thinkingAndActPrompt(iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall, requestId string) (*string, error) {
 	prompt := ""
 
 	if iteration == 0 {
 		prompt = fmt.Sprintf("You are a reAct agent. Your goal is to solve the following query: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", query, *knowledgeContext)
 	} else {
-		prompt = fmt.Sprintf("You are a reAct agent, currently in the process of solving the query: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`.", query, *prevThoughts, *prevToolCall, *prevToolCallResult)
+		prompt = fmt.Sprintf("You are a reAct agent, currently in the process of solving the query: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
 
 	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem."
@@ -204,9 +210,13 @@ func (a *FastAgent) thinkingAndActPrompt(iteration int, query string, knowledgeC
 		return nil, err
 	}
 
-	prompt += ` You have these tools at your disposal: ` + toolChoiceString + ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool. Information: The date and time is ` + time.Now().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
+	prompt += ` You have these tools at your disposal: ` + toolChoiceString + ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
 
-	prompt += ` Ensure to also provide a "description_of_action" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator. `
+	prompt += ` Ensure to also provide a "description_of_action" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator.`
+
+	if iteration > 0 {
+		prompt += fmt.Sprintf(" The tools you have alreaady called, in order of oldest to newest are: %s. Refrain from doing things you have already done.", a.formattedToolsStringFrom(prevToolCalls))
+	}
 
 	return &prompt, nil
 }
@@ -246,4 +256,12 @@ func (a *FastAgent) extractAnswerAndReason(requestId string, toolCall *tools.Too
 	// a.publish(NewAnswerSuccessEvent(requestId, answer, reason))
 
 	return &answer, &reason, nil
+}
+
+func (a *FastAgent) formattedToolsStringFrom(prevToolCalls []tools.ToolCall) string {
+	formattedToolsString := ""
+	for _, toolCall := range prevToolCalls {
+		formattedToolsString += fmt.Sprintf("Tool: %s, Arguments: %s\n", toolCall.Name, toolCall.Arguments)
+	}
+	return formattedToolsString
 }

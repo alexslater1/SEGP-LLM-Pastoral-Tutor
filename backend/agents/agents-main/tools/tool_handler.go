@@ -3,6 +3,7 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/knowledge"
@@ -110,6 +111,12 @@ func (t *ToolHandler) ToolDefinitions() []ToolDefinition {
 	for _, tool := range t.Tools {
 		toolDefinitions = append(toolDefinitions, tool.Definition())
 	}
+
+	// Sort toolDefinitions by Name
+	sort.Slice(toolDefinitions, func(i, j int) bool {
+		return toolDefinitions[i].Name < toolDefinitions[j].Name
+	})
+	
 	return toolDefinitions
 }
 

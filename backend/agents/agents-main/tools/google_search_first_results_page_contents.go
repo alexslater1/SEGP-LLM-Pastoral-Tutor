@@ -71,7 +71,7 @@ func (g *GoogleSearchFirstResultsPageContentsTool) GoogleSearchFirstResultsPageC
 		}
 
 		// Remove unwanted elements
-		doc.Find("script, style, noscript, iframe, header, footer, nav, aside").Remove()
+		doc.Find("script, style, noscript, iframe, header, footer, nav, aside, a, button, input, textarea, select, form").Remove()
 
 		// Try to find main content area in order of likelihood
 		var content string
@@ -96,12 +96,12 @@ func (g *GoogleSearchFirstResultsPageContentsTool) GoogleSearchFirstResultsPageC
 		}
 
 		// Limit content length (e.g., first 1000 characters)
-		const maxChars = 1000
+		const maxChars = 4000
 		if len(content) > maxChars {
 			content = content[:maxChars] + "..."
 		}
 
-		pageContents[i] = content + "\n"
+		pageContents[i] = fmt.Sprintf("URL: %s\n%s", topNUrls[i], content)
 	}
 
 	pageContentsStr := strings.Join(pageContents, "\n\n")

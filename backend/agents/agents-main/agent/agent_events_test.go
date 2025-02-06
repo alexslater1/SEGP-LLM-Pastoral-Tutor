@@ -37,7 +37,7 @@ func TestNewToolCallResultEvent(t *testing.T) {
 
 	assert.Equal(t, AgentEventTypeToolCallResult, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
-	assert.Equal(t, &result, event.Data["toolCallResult"])
+	assert.Equal(t, result, event.Data["toolCallResult"])
 }
 
 func TestNewAnswerSuccessEvent(t *testing.T) {

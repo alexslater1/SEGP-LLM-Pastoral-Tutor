@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/segp/agents-main/clock"
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
@@ -38,6 +39,7 @@ func NewDefaultFastAgent() Agent {
 		toolHandler        = tools.NewGoogleSearchToolHandler(googleSearchClient)
 		llm                = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
 		knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+		clock              = clock.NewRealClock()
 	)
 
 	return NewFastAgent(
@@ -45,6 +47,7 @@ func NewDefaultFastAgent() Agent {
 		toolHandler,
 		llm,
 		knowledge,
+		clock,
 	)
 }
 
