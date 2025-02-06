@@ -14,7 +14,6 @@ export default function LibraryPage() {
   const downloadMutation = useDownloadRagDoc();
 
   const handleDownload = async (doc: RagDocument) => {
-    // TODO: Implement download logic here
     try {
       await downloadMutation.mutateAsync(doc.name);
       toast.success(`Downloaded ${doc.name}`);
@@ -25,7 +24,6 @@ export default function LibraryPage() {
   };
 
   const handleDelete = async(doc: RagDocument) => {
-    // TODO: Implement delete logic here
     try {
       await deleteMutation.mutateAsync(doc.name);
       toast.success(`Deleted ${doc.name}`);

@@ -90,13 +90,33 @@ export function useRagUploadDocs() {
       const uploads = await Promise.all(files.map(uploadRagDocument));
       return uploads;
     },
-    onSuccess: () => {
-      // Invalidate and refetch
+    onMutate: async (files: File[]) => {
+      await queryClient.cancelQueries({ queryKey: ['rag-documents'] });
+      const previousDocs = queryClient.getQueryData<RagDocument[]>(['rag-documents']) ?? [];
+      const optimisticDocs: RagDocument[] = files.map(file => ({
+        id: `-1`,
+        name: file.name,
+        uploadedAt: new Date(),
+        size: 'Uploading...',
+        type: file.name.split('.').pop()?.toUpperCase() as "PDF" | "DOCX" | "TXT" | "PPTX",
+        userId: '-1',
+        backendSourceId: -1
+      }));
+      queryClient.setQueryData<RagDocument[]>(
+        ['rag-documents'],
+        old => [...(old ?? []), ...optimisticDocs]
+      );
+      return { previousDocs }
+    },
+    onError: (err: Error, variables: File[], context?: { previousDocs: RagDocument[] }) => {
+      if (context?.previousDocs) {
+        queryClient.setQueryData(['rag-documents'], context.previousDocs);
+      }
+      console.error("Upload failed", err);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['rag-documents'] });
-    },
-    onError: (error: Error) => {
-      console.error("Upload failed", error);
-    },
+    }
   });
 
   return mutation;
