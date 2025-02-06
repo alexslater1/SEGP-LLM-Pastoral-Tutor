@@ -74,6 +74,10 @@ export class ResponseData {
         return this.message
     }
 
+    getAnnotations(): string { 
+        return JSON.stringify(this.annotations)
+    }
+
     toResponse() {
         // Not sure exactly what these two are needed for they appear to be required for indicating 
         // the response stream is complete for the AI SDK
@@ -86,8 +90,8 @@ export class ResponseData {
     }
 }
 
-async function executeWithCallback(execute: (response: ResponseData) => void, 
-                                   onFinish: (response: ResponseData) => void,
+async function executeAsyncInOrder(execute: (response: ResponseData) => Promise<void>, 
+                                   onFinish: (response: ResponseData) => Promise<void>,
                                    response: ResponseData): Promise<void> {
     await execute(response)
     await onFinish(response)
@@ -95,8 +99,9 @@ async function executeWithCallback(execute: (response: ResponseData) => void,
 }
 
 export function createResponse({execute, onFinish}: 
-    {execute: (response: ResponseData) => void, onFinish: (response: ResponseData) => void}): Response {
+    {execute: (response: ResponseData) => Promise<void>,
+     onFinish: (response: ResponseData) => Promise<void>}): Response {
     let responseData = new ResponseData(MessageRole.ASSISTANT)
-    executeWithCallback(execute, onFinish, responseData)
+    executeAsyncInOrder(execute, onFinish, responseData)
     return responseData.toResponse()
 }

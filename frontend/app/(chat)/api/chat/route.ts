@@ -140,13 +140,15 @@ export async function POST(request: Request) {
             });
           }
 
+          console.log("Saving:" + response.getMessage())
+
           await saveMessages({
             messages: [{
               id: messageId,
               chatId: id,
               role: response.getMessageRole(),
               content: response.getMessage(),
-              annotations: {},
+              annotations: response.getAnnotations(),
               createdAt: new Date(),
             }]
           })

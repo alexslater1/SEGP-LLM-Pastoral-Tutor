@@ -62,7 +62,7 @@ const PurePreviewMessage = ({
       return message.content.trim()
     }
         
-    return parsedAnnotation.current_action || "Thinking"
+    return parsedAnnotation.current_action || "Thinking..."
   }
 
   return (
