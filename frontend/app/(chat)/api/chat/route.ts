@@ -129,8 +129,10 @@ export async function POST(request: Request) {
           response.updateUIMessage()
         }
       }
+      console.log("finished")
     },
     onFinish: async (response) => {
+      console.log("starting")
       if (session.user?.id) {
         try {
           const messageId = generateUUID();
