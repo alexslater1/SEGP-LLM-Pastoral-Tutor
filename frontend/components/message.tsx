@@ -44,10 +44,6 @@ const PurePreviewMessage = ({
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
-  useEffect(() => {
-    console.log(message.annotations)
-  });
-
   function getLastStatusOrMessage(): string {
     if (!message.annotations || message.content.trim() !== "") {
       return message.content.trim()

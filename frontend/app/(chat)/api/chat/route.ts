@@ -56,7 +56,7 @@ const blocksTools: AllowedTools[] = [
   'requestSuggestions',
 ];
 
-export const maxDuration = 60; // Setting timeout for Vercel serverless functions
+export const maxDuration = 60; // Setting timeout for Vercel /api/chat serverless function
 
 const weatherTools: AllowedTools[] = ['getWeather'];
 
@@ -119,7 +119,6 @@ export async function POST(request: Request) {
       while (status.type === Status.PENDING) {
         await new Promise(resolve => setTimeout(resolve, 1000 * STATUS_QUERY_INTERVAL_SECONDS));
         let newStatus = await makeV2StatusQuery(queryID);
-        console.log(newStatus)
        
         if (newStatus.type === Status.FAILED || newStatus.type === Status.COMPLETED) {
           status = newStatus
@@ -132,10 +131,8 @@ export async function POST(request: Request) {
           response.updateUIMessage()
         }
       }
-      console.log("finished")
     },
     onFinish: async (response) => {
-      console.log("starting")
       if (session.user?.id) {
         try {
           const messageId = generateUUID();
@@ -144,8 +141,6 @@ export async function POST(request: Request) {
               messageIdFromServer: messageId,
             });
           }
-
-          console.log("Saving:" + response.getMessage())
 
           await saveMessages({
             messages: [{
