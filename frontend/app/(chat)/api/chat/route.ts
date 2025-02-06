@@ -56,6 +56,8 @@ const blocksTools: AllowedTools[] = [
   'requestSuggestions',
 ];
 
+export const maxDuration = 60; // Setting timeout for Vercel serverless functions
+
 const weatherTools: AllowedTools[] = ['getWeather'];
 
 const allTools: AllowedTools[] = [...blocksTools, ...weatherTools];
