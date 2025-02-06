@@ -1,13 +1,26 @@
+from io import BytesIO
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from searcher import get_supabase_rag_chunks
 from dotenv import load_dotenv
-from document_uploader import upload_doc, delete_doc
+from document_uploader import download_doc, fetch_docs, upload_doc, delete_doc
 from transformers import AutoTokenizer, AutoModel
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
+
+# Update CORS middleware configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["Content-Disposition"]  # Important for file downloads
+)
 
 @app.get("/rag")
 async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold: float = 0.5):
@@ -57,10 +70,23 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
 
 @app.post("/rag-doc")
 async def upload_rag_document(file: UploadFile = File(...)):
+    print("Uploading document:", file.filename)
     try:
         # Embed and upload document chunks to database
         await upload_doc(file)
         return {"response": "Document uploaded"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/rag-doc")
+async def fetch_rag_documents():
+    print("Fetching documents")
+    try:
+        docs = fetch_docs()
+        print("Documents:", docs)
+        return {"documents": docs}
+
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -91,6 +117,26 @@ async def delete_rag_document(name: str):
         delete_doc(name)
         return {"response": "Document deleted"}
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/rag-doc/download")
+async def fetch_rag_documents(name: str):
+    print("Downloading documents")
+    try:
+        file = download_doc(name)
+        
+        # Create BytesIO object that can be streamed
+        file_stream = BytesIO(file)
+        
+        return StreamingResponse(
+            file_stream,
+            media_type="application/octet-stream",
+            headers={
+                "Content-Disposition": f"attachment; filename={name}"
+            }
+        )
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

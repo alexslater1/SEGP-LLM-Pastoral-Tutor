@@ -126,6 +126,12 @@ func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
 }
 
 func chatCompletionV2StatusResponseFromEventsFastAgent(events []storage.AgentEvent) *ChatCompletionV2StatusResponse {
+	if len(events) == 0 {
+		return &ChatCompletionV2StatusResponse{
+			Type: ChatCompletionV2StatusResponseTypePending,
+		}
+	}
+
 	newestEvent := events[0]
 	for _, event := range events {
 		if event.CreatedAt.After(*newestEvent.CreatedAt) {
