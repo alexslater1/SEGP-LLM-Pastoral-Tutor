@@ -94,6 +94,7 @@ async function executeAsyncInOrder(execute: (response: ResponseData) => Promise<
                                    onFinish: (response: ResponseData) => Promise<void>,
                                    response: ResponseData): Promise<void> {
     await execute(response)
+    console.log("Finished executing")
     await onFinish(response)
     response.closeStream()
 }

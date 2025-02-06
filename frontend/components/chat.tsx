@@ -68,6 +68,19 @@ export function Chat({
           isReadonly={isReadonly}
         />
 
+        {messages.length == 0 && (
+          <div className="flex flex-col items-center justify-center h-dvh p-16">
+            <div className="text-center text-white">
+              <p className="text-5xl font-bold">
+                Hi, I’m the Imperial College tutor agent
+              </p>
+              <p className="text-4xl font-bold p-8">
+                Ask me anything
+              </p>
+            </div>
+          </div>
+        )}
+
         <Messages
           chatId={id}
           isLoading={isLoading}

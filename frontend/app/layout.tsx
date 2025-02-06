@@ -7,9 +7,10 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://chat.vercel.ai"),
-  title: "Next.js Chatbot Template",
-  description: "Next.js chatbot template using the AI SDK.",
+  metadataBase: new URL("https://segp-frontend.vercel.app"),
+  title: "Imperial College Tutor Agent",
+  description: "A web app for Imperial College students to message an AI agent " +
+    "as a first call before their personal tutor.",
 };
 
 export const viewport = {
