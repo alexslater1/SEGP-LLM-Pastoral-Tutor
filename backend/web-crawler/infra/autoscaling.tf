@@ -47,7 +47,7 @@ resource "aws_security_group_rule" "lambda_to_redis" {
   security_group_id        = aws_security_group.elasticache.id
 }
 
-# CloudWatch Event Rule to trigger Lambda every minute
+# CloudWatch Event Rule to trigger Lambda every 30 seconds
 resource "aws_cloudwatch_event_rule" "queue_metrics" {
   name                = "queue-metrics-rule"
   description         = "Trigger queue metrics Lambda function"
@@ -70,7 +70,7 @@ resource "aws_lambda_permission" "allow_eventbridge" {
 
 # Auto Scaling for RAG Service
 resource "aws_appautoscaling_target" "rag" {
-  max_capacity       = 5
+  max_capacity       = 150
   min_capacity       = 1
   resource_id        = "service/${aws_ecs_cluster.rag.name}/${aws_ecs_service.rag.name}"
   scalable_dimension = "ecs:service:DesiredCount"
@@ -85,9 +85,9 @@ resource "aws_appautoscaling_policy" "rag_queue" {
   service_namespace  = aws_appautoscaling_target.rag.service_namespace
 
   target_tracking_scaling_policy_configuration {
-    target_value       = 10.0 # Scale when there are more than 10 items in queue
-    scale_in_cooldown  = 300  # 5 minutes
-    scale_out_cooldown = 60   # 1 minute
+    target_value       = 10.0
+    scale_in_cooldown  = 30
+    scale_out_cooldown = 30
 
     customized_metric_specification {
       metric_name = "RAGQueueLength"
@@ -105,7 +105,7 @@ resource "aws_appautoscaling_policy" "rag_queue" {
 
 # Auto Scaling for Scraper Service
 resource "aws_appautoscaling_target" "scraper" {
-  max_capacity       = 5
+  max_capacity       = 10
   min_capacity       = 1
   resource_id        = "service/${aws_ecs_cluster.scraper.name}/${aws_ecs_service.scraper.name}"
   scalable_dimension = "ecs:service:DesiredCount"
@@ -120,9 +120,9 @@ resource "aws_appautoscaling_policy" "scraper_queue" {
   service_namespace  = aws_appautoscaling_target.scraper.service_namespace
 
   target_tracking_scaling_policy_configuration {
-    target_value       = 20.0 # Scale when there are more than 20 items in queue
-    scale_in_cooldown  = 300  # 5 minutes
-    scale_out_cooldown = 60   # 1 minute
+    target_value       = 100.0
+    scale_in_cooldown  = 30
+    scale_out_cooldown = 30
 
     customized_metric_specification {
       metric_name = "ScraperQueueLength"
