@@ -81,6 +81,27 @@ resource "aws_iam_role_policy" "ecs_task_custom_policy" {
   })
 }
 
+# Add Secrets Manager access to ECS Task Execution Role
+resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
+  name = "ecs-task-execution-secrets"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [
+          aws_secretsmanager_secret.redis_password.arn
+        ]
+      }
+    ]
+  })
+}
+
 # 3. Auto Scaling Role
 resource "aws_iam_role" "ecs_autoscaling_role" {
   name = "ecs-autoscaling-role"
