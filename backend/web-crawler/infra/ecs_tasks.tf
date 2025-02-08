@@ -31,7 +31,7 @@ resource "aws_ecs_task_definition" "queue_api" {
 
       environment = [
         {
-          name  = "REDIS_ADDR"
+          name  = "REDIS_ADDRESS"
           value = "${aws_elasticache_replication_group.queue.primary_endpoint_address}:6379"
         },
         {
