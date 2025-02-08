@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"github.com/ethanhosier/worker-node/ragger"
 	"github.com/ethanhosier/worker-node/scraper"
 	"github.com/ethanhosier/worker-node/storage"
+	"github.com/ethanhosier/worker-node/utils"
 	"github.com/ethanhosier/worker-node/worker_manager"
 	"github.com/joho/godotenv"
 )
@@ -26,34 +26,26 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	// Add command line flags
-	workerType := flag.String("worker", "", "Type of worker to run (scraper or rag)")
-	concurrency := flag.Int("concurrency", 0, "Number of concurrent workers (only used for scraper)")
-	redisAddr := flag.String("redis-addr", "localhost:6379", "Redis server address")
-	redisPassword := flag.String("redis-password", "", "Redis password")
-	redisDB := flag.Int("redis-db", 0, "Redis database number")
-	flag.Parse()
+	redisAddr := utils.Required(os.Getenv("REDIS_ADDR"), "REDIS_ADDR")
+	redisPassword := utils.Required(os.Getenv("REDIS_PASSWORD"), "REDIS_PASSWORD")
+	redisDB := utils.RequiredInt(os.Getenv("REDIS_DB"), "REDIS_DB")
 
-	if *workerType == "" {
-		log.Fatal("Please specify a worker type using -worker flag (scraper or rag)")
-	}
-
-	if *workerType == "scraper" && *concurrency == 0 {
-		log.Fatal("Please specify a concurrency using -concurrency flag (scraper)")
-	}
+	workerType := utils.Required(os.Getenv("WORKER_TYPE"), "WORKER_TYPE")
 
 	var (
 		coordinatorClient = coordinator_client.NewRedisCoordinatorClient(
 			context.TODO(),
-			*redisAddr,
-			*redisPassword,
-			*redisDB,
+			redisAddr,
+			redisPassword,
+			redisDB,
 		)
 	)
 
-	switch *workerType {
+	switch workerType {
 	case "scraper":
-		_, errCh := startScraperWorkerManager(coordinatorClient, *concurrency)
+		concurrency := utils.RequiredInt(os.Getenv("CONCURRENCY"), "CONCURRENCY")
+
+		_, errCh := startScraperWorkerManager(coordinatorClient, concurrency)
 		for err := range errCh {
 			log.Fatalf("Error: %v", err)
 		}
@@ -63,7 +55,7 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 	default:
-		log.Fatalf("Unknown worker type: %s", *workerType)
+		log.Fatalf("Unknown worker type: %s", workerType)
 	}
 
 	select {}

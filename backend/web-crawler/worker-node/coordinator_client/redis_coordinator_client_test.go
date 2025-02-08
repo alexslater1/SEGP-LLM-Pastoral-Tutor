@@ -28,7 +28,7 @@ func TestRedisCoordinatorClientCreateTask(t *testing.T) {
 		t.Skip("Skipping test in CICD")
 	}
 
-	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "password", 1)
 
 	taskParams := map[string]string{
 		"url": "https://ethanhosier.com",
