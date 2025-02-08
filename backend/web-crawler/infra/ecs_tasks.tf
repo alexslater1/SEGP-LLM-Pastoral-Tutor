@@ -32,7 +32,7 @@ resource "aws_ecs_task_definition" "queue_api" {
       environment = [
         {
           name  = "REDIS_ADDR"
-          value = aws_elasticache_cluster.main.cache_nodes[0].address
+          value = "${aws_elasticache_replication_group.queue.primary_endpoint_address}:6379"
         },
         {
           name  = "REDIS_DB"
@@ -79,7 +79,7 @@ resource "aws_ecs_task_definition" "rag_worker" {
       environment = [
         {
           name  = "REDIS_ADDR"
-          value = aws_elasticache_cluster.main.cache_nodes[0].address
+          value = "${aws_elasticache_replication_group.queue.primary_endpoint_address}:6379"
         },
         {
           name  = "REDIS_DB"
@@ -130,7 +130,7 @@ resource "aws_ecs_task_definition" "scraper_worker" {
       environment = [
         {
           name  = "REDIS_ADDR"
-          value = aws_elasticache_cluster.main.cache_nodes[0].address
+          value = "${aws_elasticache_replication_group.queue.primary_endpoint_address}:6379"
         },
         {
           name  = "REDIS_DB"

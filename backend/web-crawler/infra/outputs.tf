@@ -11,13 +11,13 @@ output "worker_repository_url" {
 
 # Redis
 output "redis_endpoint" {
-  description = "The endpoint of the Redis cluster"
-  value       = aws_elasticache_cluster.main.cache_nodes[0].address
+  description = "The endpoint of the Redis replication group"
+  value       = aws_elasticache_replication_group.queue.primary_endpoint_address
 }
 
 output "redis_port" {
-  description = "The port of the Redis cluster"
-  value       = aws_elasticache_cluster.main.cache_nodes[0].port
+  description = "The port of the Redis replication group"
+  value       = "6379"
 }
 
 # CloudWatch Log Groups

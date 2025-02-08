@@ -39,26 +39,21 @@ resource "aws_elasticache_parameter_group" "main" {
     name  = "maxmemory-policy"
     value = "allkeys-lru"
   }
+
 }
 
-# Elasticache Redis cluster
-resource "aws_elasticache_cluster" "main" {
-  cluster_id           = "redis-queue"
-  engine               = "redis"
-  node_type            = "cache.t4g.micro" # Smallest instance for dev, adjust for production
-  num_cache_nodes      = 1
+resource "aws_elasticache_replication_group" "queue" {
+  replication_group_id = "redis-queue"
+  description          = "Worker queue redis"
+  node_type            = "cache.t4g.micro"
+  num_cache_clusters   = 1
   parameter_group_name = aws_elasticache_parameter_group.main.name
   port                 = 6379
   security_group_ids   = [aws_security_group.elasticache.id]
   subnet_group_name    = aws_elasticache_subnet_group.main.name
 
-  # Recommended settings
-  apply_immediately  = true
-  az_mode            = "single-az" # Use multi-az for production
-  maintenance_window = "sun:05:00-sun:06:00"
-
-  tags = {
-    Name = "redis-queue"
-  }
+  auth_token                 = var.redis_password
+  transit_encryption_enabled = true
+  at_rest_encryption_enabled = true
 }
 

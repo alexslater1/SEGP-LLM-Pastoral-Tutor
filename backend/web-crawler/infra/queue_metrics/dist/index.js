@@ -10,6 +10,7 @@ const handler = async (_event) => {
     const redisHost = process.env.REDIS_HOST;
     const redisPort = process.env.REDIS_PORT || "6379";
     const redisPassword = process.env.REDIS_PASSWORD;
+    const redisDatabase = process.env.REDIS_DB || "0";
     if (!redisHost) {
         console.error("Missing REDIS_HOST environment variable.");
         throw new Error("REDIS_HOST not defined");
@@ -27,6 +28,7 @@ const handler = async (_event) => {
             tls: true,
         },
         password: redisPassword,
+        database: Number(redisDatabase),
     });
     client.on("error", (err) => {
         console.error("Redis Client Error", err);

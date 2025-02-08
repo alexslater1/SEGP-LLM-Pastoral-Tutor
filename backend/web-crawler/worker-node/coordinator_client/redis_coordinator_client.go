@@ -2,6 +2,7 @@ package coordinator_client
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"time"
 
@@ -17,6 +18,9 @@ func NewRedisCoordinatorClient(ctx context.Context, address string, password str
 		Addr:     address,
 		Password: password,
 		DB:       db,
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	})
 
 	if err := redisClient.Ping(context.Background()).Err(); err != nil {

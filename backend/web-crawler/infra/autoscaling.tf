@@ -10,7 +10,7 @@ resource "aws_lambda_function" "queue_metrics" {
 
   environment {
     variables = {
-      REDIS_HOST     = aws_elasticache_cluster.main.cache_nodes[0].address
+      REDIS_HOST     = aws_elasticache_replication_group.queue.primary_endpoint_address
       REDIS_PORT     = "6379"
       REDIS_PASSWORD = var.redis_password
       REDIS_DB       = "1"

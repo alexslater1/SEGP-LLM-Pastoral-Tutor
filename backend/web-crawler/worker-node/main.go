@@ -30,6 +30,8 @@ func main() {
 	redisPassword := utils.Required(os.Getenv("REDIS_PASSWORD"), "REDIS_PASSWORD")
 	redisDB := utils.RequiredInt(os.Getenv("REDIS_DB"), "REDIS_DB")
 
+	log.Printf("Redis address: %s, password: %s, db: %d", redisAddr, redisPassword, redisDB)
+
 	workerType := utils.Required(os.Getenv("WORKER_TYPE"), "WORKER_TYPE")
 
 	var (

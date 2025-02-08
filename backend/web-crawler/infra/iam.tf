@@ -156,7 +156,8 @@ resource "aws_iam_role_policy" "ecs_task_role_policy" {
         Action = [
           "cloudwatch:PutMetricData",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "elasticache:*"
         ]
         Resource = "*"
       }
