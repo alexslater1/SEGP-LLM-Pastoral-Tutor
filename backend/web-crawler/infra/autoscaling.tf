@@ -1,11 +1,12 @@
 # Lambda function for queue metrics
 resource "aws_lambda_function" "queue_metrics" {
-  filename      = "queue_metrics.zip"
-  function_name = "queue-metrics"
-  role          = aws_iam_role.lambda_role.arn
-  handler       = "index.handler"
-  runtime       = "nodejs22.x"
-  timeout       = 30
+  filename         = "queue_metrics.zip"
+  function_name    = "queue-metrics"
+  source_code_hash = filebase64sha256("queue_metrics.zip")
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "dist/index.handler"
+  runtime          = "nodejs22.x"
+  timeout          = 30
 
   environment {
     variables = {
