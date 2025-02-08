@@ -13,7 +13,7 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a" # Change this to your desired AZ
+  availability_zone       = "eu-west-2a" # Changed to London AZ
   map_public_ip_on_launch = true
 
   tags = {
@@ -25,7 +25,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1a" # Change this to your desired AZ
+  availability_zone = "eu-west-2a" # Changed to London AZ
 
   tags = {
     Name = "private-subnet"
@@ -74,4 +74,33 @@ resource "aws_route_table" "private" {
 resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private.id
   route_table_id = aws_route_table.private.id
+}
+
+# Elastic IP for NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "nat-eip"
+  }
+}
+
+# NAT Gateway
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id # Place it in the public subnet
+
+  tags = {
+    Name = "main-nat"
+  }
+
+  # Good practice to ensure the Internet Gateway is available before creating the NAT Gateway
+  depends_on = [aws_internet_gateway.main]
+}
+
+# Update the private route table to route through NAT Gateway
+resource "aws_route" "private_nat_gateway" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main.id
 }
