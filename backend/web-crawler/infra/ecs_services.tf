@@ -8,7 +8,7 @@ resource "aws_security_group" "queue_api" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow direct access from internet
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -49,9 +49,9 @@ resource "aws_ecs_service" "queue_api" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.public.id]
+    subnets          = [aws_subnet.private.id]
     security_groups  = [aws_security_group.queue_api.id]
-    assign_public_ip = true
+    assign_public_ip = false
   }
 }
 

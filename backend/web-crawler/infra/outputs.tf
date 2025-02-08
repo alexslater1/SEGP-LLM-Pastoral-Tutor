@@ -1,9 +1,3 @@
-# Queue API
-output "queue_api_public_ip" {
-  description = "The public IP of the Queue API service"
-  value       = aws_ecs_service.queue_api.network_configuration[0].assign_public_ip
-}
-
 # ECR Repository URLs
 output "queue_api_repository_url" {
   description = "The URL of the Queue API ECR repository"
