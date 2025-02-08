@@ -4,7 +4,7 @@ resource "aws_lambda_function" "queue_metrics" {
   function_name = "queue-metrics"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs22.x"
   timeout       = 30
 
   environment {
