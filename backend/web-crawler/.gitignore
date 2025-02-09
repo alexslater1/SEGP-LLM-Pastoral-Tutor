@@ -1,2 +1,6 @@
 **/.terraform
 terraform.tfvars
+
+.env
+queue_metrics.zip
+node_modules

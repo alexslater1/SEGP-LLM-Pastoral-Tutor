@@ -28,7 +28,7 @@ func TestRedisCoordinatorClientCreateTask(t *testing.T) {
 		t.Skip("Skipping test in CICD")
 	}
 
-	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "password", 1)
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
 
 	taskParams := map[string]string{
 		"url": "https://ethanhosier.com",
@@ -175,7 +175,7 @@ https://www.imperial.ac.uk/study/fees-and-funding/scholarships-search/
 https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/ib-excellence/
 https://www.imperial.ac.uk/study/fees-and-funding/undergraduate/bursaries-grants-scholarships/presidential-scholarships-black-heritage-students/`
 
-	client := NewRedisCoordinatorClient(context.Background(), "worker-queue-001.worker-queue.acdafh.euw2.cache.amazonaws.com:6379", "passwordpassword", 0)
+	client := NewRedisCoordinatorClient(context.Background(), "18.133.156.65:6379", "password", 0)
 	urls := strings.Split(links, "\n")
 
 	for _, url := range urls {
@@ -297,4 +297,94 @@ func TestRedisCoordinatorClientStoreError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to store error : %v", err)
 	}
+}
+
+func TestRedisCoordinatorClientCreateTasks(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	params1 := map[string]string{
+		"url": "https://ethanhosier.com",
+	}
+	task1, err := NewTask("37407602-a309-4afd-8b77-efa91d808bf3", "asdasdasd", params1)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	params2 := map[string]string{
+		"url": "https://ethanhosier.com/blog",
+	}
+	task2, err := NewTask("37407602-a309-4afd-8b77-efa91d808bf3", "asdasdasd", params2)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	client.CreateTasks(context.Background(), CoordinatorClientTaskTopicUrls, []*Task{task1, task2})
+}
+
+func TestRedisCoordinatorClientNumTasks(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	numTasks, err := client.NumTasks(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of tasks: %v", err)
+	}
+
+	assert.Equal(t, numTasks, 5)
+}
+
+func TestRedisCoordinatorClientNumProcessingTasks(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	numProcessingTasks, err := client.NumProcessingTasks(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get number of processing tasks: %v", err)
+	}
+
+	assert.Equal(t, numProcessingTasks, 0)
+}
+
+func TestRedisCoordinatorClientGetErrors(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CICD")
+	}
+
+	client := NewRedisCoordinatorClient(context.Background(), "localhost:6379", "", 0)
+
+	errors, err := client.GetErrors(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get errors: %v", err)
+	}
+
+	assert.Equal(t, len(errors), 0)
+	params := map[string]string{
+		"url": "https://ethanhosier.com",
+	}
+	task, err := NewTask("37407602-a309-4afd-8b77-efa91d808bf3", "asdasdasd", params)
+	if err != nil {
+		t.Fatalf("Failed to create task: %v", err)
+	}
+
+	if err := client.StoreError(context.Background(), CoordinatorClientTaskTopicUrls, task, fmt.Errorf("an error")); err != nil {
+		t.Fatalf("Failed to store error: %v", err)
+	}
+
+	errors, err = client.GetErrors(context.Background(), CoordinatorClientTaskTopicUrls)
+	if err != nil {
+		t.Fatalf("Failed to get errors: %v", err)
+	}
+
+	assert.Equal(t, len(errors), 1)
+	assert.Equal(t, errors[0].Error, "an error")
 }

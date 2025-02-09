@@ -1,5 +1,5 @@
 variable "redis_password" {
-  description = "Password for Redis authentication"
+  description = "Password for Redis"
   type        = string
-  sensitive   = true # Marks this variable as sensitive in logs
+  sensitive   = true
 }

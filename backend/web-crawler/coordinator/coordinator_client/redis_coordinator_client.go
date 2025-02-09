@@ -41,6 +41,23 @@ func (r *RedisCoordinatorClient) CreateTask(ctx context.Context, topic Coordinat
 	return r.redisClient.RPush(ctx, topic.String(), taskString).Err()
 }
 
+func (r *RedisCoordinatorClient) CreateTasks(ctx context.Context, topic CoordinatorClientTaskTopic, tasks []*Task) error {
+	taskStrings := make([]string, 0, len(tasks))
+	for _, task := range tasks {
+		taskString, err := task.toString()
+		if err != nil {
+			return err
+		}
+		taskStrings = append(taskStrings, taskString)
+	}
+
+	taskInterfaces := make([]interface{}, len(taskStrings))
+	for i, v := range taskStrings {
+		taskInterfaces[i] = v
+	}
+	return r.redisClient.RPush(ctx, topic.String(), taskInterfaces...).Err()
+}
+
 func (r *RedisCoordinatorClient) GetTask(ctx context.Context, timeout time.Duration, topic CoordinatorClientTaskTopic) (*Task, error) {
 	result, err := r.redisClient.BLPop(ctx, timeout, topic.String()).Result()
 	if err == redis.Nil {
@@ -112,4 +129,38 @@ func (r *RedisCoordinatorClient) StoreError(ctx context.Context, topic Coordinat
 	}
 
 	return r.redisClient.RPush(ctx, "errors", storedErrorString).Err()
+}
+
+func (r *RedisCoordinatorClient) NumTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error) {
+	numTasks, err := r.redisClient.LLen(ctx, topic.String()).Result()
+	if err != nil {
+		return 0, err
+	}
+	return int(numTasks), nil
+}
+
+func (r *RedisCoordinatorClient) NumProcessingTasks(ctx context.Context, topic CoordinatorClientTaskTopic) (int, error) {
+	numProcessingTasks, err := r.redisClient.LLen(ctx, topic.ProcessingTopicString()).Result()
+	if err != nil {
+		return 0, err
+	}
+	return int(numProcessingTasks), nil
+}
+
+func (r *RedisCoordinatorClient) GetErrors(ctx context.Context, topic CoordinatorClientTaskTopic) ([]*StoredError, error) {
+	errors, err := r.redisClient.LRange(ctx, "errors", 0, -1).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	storedErrors := make([]*StoredError, 0, len(errors))
+	for _, error := range errors {
+		var storedError StoredError
+		err = json.Unmarshal([]byte(error), &storedError)
+		if err != nil {
+			return nil, err
+		}
+		storedErrors = append(storedErrors, &storedError)
+	}
+	return storedErrors, nil
 }

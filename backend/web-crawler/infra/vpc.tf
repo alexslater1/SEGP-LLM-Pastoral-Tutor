@@ -1,25 +1,34 @@
-# VPC
+# VPC Configuration
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
-    Name = "worker-node-vpc"
+    Name = "main-vpc"
   }
 }
 
-# Public Subnets (2 for high availability)
+# Public Subnet
 resource "aws_subnet" "public" {
-  count             = 2
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.${count.index + 1}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "eu-west-2a" # Changed to London AZ
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "worker-node-public-${count.index + 1}"
+    Name = "public-subnet"
+  }
+}
+
+# Private Subnet
+resource "aws_subnet" "private" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "eu-west-2a" # Changed to London AZ
+
+  tags = {
+    Name = "private-subnet"
   }
 }
 
@@ -28,11 +37,11 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "worker-node-igw"
+    Name = "main-igw"
   }
 }
 
-# Route Table
+# Route Table for Public Subnet
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -42,45 +51,56 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "worker-node-public-rt"
+    Name = "public-rt"
   }
 }
 
-# Route Table Association
+# Route Table Association for Public Subnet
 resource "aws_route_table_association" "public" {
-  count          = 2
-  subnet_id      = aws_subnet.public[count.index].id
+  subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
 }
 
-# Security Group
-resource "aws_security_group" "worker_node" {
-  name        = "worker-node-sg"
-  description = "Security group for worker node"
-  vpc_id      = aws_vpc.main.id
-
-  # No inbound rules needed since we're only making outbound requests
-
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+# Route Table for Private Subnet
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "worker-node-sg"
+    Name = "private-rt"
   }
 }
 
-# Data source for availability zones
-data "aws_availability_zones" "available" {
-  state = "available"
+# Route Table Association for Private Subnet
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
+}
+
+# Elastic IP for NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "nat-eip"
+  }
+}
+
+# NAT Gateway
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id # Place it in the public subnet
+
+  tags = {
+    Name = "main-nat"
+  }
+
+  # Good practice to ensure the Internet Gateway is available before creating the NAT Gateway
+  depends_on = [aws_internet_gateway.main]
+}
+
+# Update the private route table to route through NAT Gateway
+resource "aws_route" "private_nat_gateway" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main.id
 }
