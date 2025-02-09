@@ -46,7 +46,7 @@ export async function makeV1Completion(previousMessages: Message[], userMessage:
     try {
         let query = createQueryText(previousMessages, userMessage);
         if (!process.env.BACKEND_URL) throw new Error()
-        const response = await fetch(process.env.BACKEND_URL + completionEndpoint, {
+        const response = await fetch(process.env.BACKEND_AGENT_URL + completionEndpoint, {
             method: 'POST',
             signal: AbortSignal.timeout(1000 * API_FETCH_TIMEOUT_SECONDS),
             headers: {
@@ -72,7 +72,7 @@ export async function makeV2InitialQuery(previousMessages: Message[], userMessag
     try {
         const completionEndpoint = "/completion/v2"
         let query = createQueryText(previousMessages, userMessage, false);
-        const response = await fetch(process.env.BACKEND_URL + completionEndpoint, {
+        const response = await fetch(process.env.BACKEND_AGENT_URL + completionEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -96,7 +96,7 @@ export async function makeV2InitialQuery(previousMessages: Message[], userMessag
 export async function makeV2StatusQuery(queryID: queryID): Promise<StatusResponse> {
     try {
         const completionEndpoint = "/completion/v2/status/" + queryID
-        const response = await fetch(process.env.BACKEND_URL + completionEndpoint, {
+        const response = await fetch(process.env.BACKEND_AGENT_URL + completionEndpoint, {
             method: 'GET',
         });
 

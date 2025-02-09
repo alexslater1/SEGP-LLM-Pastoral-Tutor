@@ -175,7 +175,7 @@ export default function AgentRequestsPage() {
                   </table>
 
                   {/* Pagination Controls */}
-                  <div className="flex items-center justify-between px-4 py-4 border-t">
+                  <div className="flex items-center justify-between p-4 border-t">
                     <div className="flex-1 text-sm text-muted-foreground">
                       Page {page + 1} of {data?.totalPages}
                     </div>
