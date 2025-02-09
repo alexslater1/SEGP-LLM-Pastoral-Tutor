@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       }).join("\n");
       query += "\nMost recent user message to respond and answer to now: " + userMessage.content;
 
-      const response = await fetch(process.env.BACKEND_URL || "", {
+      const response = await fetch(process.env.BACKEND_AGENT_URL + "/completion" || "", {
         method: 'POST',
         signal: AbortSignal.timeout(1000 * API_FETCH_TIMEOUT_SECONDS),
         headers: {

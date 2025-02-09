@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RagDocument } from "@/lib/db/schema";
 
+const BACKEND_RAG_URL = "https://segp-backend-rag.serve.freemyip.com"
+
 function humanReadableSize(sizeInBytes: number): string {
   const units = ["B", "KB", "MB", "GB", "TB", "PB"];
   let size = sizeInBytes;
@@ -18,12 +20,12 @@ const uploadRagDocument = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
     
-    // Use relative path to Next.js API route
-    const response = await fetch('http://127.0.0.1:8000/rag-doc', {
+    const response = await fetch(BACKEND_RAG_URL + '/rag-doc', {
       method: 'POST',
       body: formData,
       credentials: 'include',
     });
+
 
     if (!response.ok) {
       throw new Error(`Upload failed with status: ${response.status}`);
@@ -54,10 +56,11 @@ type Document = {
 
 const fetchRagDocuments = async (): Promise<RagDocument[]> => {
   console.log("fetching docs");
-  const response = await fetch('http://127.0.0.1:8000/rag-doc', {
+  const response = await fetch(BACKEND_RAG_URL + '/rag-doc', {
     method: 'GET',
     credentials: 'include',
   });
+
 
   if (!response.ok) {
     throw new Error(`Failed to fetch RAG documents: ${response.status}`);
@@ -134,10 +137,11 @@ const deleteRagDocument = async (name: string) => {
   try {
     console.log('Starting delete for:', name);
     
-    const response = await fetch(`http://127.0.0.1:8000/rag-doc?name=${encodeURIComponent(name)}`, {
+    const response = await fetch(BACKEND_RAG_URL + `/rag-doc?name=${encodeURIComponent(name)}`, {
       method: 'DELETE',
       credentials: 'include',
     });
+
 
     if (!response.ok) {
       throw new Error(`Delete failed with status: ${response.status}`);
@@ -170,10 +174,11 @@ const downloadRagDocument = async (name: string) => {
   try { 
     console.log('Starting download for:', name);
     
-    const response = await fetch(`http://127.0.0.1:8000/rag-doc/download?name=${encodeURIComponent(name)}`, {
+    const response = await fetch(`${BACKEND_RAG_URL}/rag-doc/download?name=${encodeURIComponent(name)}`, {
       method: 'GET',
       credentials: 'include',
     });
+
 
     if (!response.ok) {
       throw new Error(`Download failed with status: ${response.status}`);
