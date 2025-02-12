@@ -7,121 +7,106 @@ import (
 	"sort"
 
 	"github.com/segp/agents-main/storage"
+	"github.com/segp/agents-main/utils"
 )
 
-type MessageV3 struct {
-	Role      string                           `json:"role"`
-	Content   string                           `json:"content"`
-	RequestID string                           `json:"request_id"`
-	Statuses  []ChatCompletionV2StatusResponse `json:"statuses"`
+type MessageRole string
+
+const (
+	MessageRoleUser  MessageRole = "user"
+	MessageRoleAgent MessageRole = "agent"
+)
+
+type QueryAndResponse struct {
+	Type      ChatCompletionV2StatusResponseType `json:"type"`
+	Query     string                             `json:"query"`
+	RequestID string                             `json:"request_id"`
+	Actions   []string                           `json:"actions"`
+
+	Answer        string `json:"answer,omitempty"`
+	Error         string `json:"error,omitempty"`
+	CurrentAction string `json:"current_action,omitempty"`
 }
 
-type ChatHistoryV3Response struct {
-	Messages []MessageV3 `json:"messages"`
+type ChatHistoryResponse struct {
+	Messages []QueryAndResponse `json:"query_and_responses"`
 }
 
-func ChatHistoryV3(store storage.Storage) http.HandlerFunc {
+func ChatHistory(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		chatID := r.PathValue("chat_id")
-		if chatID == "" {
-			http.Error(w, "chat_id is required", http.StatusBadRequest)
-			return
-		}
-
-		requests, err := storage.GetAll[storage.AgentRequest](store, map[string]string{"chat_id": chatID})
+		chatId := r.PathValue("chat_id")
+		agentRequests, err := storage.GetAll[storage.AgentRequest](store, map[string]string{"chat_id": chatId})
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error getting requests %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("error getting agent requests %v", err.Error()), http.StatusInternalServerError)
 			return
 		}
 
-		sort.Slice(requests, func(i, j int) bool {
-			return requests[i].CreatedAt.Before(*requests[j].CreatedAt)
+		sort.Slice(agentRequests, func(i, j int) bool {
+			return agentRequests[i].CreatedAt.After(*agentRequests[j].CreatedAt)
 		})
 
-		response := []MessageV3{}
-		for _, request := range requests {
-			request, events, err := getOrderedRequestEvents(store, request.ID)
+		eventsTasks := utils.DoAsyncList(agentRequests, func(ar storage.AgentRequest) ([]storage.AgentEvent, error) {
+			events, err := storage.GetAll[storage.AgentEvent](store, map[string]string{"request_id": ar.ID})
 			if err != nil {
-				http.Error(w, fmt.Sprintf("error getting events %v", err.Error()), http.StatusInternalServerError)
-				return
+				return nil, err
 			}
 
-			requestMetadata := request.Metadata.(map[string]interface{})
-			response = append(response, MessageV3{
-				Role:      "user",
-				Content:   requestMetadata["query"].(string),
-				RequestID: request.ID,
-				Statuses:  nil,
+			sort.Slice(events, func(i, j int) bool {
+				return events[i].CreatedAt.After(*events[j].CreatedAt)
 			})
 
-			var statuses []ChatCompletionV2StatusResponse
-			for _, event := range events {
-				statuses = append(statuses, *createStatusFromEvent(event))
-			}
-
-			content := "Thinking"
-			if len(events) > 0 {
-				content = eventContent(events[len(events)-1])
-			}
-
-			response = append(response, MessageV3{
-				Role:      "assistant",
-				Content:   content,
-				RequestID: request.ID,
-				Statuses:  statuses,
-			})
-		}
-
-		json.NewEncoder(w).Encode(ChatHistoryV3Response{
-			Messages: response,
+			return events, nil
 		})
-	}
-}
 
-// Helper functions to create responses
-func getOrderedRequestEvents(store storage.Storage, requestID string) (*storage.AgentRequest, []storage.AgentEvent, error) {
-	events, err := storage.GetAll[storage.AgentEvent](store, map[string]string{"request_id": requestID})
-	if err != nil {
-		return &storage.AgentRequest{}, nil, err
-	}
-
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].CreatedAt.Before(*events[j].CreatedAt)
-	})
-
-	request, err := storage.Get[storage.AgentRequest](store, requestID)
-	if err != nil {
-		return &storage.AgentRequest{}, nil, err
-	}
-
-	return request, events, nil
-}
-
-func eventContent(event storage.AgentEvent) string {
-	switch event.Type {
-	case "error":
-		return event.Metadata.(map[string]interface{})["error"].(string)
-
-	case "tool_call_choice":
-		metadata := event.Metadata.(map[string]interface{})
-		toolCall := metadata["toolCallChoice"].(map[string]interface{})
-
-		// Handle both string and map arguments cases
-		var action string
-		if argsStr, ok := toolCall["arguments"].(string); ok {
-			var args map[string]interface{}
-			json.Unmarshal([]byte(argsStr), &args)
-			action = args["description_of_action"].(string)
-		} else {
-			arguments := toolCall["arguments"].(map[string]interface{})
-			action = arguments["description_of_action"].(string)
+		events, err := utils.GetAsyncList(eventsTasks)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error getting events %v", err.Error()), http.StatusInternalServerError)
+			return
 		}
-		return action
 
-	case "answer_success":
-		metadata := event.Metadata.(map[string]interface{})
-		return metadata["answer"].(string)
+		json.NewEncoder(w).Encode(queryAndResponsesFrom(agentRequests, events))
+	}
+}
+
+func queryAndResponsesFrom(agentRequests []storage.AgentRequest, events [][]storage.AgentEvent) []QueryAndResponse {
+	queryAndResponses := make([]QueryAndResponse, len(agentRequests))
+	for i, agentRequest := range agentRequests {
+		queryAndResponses[i] = queryAndResponseFrom(agentRequest, events[i])
+	}
+	return queryAndResponses
+}
+
+func queryAndResponseFrom(agentRequest storage.AgentRequest, events []storage.AgentEvent) QueryAndResponse {
+	statusResponses := make([]ChatCompletionV2StatusResponse, len(events))
+	actions := []string{}
+	for i, event := range events {
+		statusEvent := createStatusFromEvent(event)
+		statusResponses[i] = *statusEvent
+
+		if statusEvent.Type == ChatCompletionV2StatusResponseTypePending {
+			actions = append(actions, statusEvent.CurrentAction)
+		}
 	}
 
-	return "Thinking"
+	mostRecentStatus := statusResponses[0]
+	query := agentRequest.Metadata.(map[string]interface{})["query"].(string)
+	base := QueryAndResponse{
+		Type:      mostRecentStatus.Type,
+		Query:     query,
+		RequestID: agentRequest.ID,
+		Actions:   actions,
+	}
+
+	switch mostRecentStatus.Type {
+	case ChatCompletionV2StatusResponseTypePending:
+		base.CurrentAction = mostRecentStatus.CurrentAction
+
+	case ChatCompletionV2StatusResponseTypeCompleted:
+		base.Answer = mostRecentStatus.Answer
+
+	case ChatCompletionV2StatusResponseTypeError:
+		base.Error = mostRecentStatus.Error
+	}
+
+	return base
 }

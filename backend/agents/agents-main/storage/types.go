@@ -13,7 +13,7 @@ type AgentRequest struct {
 	CreatedAt *time.Time  `json:"created_at,omitempty"`
 	Endpoint  string      `json:"endpoint"`
 	Metadata  interface{} `json:"metadata,omitempty"`
-	ChatID    string      `json:"chat_id,omitempty"`
+	ChatID    string      `json:"chat_id"`
 }
 
 func (ar AgentRequest) TableName() StorageTableName {
@@ -51,20 +51,19 @@ func NewAgentEvent(requestId string, eventType string, metadata interface{}) Age
 type Chat struct {
 	ID         string     `json:"id,omitempty"`
 	CreatedAt  *time.Time `json:"createdAt,omitempty"`
-	UserID     string     `json:"userId,omitempty"`
-	Title      string     `json:"title,omitempty"`
-	Visibility string     `json:"visibility,omitempty"`
+	UserID     string     `json:"userId"`
+	Title      *string    `json:"title,omitempty"`
+	Visibility string     `json:"visibility"`
 }
 
 func (c Chat) TableName() StorageTableName {
 	return StorageTableNameChats
 }
 
-func NewChat(id string, userId string, title string, visibility string) Chat {
+func NewChat(userId string, title *string) Chat {
 	return Chat{
-		ID:         id,
 		UserID:     userId,
+		Visibility: "private",
 		Title:      title,
-		Visibility: visibility,
 	}
 }
