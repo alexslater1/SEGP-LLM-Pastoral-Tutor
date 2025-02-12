@@ -38,9 +38,9 @@ func NewDefaultFastAgent() Agent {
 		googleSearchClient = googleSearch.NewRodClient()
 		toolHandler        = tools.NewGoogleSearchToolHandler(googleSearchClient)
 		llm                = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
-		knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
-		// knowledge = knowledge.NewLocalKnowledge()
-		clock = clock.NewRealClock()
+		// knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+		knowledge = knowledge.NewLocalKnowledge()
+		clock     = clock.NewRealClock()
 	)
 
 	return NewFastAgent(

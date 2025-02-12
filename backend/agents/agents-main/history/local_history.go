@@ -10,7 +10,7 @@ func NewLocalHistory() *LocalHistory {
 	}
 }
 
-func (s *LocalHistory) GetChatHistory() ([]string, error) {
+func (s *LocalHistory) GetChatHistory(chatId string) ([]string, error) {
 	return s.ChatHistory, nil
 }
 

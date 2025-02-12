@@ -55,6 +55,67 @@ func TestMemoryStorage_Store(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "data cannot be nil")
 	})
+
+	t.Run("handles numeric ID", func(t *testing.T) {
+		type NumericIDStruct struct {
+			ID       int    `json:"id"`
+			Endpoint string `json:"endpoint"`
+		}
+		req := NumericIDStruct{
+			ID:       123,
+			Endpoint: "test-endpoint",
+		}
+
+		result, err := storage.store(StorageTableNameAgentRequests, req)
+		assert.NoError(t, err)
+
+		res, ok := result.(map[string]interface{})
+		assert.True(t, ok)
+		assert.Equal(t, 123, res["id"])
+		assert.Equal(t, "test-endpoint", res["endpoint"].(string))
+	})
+
+	t.Run("generates numeric ID when original type is numeric", func(t *testing.T) {
+		type NumericIDStruct struct {
+			ID       int    `json:"id,omitempty"`
+			Endpoint string `json:"endpoint"`
+		}
+		req := NumericIDStruct{
+			Endpoint: "test-endpoint",
+		}
+
+		result, err := storage.store(StorageTableNameAgentRequests, req)
+		assert.NoError(t, err)
+
+		res, ok := result.(map[string]interface{})
+		assert.True(t, ok)
+
+		// Check that generated ID is a number
+		id, ok := res["id"].(int)
+		assert.True(t, ok)
+		assert.Greater(t, id, 0)
+		assert.LessOrEqual(t, id, 1000000)
+		assert.Equal(t, "test-endpoint", res["endpoint"].(string))
+	})
+
+	t.Run("preserves string ID type when provided", func(t *testing.T) {
+		type StringIDStruct struct {
+			ID       string `json:"id"`
+			Endpoint string `json:"endpoint"`
+		}
+		req := StringIDStruct{
+			ID:       "test-id",
+			Endpoint: "test-endpoint",
+		}
+
+		result, err := storage.store(StorageTableNameAgentRequests, req)
+		assert.NoError(t, err)
+
+		res, ok := result.(map[string]interface{})
+		assert.True(t, ok)
+		assert.Equal(t, "test-id", res["id"])
+		assert.Equal(t, "test-endpoint", res["endpoint"])
+	})
 }
 
 func TestMemoryStorage_Get(t *testing.T) {
@@ -115,6 +176,35 @@ func TestMemoryStorage_StoreAll(t *testing.T) {
 		assert.Equal(t, "endpoint2", parsedResults[1].Endpoint)
 	})
 
+	t.Run("stores multiple items with numeric IDs", func(t *testing.T) {
+		type NumericIDStruct struct {
+			ID       int    `json:"id,omitempty"`
+			Endpoint string `json:"endpoint"`
+		}
+		reqs := []interface{}{
+			NumericIDStruct{ID: 123, Endpoint: "endpoint1"},
+			NumericIDStruct{Endpoint: "endpoint2"}, // No ID, should generate numeric
+		}
+
+		results, err := storage.storeAll(StorageTableNameAgentRequests, reqs)
+		assert.NoError(t, err)
+		assert.Len(t, results, 2)
+
+		// Check first item with provided numeric ID
+		res1, ok := results[0].(map[string]interface{})
+		assert.True(t, ok)
+		assert.Equal(t, 123, res1["id"])
+		assert.Equal(t, "endpoint1", res1["endpoint"].(string))
+
+		// Check second item with generated numeric ID
+		res2, ok := results[1].(map[string]interface{})
+		assert.True(t, ok)
+		id2, ok := res2["id"].(int)
+		assert.True(t, ok)
+		assert.Greater(t, id2, 0)
+		assert.LessOrEqual(t, id2, 1000000)
+		assert.Equal(t, "endpoint2", res2["endpoint"].(string))
+	})
 }
 
 func TestMemoryStorage_GetAll(t *testing.T) {
