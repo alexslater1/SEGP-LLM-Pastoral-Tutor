@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/segp/agents-main/storage"
 )
@@ -9,19 +10,20 @@ import (
 func createStatusFromEvent(event storage.AgentEvent) *ChatCompletionV2StatusResponse {
 	switch event.Type {
 	case "error":
-		return newErrorResponse(event.Metadata.(map[string]string)["error"])
+		return newErrorResponse(event.Metadata.(map[string]interface{})["error"].(string))
 
 	case "tool_call_choice":
-		metadata := event.Metadata.(map[string]map[string]string)
-		toolCallArgsStr := metadata["toolCallChoice"]["arguments"]
+		metadata := event.Metadata.(map[string]interface{})
+		toolCallArgsStr := metadata["toolCallChoice"].(map[string]interface{})["arguments"].(string)
 		toolCallArgs := map[string]string{}
 		json.Unmarshal([]byte(toolCallArgsStr), &toolCallArgs)
 
 		return newPendingResponse(toolCallArgs["description_of_action"])
 
 	case "answer_success":
-		metadata := event.Metadata.(map[string]string)
-		return newCompletedResponse(metadata["answer"])
+		fmt.Printf("event.Metadata: %+v\n", event.Metadata)
+		metadata := event.Metadata.(map[string]interface{})
+		return newCompletedResponse(metadata["answer"].(string))
 	}
 
 	return newPendingResponse("Thinking")

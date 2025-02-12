@@ -82,6 +82,11 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 			return
 		}
 
+		if req.UserId == "" {
+			http.Error(w, "user_id is required", http.StatusBadRequest)
+			return
+		}
+
 		chatId := req.ChatId
 		if req.ChatId == "" {
 			createdChat, err := storage.Store(store, storage.NewChat(req.UserId, nil))

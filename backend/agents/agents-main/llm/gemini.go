@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	chatCompletionModel = "gemini-2.0-flash-exp"
+	chatCompletionModel = "gemini-2.0-flash"
 )
 
 type GeminiLLM struct {

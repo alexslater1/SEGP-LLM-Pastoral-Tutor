@@ -31,7 +31,7 @@ func TestQueryAndResponseFrom(t *testing.T) {
 			ID:        requestId1,
 			CreatedAt: &timeRequest1,
 			Endpoint:  "endpoint1",
-			Metadata:  map[string]string{"query": query1},
+			Metadata:  map[string]interface{}{"query": query1},
 			ChatID:    chatId1,
 		}
 
@@ -39,7 +39,7 @@ func TestQueryAndResponseFrom(t *testing.T) {
 			ID:        requestId2,
 			CreatedAt: &timeRequest2,
 			Endpoint:  "endpoint2",
-			Metadata:  map[string]string{"query": query2},
+			Metadata:  map[string]interface{}{"query": query2},
 			ChatID:    chatId2,
 		}
 
@@ -47,49 +47,49 @@ func TestQueryAndResponseFrom(t *testing.T) {
 			ID:        requestId3,
 			CreatedAt: &timeRequest3,
 			Endpoint:  "endpoint3",
-			Metadata:  map[string]string{"query": query3},
+			Metadata:  map[string]interface{}{"query": query3},
 			ChatID:    chatId3,
 		}
 
-		metadata1 = map[string]map[string]string{
-			"toolCallChoice": {
+		metadata1 = map[string]interface{}{
+			"toolCallChoice": map[string]interface{}{
 				"name":      "google_search_first_results_page_contents",
 				"arguments": "{\"_thoughts\":\"The user is asking for the current USD price. This is a very general request and needs more context. I assume the user is asking for the current exchange rate of USD to some other currency, likely GBP since the context seems to be about UK institutions. However, without knowing the target currency, I need to use a search query to find the current USD to GBP exchange rate. I can specify 'current usd to gbp exchange rate' in my query to get the needed information.\",\"description_of_action\":\"I am searching for the current USD to GBP exchange rate.\",\"query\":\"current usd to gbp exchange rate\"}",
 			},
 		}
 
-		metadata2 = map[string]string{
+		metadata2 = map[string]interface{}{
 			"toolCallResult": "tool call result",
 		}
 
-		metadata3 = map[string]string{
+		metadata3 = map[string]interface{}{
 			"answer": "The current exchange rate is 1 USD = 0.814 GBP.",
 			"reason": "I have the current USD to GBP exchange rate from the previous search.",
 		}
 
-		metadata4 = map[string]map[string]string{
-			"toolCallChoice": {
+		metadata4 = map[string]interface{}{
+			"toolCallChoice": map[string]interface{}{
 				"name":      "google_search_first_results_page_contents",
 				"arguments": "{\"_thoughts\":\"this  is a thought.\",\"description_of_action\":\"this is a description.\",\"query\":\"this is a query.\"}",
 			},
 		}
 
-		metadata5 = map[string]string{
+		metadata5 = map[string]interface{}{
 			"toolCallResult": "another tool call result",
 		}
 
-		metadata6 = map[string]string{
+		metadata6 = map[string]interface{}{
 			"error": "an error",
 		}
 
-		metadata7 = map[string]map[string]string{
-			"toolCallChoice": {
+		metadata7 = map[string]interface{}{
+			"toolCallChoice": map[string]interface{}{
 				"name":      "google_search_first_results_page_contents",
 				"arguments": "{\"_thoughts\":\"this  is such a good thought.\",\"description_of_action\":\"this is a really good yeah description.\",\"query\":\"this is a good good query.\"}",
 			},
 		}
 
-		metadata8 = map[string]string{
+		metadata8 = map[string]interface{}{
 			"toolCallResult": "another tool call result",
 		}
 
