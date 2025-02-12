@@ -5,21 +5,40 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"slices"
-	"sort"
 
 	"github.com/segp/agents-main/agent"
-
 	"github.com/segp/agents-main/storage"
 )
 
+type ChatCompletionV2StatusResponseType string
+
+const (
+	ChatCompletionV2StatusResponseTypePending   ChatCompletionV2StatusResponseType = "pending"
+	ChatCompletionV2StatusResponseTypeCompleted ChatCompletionV2StatusResponseType = "completed"
+	ChatCompletionV2StatusResponseTypeError     ChatCompletionV2StatusResponseType = "error"
+)
+
 type ChatCompletionRequest struct {
-	Query string `json:"query"`
+	Query  string `json:"query"`
+	ChatId string `json:"chat_id"`
+	UserId string `json:"user_id"`
 }
 
 type ChatCompletionResponse struct {
 	Response string `json:"response"`
 	Reason   string `json:"reason"`
+}
+
+type ChatCompletionV2StatusResponse struct {
+	Type          ChatCompletionV2StatusResponseType `json:"type"`
+	Error         string                             `json:"error,omitempty"`
+	Answer        string                             `json:"answer,omitempty"`
+	CurrentAction string                             `json:"current_action,omitempty"`
+}
+
+type ChatCompletionV2Response struct {
+	RequestId string `json:"request_id"`
+	ChatId    string `json:"chat_id"`
 }
 
 func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
@@ -35,7 +54,7 @@ func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}))
+		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, ""))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
 			return
@@ -48,10 +67,6 @@ func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
 
 		json.NewEncoder(w).Encode(ChatCompletionResponse{Response: *response, Reason: *reasoning})
 	}
-}
-
-type ChatCompletionV2Response struct {
-	RequestId string `json:"request_id"`
 }
 
 func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc {
@@ -67,13 +82,28 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 			return
 		}
 
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}))
+		if req.UserId == "" {
+			http.Error(w, "user_id is required", http.StatusBadRequest)
+			return
+		}
+
+		chatId := req.ChatId
+		if req.ChatId == "" {
+			createdChat, err := storage.Store(store, storage.NewChat(req.UserId, nil))
+			if err != nil {
+				http.Error(w, fmt.Sprintf("error creating chat %v", err.Error()), http.StatusInternalServerError)
+				return
+			}
+			chatId = createdChat.ID
+		}
+
+		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, chatId))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
 			return
 		}
 
-		slog.Info("Created request", "request_id", createdReq.ID)
+		slog.Info("Created request", "request_id", createdReq.ID, "chat_id", chatId)
 
 		go func() {
 			response, reasoning, err := agent.Run(req.Query, createdReq.ID)
@@ -86,23 +116,8 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 			slog.Info("agent response", "response", *response, "reason", *reasoning)
 		}()
 
-		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: createdReq.ID})
+		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: createdReq.ID, ChatId: chatId})
 	}
-}
-
-type ChatCompletionV2StatusResponseType string
-
-const (
-	ChatCompletionV2StatusResponseTypePending   ChatCompletionV2StatusResponseType = "pending"
-	ChatCompletionV2StatusResponseTypeCompleted ChatCompletionV2StatusResponseType = "completed"
-	ChatCompletionV2StatusResponseTypeError     ChatCompletionV2StatusResponseType = "error"
-)
-
-type ChatCompletionV2StatusResponse struct {
-	Type          ChatCompletionV2StatusResponseType `json:"type"`
-	Error         string                             `json:"error,omitempty"`
-	Answer        string                             `json:"answer,omitempty"`
-	CurrentAction string                             `json:"current_action,omitempty"`
 }
 
 func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
@@ -139,110 +154,5 @@ func chatCompletionV2StatusResponseFromEventsFastAgent(events []storage.AgentEve
 		}
 	}
 
-	switch newestEvent.Type {
-	case "error":
-		return newErrorResponse(newestEvent.Metadata.(map[string]interface{})["error"].(string))
-
-	case "tool_call_choice":
-		metadata := newestEvent.Metadata.(map[string]interface{})
-		toolCall := metadata["toolCallChoice"].(map[string]interface{})
-
-		// Handle both string and map arguments cases
-		var action string
-		if argsStr, ok := toolCall["arguments"].(string); ok {
-			var args map[string]interface{}
-			json.Unmarshal([]byte(argsStr), &args)
-			action = args["description_of_action"].(string)
-		} else {
-			arguments := toolCall["arguments"].(map[string]interface{})
-			action = arguments["description_of_action"].(string)
-		}
-		return newPendingResponse(action)
-
-	case "answer_success":
-		metadata := newestEvent.Metadata.(map[string]interface{})
-		return newCompletedResponse(metadata["answer"].(string))
-	}
-
-	return newPendingResponse("Thinking")
-}
-
-func chatCompletionV2StatusResponseFromEvents(events []storage.AgentEvent) *ChatCompletionV2StatusResponse {
-	lastEvent := getLatestEvent(events, []string{"error", "tool_call_choice", "answer_success", "observation"})
-	if lastEvent == nil {
-		return newPendingResponse("Thinking")
-	}
-
-	switch lastEvent.Type {
-	case "error":
-		metadata := lastEvent.Metadata.(map[string]interface{})
-		return newErrorResponse(metadata["error"].(string))
-
-	case "observation":
-		return newPendingResponse("Thinking")
-
-	case "answer_success":
-		metadata := lastEvent.Metadata.(map[string]interface{})
-		return newCompletedResponse(metadata["answer"].(string))
-
-	case "tool_call_choice":
-		metadata := lastEvent.Metadata.(map[string]interface{})
-		toolCall := metadata["toolCallChoice"].(map[string]interface{})
-
-		// Handle both string and map arguments cases
-		var action string
-		if argsStr, ok := toolCall["arguments"].(string); ok {
-			var args map[string]interface{}
-			json.Unmarshal([]byte(argsStr), &args)
-			action = args["descriptionOfAction"].(string)
-		} else {
-			arguments := toolCall["arguments"].(map[string]interface{})
-			action = arguments["descriptionOfAction"].(string)
-		}
-		return newPendingResponse(action)
-	}
-
-	return newPendingResponse("Thinking")
-}
-
-// Helper functions to create responses
-func newPendingResponse(action string) *ChatCompletionV2StatusResponse {
-	return &ChatCompletionV2StatusResponse{
-		Type:          ChatCompletionV2StatusResponseTypePending,
-		CurrentAction: action,
-	}
-}
-
-func newErrorResponse(err string) *ChatCompletionV2StatusResponse {
-	return &ChatCompletionV2StatusResponse{
-		Type:  ChatCompletionV2StatusResponseTypeError,
-		Error: err,
-	}
-}
-
-func newCompletedResponse(answer string) *ChatCompletionV2StatusResponse {
-	return &ChatCompletionV2StatusResponse{
-		Type:   ChatCompletionV2StatusResponseTypeCompleted,
-		Answer: answer,
-	}
-}
-
-func getLatestEvent(events []storage.AgentEvent, relevantEventTypes []string) *storage.AgentEvent {
-	sortedRelevantEvents := []storage.AgentEvent{}
-
-	for _, event := range events {
-		if slices.Contains(relevantEventTypes, event.Type) {
-			sortedRelevantEvents = append(sortedRelevantEvents, event)
-		}
-	}
-
-	if len(sortedRelevantEvents) == 0 {
-		return nil
-	}
-
-	sort.Slice(sortedRelevantEvents, func(i, j int) bool {
-		return sortedRelevantEvents[i].CreatedAt.After(*sortedRelevantEvents[j].CreatedAt)
-	})
-
-	return &sortedRelevantEvents[0]
+	return createStatusFromEvent(newestEvent)
 }

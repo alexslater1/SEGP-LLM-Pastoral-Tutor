@@ -11,6 +11,7 @@ type StorageTableName string
 const (
 	StorageTableNameAgentRequests StorageTableName = "agent_requests"
 	StorageTableNameAgentEvents   StorageTableName = "agent_events"
+	StorageTableNameChats         StorageTableName = "Chat"
 )
 
 type Storage interface {
