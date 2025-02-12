@@ -153,7 +153,7 @@ func TestFastAgentRun(t *testing.T) {
 	}
 
 	agent := NewDefaultLoggingFastAgent()
-	answer, reason, err := agent.Run("Are lidl and aldi founders brothers?", "test_request_id")
+	answer, reason, err := agent.Run("what about in 3 days?", "2fea8a5f-b82c-4261-9889-3e42136d9ef0")
 	if err != nil {
 		t.Fatalf("error running agent: %v", err)
 	}

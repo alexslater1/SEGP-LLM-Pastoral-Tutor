@@ -31,7 +31,7 @@ func NewAgentRequest(endpoint string, metadata interface{}, chatID string) Agent
 type AgentEvent struct {
 	ID        int         `json:"id,omitempty"`
 	CreatedAt *time.Time  `json:"created_at,omitempty"`
-	RequestId string      `json:"request_id"`
+	RequestID string      `json:"request_id"`
 	Type      string      `json:"type"`
 	Metadata  interface{} `json:"metadata,omitempty"`
 }
@@ -42,7 +42,7 @@ func (ae AgentEvent) TableName() StorageTableName {
 
 func NewAgentEvent(requestId string, eventType string, metadata interface{}) AgentEvent {
 	return AgentEvent{
-		RequestId: requestId,
+		RequestID: requestId,
 		Type:      eventType,
 		Metadata:  metadata,
 	}
