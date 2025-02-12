@@ -89,7 +89,7 @@ func queryAndResponseFrom(agentRequest storage.AgentRequest, events []storage.Ag
 	}
 
 	mostRecentStatus := statusResponses[0]
-	query := agentRequest.Metadata.(map[string]interface{})["query"].(string)
+	query := agentRequest.Metadata.(map[string]string)["query"]
 	base := QueryAndResponse{
 		Type:      mostRecentStatus.Type,
 		Query:     query,

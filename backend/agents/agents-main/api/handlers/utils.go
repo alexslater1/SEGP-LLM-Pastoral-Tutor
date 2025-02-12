@@ -9,27 +9,19 @@ import (
 func createStatusFromEvent(event storage.AgentEvent) *ChatCompletionV2StatusResponse {
 	switch event.Type {
 	case "error":
-		return newErrorResponse(event.Metadata.(map[string]interface{})["error"].(string))
+		return newErrorResponse(event.Metadata.(map[string]string)["error"])
 
 	case "tool_call_choice":
-		metadata := event.Metadata.(map[string]interface{})
-		toolCall := metadata["toolCallChoice"].(map[string]interface{})
+		metadata := event.Metadata.(map[string]map[string]string)
+		toolCallArgsStr := metadata["toolCallChoice"]["arguments"]
+		toolCallArgs := map[string]string{}
+		json.Unmarshal([]byte(toolCallArgsStr), &toolCallArgs)
 
-		// Handle both string and map arguments cases
-		var action string
-		if argsStr, ok := toolCall["arguments"].(string); ok {
-			var args map[string]interface{}
-			json.Unmarshal([]byte(argsStr), &args)
-			action = args["description_of_action"].(string)
-		} else {
-			arguments := toolCall["arguments"].(map[string]interface{})
-			action = arguments["description_of_action"].(string)
-		}
-		return newPendingResponse(action)
+		return newPendingResponse(toolCallArgs["description_of_action"])
 
 	case "answer_success":
-		metadata := event.Metadata.(map[string]interface{})
-		return newCompletedResponse(metadata["answer"].(string))
+		metadata := event.Metadata.(map[string]string)
+		return newCompletedResponse(metadata["answer"])
 	}
 
 	return newPendingResponse("Thinking")
