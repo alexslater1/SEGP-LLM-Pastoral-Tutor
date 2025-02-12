@@ -37,11 +37,11 @@ func TestEventStoringReActAgent(t *testing.T) {
 	if os.Getenv("CICD") == "true" {
 		t.Skip("skipping test in CI")
 	}
-	
+
 	agent := NewDefaultEventStoringLoggingReActAgent()
 	supabaseStorage := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	createdReq, err := storage.Store(supabaseStorage, storage.NewAgentRequest("/test", map[string]string{"test": "test"}))
+	createdReq, err := storage.Store(supabaseStorage, storage.NewAgentRequest("/test", map[string]string{"test": "test"}, ""))
 	if err != nil {
 		t.Fatalf("Error creating request: %v", err)
 	}

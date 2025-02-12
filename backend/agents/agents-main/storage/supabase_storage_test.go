@@ -24,7 +24,7 @@ func TestSupabaseStorageStore(t *testing.T) {
 
 	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	data, err := storage.store(StorageTableNameAgentRequests, NewAgentRequest("test", map[string]string{"test": "test"}))
+	data, err := storage.store(StorageTableNameAgentRequests, NewAgentRequest("test", map[string]string{"test": "test"}, ""))
 	if err != nil {
 		t.Error("Error storing item in storage")
 	}
@@ -39,7 +39,7 @@ func TestStoreSupabaseStorageStore(t *testing.T) {
 
 	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	data, err := Store(storage, NewAgentRequest("test", map[string]string{"test": "test"}))
+	data, err := Store(storage, NewAgentRequest("test", map[string]string{"test": "test"}, ""))
 	if err != nil {
 		t.Error("Error storing item in storage", err)
 	}

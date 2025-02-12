@@ -13,8 +13,14 @@ import (
 	"github.com/segp/agents-main/storage"
 )
 
-type ChatCompletionRequest struct {
+type ChatCompletionRequestV1V2 struct {
 	Query string `json:"query"`
+}
+
+type ChatCompletionRequestV3 struct {
+	Query  string `json:"query"`
+	UserID string `json:"user_id"`
+	ChatID string `json:"chat_id"`
 }
 
 type ChatCompletionResponse struct {
@@ -24,7 +30,7 @@ type ChatCompletionResponse struct {
 
 func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req ChatCompletionRequest
+		var req ChatCompletionRequestV1V2
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, fmt.Sprintf("error decoding json %v", err.Error()), http.StatusBadRequest)
 			return
@@ -35,7 +41,7 @@ func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}))
+		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, ""))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
 			return
@@ -56,7 +62,7 @@ type ChatCompletionV2Response struct {
 
 func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req ChatCompletionRequest
+		var req ChatCompletionRequestV1V2
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, fmt.Sprintf("error decoding json %v", err.Error()), http.StatusBadRequest)
 			return
@@ -67,7 +73,7 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 			return
 		}
 
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}))
+		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, ""))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
 			return
@@ -205,6 +211,55 @@ func chatCompletionV2StatusResponseFromEvents(events []storage.AgentEvent) *Chat
 	return newPendingResponse("Thinking")
 }
 
+func ChatCompletionV3(agent agent.Agent, store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req ChatCompletionRequestV3
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, fmt.Sprintf("error decoding json %v", err.Error()), http.StatusBadRequest)
+			return
+		}
+
+		if req.Query == "" {
+			http.Error(w, "query is required", http.StatusBadRequest)
+			return
+		} else if req.ChatID == "" {
+			http.Error(w, "chat ID is required", http.StatusBadRequest)
+			return
+		} else if req.UserID == "" {
+			http.Error(w, "user ID is required", http.StatusBadRequest)
+			return
+		}
+
+		chat, err := createNewChat(store, req.ChatID, req.UserID)
+
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error reading/creating chat %v", err.Error()), http.StatusInternalServerError)
+			return
+		}
+		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, chat.ID))
+
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
+			return
+		}
+
+		slog.Info("Created request", "request_id", createdReq.ID)
+
+		go func() {
+			response, reasoning, err := agent.Run(req.Query, createdReq.ID)
+			if err != nil {
+				slog.Error("error running agent", "error", err.Error())
+				storage.Store(store, storage.NewAgentEvent(createdReq.ID, "error", map[string]string{"error": err.Error()}))
+				return
+			}
+
+			slog.Info("agent response", "response", *response, "reason", *reasoning)
+		}()
+
+		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: createdReq.ID})
+	}
+}
+
 // Helper functions to create responses
 func newPendingResponse(action string) *ChatCompletionV2StatusResponse {
 	return &ChatCompletionV2StatusResponse{
@@ -245,4 +300,18 @@ func getLatestEvent(events []storage.AgentEvent, relevantEventTypes []string) *s
 	})
 
 	return &sortedRelevantEvents[0]
+}
+
+func createNewChat(store storage.Storage, chatID string, userID string) (*storage.Chat, error) {
+	existingChat, err := storage.Get[storage.Chat](store, chatID)
+	if err != nil && err.Error() == "no result returned from supabase" {
+		createdChat, err := storage.Store(store, storage.NewChat(chatID, userID, "Temp Title", "private"))
+		if err != nil {
+			return nil, err
+		}
+		return createdChat, nil
+	} else if err != nil {
+		return nil, err
+	}
+	return existingChat, nil
 }
