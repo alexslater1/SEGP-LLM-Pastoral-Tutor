@@ -174,7 +174,9 @@ func (a *FastAgent) thinkAndChooseTool(iteration int, query string, knowledgeCon
 		return nil, nil, fmt.Errorf("failed to parse tool call from structured output")
 	}
 
-	a.publish(NewToolCallChoiceEvent(requestId, *toolCall))
+	if toolCall.Name != "no_tool" {
+		a.publish(NewToolCallChoiceEvent(requestId, *toolCall))
+	}
 
 	var parsedArgs map[string]interface{}
 	err = json.Unmarshal([]byte(toolCall.Arguments), &parsedArgs)
