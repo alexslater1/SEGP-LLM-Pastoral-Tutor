@@ -9,10 +9,11 @@ type StorageType interface {
 }
 
 type AgentRequest struct {
-	ID       string      `json:"id,omitempty"`
-	Endpoint string      `json:"endpoint"`
-	Metadata interface{} `json:"metadata,omitempty"`
-	ChatID   string      `json:"chat_id,omitempty"`
+	ID        string      `json:"id,omitempty"`
+	CreatedAt *time.Time  `json:"created_at,omitempty"`
+	Endpoint  string      `json:"endpoint"`
+	Metadata  interface{} `json:"metadata,omitempty"`
+	ChatID    string      `json:"chat_id,omitempty"`
 }
 
 func (ar AgentRequest) TableName() StorageTableName {

@@ -48,6 +48,7 @@ func (s *Server) routes() {
 	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(agent, storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
 	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
 	s.router.HandleFunc("POST /completion/v3", handlers.ChatCompletionV3(agent, storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
+	s.router.HandleFunc("GET /chats/v3/{chat_id}", handlers.ChatHistoryV3(storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
 }
 
 func (s *Server) Start() error {
