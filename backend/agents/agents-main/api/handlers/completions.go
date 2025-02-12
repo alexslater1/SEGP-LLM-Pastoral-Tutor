@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/segp/agents-main/agent"
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -69,7 +70,7 @@ func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
 	}
 }
 
-func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc {
+func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.History) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -87,6 +88,8 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 			return
 		}
 
+		chatHistory := []string{}
+
 		chatId := req.ChatId
 		if req.ChatId == "" {
 			createdChat, err := storage.Store(store, storage.NewChat(req.UserId, nil))
@@ -95,6 +98,13 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 				return
 			}
 			chatId = createdChat.ID
+		} else {
+			h, err := history.GetChatHistory(chatId)
+			if err != nil {
+				slog.Error("error getting history", "error", err.Error())
+				return
+			}
+			chatHistory = h
 		}
 
 		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, chatId))
@@ -106,7 +116,10 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage) http.HandlerFunc
 		slog.Info("Created request", "request_id", createdReq.ID, "chat_id", chatId)
 
 		go func() {
-			response, reasoning, err := agent.Run(req.Query, createdReq.ID)
+			newQuery := fmt.Sprintf("Previous Chat History: %s\n\nNew Query: %s", chatHistory, req.Query)
+			slog.Info("new query", "query", newQuery)
+
+			response, reasoning, err := agent.Run(newQuery, createdReq.ID)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				storage.Store(store, storage.NewAgentEvent(createdReq.ID, "error", map[string]string{"error": err.Error()}))

@@ -6,6 +6,7 @@ import (
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api/handlers"
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -43,12 +44,14 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 
 func (s *Server) routes() {
 	agent := agent.NewDefaultEventStoringLoggingFastAgent()
+	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+	history := history.NewStoreHistory(store)
 
-	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent, storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
-	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(agent, storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
-	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
+	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent, store))
+	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(agent, store, history))
+	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(store))
 
-	s.router.HandleFunc("GET /chats/{chat_id}", handlers.ChatHistory(storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))))
+	s.router.HandleFunc("GET /chats/{chat_id}", handlers.ChatHistory(store))
 }
 
 func (s *Server) Start() error {

@@ -1,12 +1,23 @@
 package history
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/storage"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	if err := godotenv.Load("../../../.env"); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+	os.Exit(m.Run())
+}
 
 func TestStoreHistory(t *testing.T) {
 	var (
@@ -170,4 +181,20 @@ func TestStoreHistory(t *testing.T) {
 	assert.Equal(t, h1, []string{"Query: What is imperials policy on late coursework submissions?\nResponse: The current exchange rate is 1 USD = 0.814 GBP."})
 	assert.Equal(t, h2, []string{"Query: What is the sum of the temperature of in japan and the temperature in london, both in farenheight?\nResponse: [ERROR]"})
 	assert.Equal(t, h3, []string{"Query: What is the current USD to GBP exchange rate?\nResponse: [PENDING]"})
+}
+
+func TestStoreHistoryWithSupabase(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+	history := NewStoreHistory(store)
+
+	h, err := history.GetChatHistory("2fea8a5f-b82c-4261-9889-3e42136d9ef0")
+	if err != nil {
+		t.Errorf("Error getting chat history: %v", err)
+	}
+
+	fmt.Printf("History: %v\n", h)
 }
