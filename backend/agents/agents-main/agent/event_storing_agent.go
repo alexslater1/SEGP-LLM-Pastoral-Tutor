@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/segp/agents-main/storage"
@@ -18,13 +19,13 @@ func NewEventStoringAgent(agent Agent, storage storage.Storage) *EventStoringAge
 	}
 }
 
-func (a *EventStoringAgent) Run(input string, requestId string) (*string, *string, error) {
+func (a *EventStoringAgent) Run(ctx context.Context, input string) (*string, *string, error) {
 	ch := a.Subscribe()
 	defer a.Unsubscribe(ch)
 
 	go a.storageLoop(ch)
 
-	return a.Agent.Run(input, requestId)
+	return a.Agent.Run(ctx, input)
 }
 
 func (a *EventStoringAgent) Subscribe() <-chan AgentEvent {

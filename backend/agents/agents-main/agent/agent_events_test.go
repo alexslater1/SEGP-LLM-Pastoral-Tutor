@@ -1,8 +1,10 @@
 package agent
 
 import (
+	"context"
 	"testing"
 
+	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/tools"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,7 +13,7 @@ func TestNewCreateRequestEvent(t *testing.T) {
 	requestID := "req123"
 	query := "test query"
 
-	event := NewCreateRequestEvent(requestID, query)
+	event := NewCreateRequestEvent(context_keys.SetRequestID(context.Background(), requestID), query)
 
 	assert.Equal(t, AgentEventTypeCreateRequest, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
@@ -22,7 +24,7 @@ func TestNewThinkEvent(t *testing.T) {
 	requestID := "req123"
 	thoughts := "thinking process"
 
-	event := NewThinkEvent(requestID, thoughts)
+	event := NewThinkEvent(context_keys.SetRequestID(context.Background(), requestID), thoughts)
 
 	assert.Equal(t, AgentEventTypeThink, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
@@ -33,7 +35,7 @@ func TestNewToolCallResultEvent(t *testing.T) {
 	requestID := "req123"
 	result := "tool result"
 
-	event := NewToolCallResultEvent(requestID, &result)
+	event := NewToolCallResultEvent(context_keys.SetRequestID(context.Background(), requestID), &result)
 
 	assert.Equal(t, AgentEventTypeToolCallResult, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
@@ -45,7 +47,7 @@ func TestNewAnswerSuccessEvent(t *testing.T) {
 	answer := "test answer"
 	reason := "test reason"
 
-	event := NewAnswerSuccessEvent(requestID, answer, reason)
+	event := NewAnswerSuccessEvent(context_keys.SetRequestID(context.Background(), requestID), answer, reason)
 
 	assert.Equal(t, AgentEventTypeAnswerSuccess, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
@@ -57,7 +59,7 @@ func TestNewObservationEvent(t *testing.T) {
 	requestID := "req123"
 	observation := "test observation"
 
-	event := NewObservationEvent(requestID, observation)
+	event := NewObservationEvent(context_keys.SetRequestID(context.Background(), requestID), observation)
 
 	assert.Equal(t, AgentEventTypeObservation, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
@@ -71,7 +73,7 @@ func TestNewToolCallChoiceEvent(t *testing.T) {
 		Arguments: "test arguments",
 	}
 
-	event := NewToolCallChoiceEvent(requestID, toolCall)
+	event := NewToolCallChoiceEvent(context_keys.SetRequestID(context.Background(), requestID), toolCall)
 
 	assert.Equal(t, AgentEventTypeToolCallChoice, event.Type)
 	assert.Equal(t, requestID, event.RequestID)

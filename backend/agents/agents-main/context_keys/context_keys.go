@@ -17,10 +17,12 @@ func SetRequestID(ctx context.Context, requestID string) context.Context {
 	return context.WithValue(ctx, ContextKeyRequestID, requestID)
 }
 
-func GetSessionID(ctx context.Context) string {
-	return ctx.Value(ContextKeySessionID).(string)
+func GetSessionID(ctx context.Context) (string, bool) {
+	sessionID, ok := ctx.Value(ContextKeySessionID).(string)
+	return sessionID, ok
 }
 
-func GetRequestID(ctx context.Context) string {
-	return ctx.Value(ContextKeyRequestID).(string)
+func GetRequestID(ctx context.Context) (string, bool) {
+	requestID, ok := ctx.Value(ContextKeyRequestID).(string)
+	return requestID, ok
 }

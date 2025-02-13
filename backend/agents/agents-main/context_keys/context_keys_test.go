@@ -13,7 +13,11 @@ func TestSetAndGetSessionID(t *testing.T) {
 	ctxWithSession := SetSessionID(ctx, sessionID)
 
 	// Retrieve the session ID from the context.
-	got := GetSessionID(ctxWithSession)
+	got, ok := GetSessionID(ctxWithSession)
+	if !ok {
+		t.Errorf("Expected session ID %q, got %q", sessionID, got)
+	}
+
 	if got != sessionID {
 		t.Errorf("Expected session ID %q, got %q", sessionID, got)
 	}
@@ -27,7 +31,11 @@ func TestSetAndGetRequestID(t *testing.T) {
 	ctxWithRequest := SetRequestID(ctx, requestID)
 
 	// Retrieve the request ID from the context.
-	got := GetRequestID(ctxWithRequest)
+	got, ok := GetRequestID(ctxWithRequest)
+	if !ok {
+		t.Errorf("Expected request ID %q, got %q", requestID, got)
+	}
+
 	if got != requestID {
 		t.Errorf("Expected request ID %q, got %q", requestID, got)
 	}
@@ -36,23 +44,20 @@ func TestSetAndGetRequestID(t *testing.T) {
 // Test that GetSessionID panics when the key is not set.
 func TestGetSessionIDWithoutSetting(t *testing.T) {
 	ctx := context.Background()
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("GetSessionID did not panic when no session ID was set")
-		}
-	}()
+
 	// This should panic.
-	_ = GetSessionID(ctx)
+	_, ok := GetSessionID(ctx)
+	if ok {
+		t.Error("GetSessionID was not false when no session ID was set")
+	}
 }
 
 // Test that GetRequestID panics when the key is not set.
 func TestGetRequestIDWithoutSetting(t *testing.T) {
 	ctx := context.Background()
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("GetRequestID did not panic when no request ID was set")
-		}
-	}()
-	// This should panic.
-	_ = GetRequestID(ctx)
+
+	_, ok := GetRequestID(ctx)
+	if ok {
+		t.Error("GetRequestID was not false when no request ID was set")
+	}
 }
