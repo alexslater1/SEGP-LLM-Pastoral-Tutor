@@ -15,7 +15,7 @@ import (
 )
 
 type Agent interface {
-	Run(input string, requestId string) (*string, *string, error)
+	Run(ctx context.Context, input string) (*string, *string, error)
 	Subscribe() <-chan AgentEvent
 	Unsubscribe(ch <-chan AgentEvent)
 }
