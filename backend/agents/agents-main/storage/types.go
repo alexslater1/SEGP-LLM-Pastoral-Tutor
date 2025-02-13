@@ -67,3 +67,31 @@ func NewChat(userId string, title *string) Chat {
 		Title:      title,
 	}
 }
+
+type Session struct {
+	ID                 string     `json:"id,omitempty"`
+	CreatedAt          *time.Time `json:"created_at,omitempty"`
+	CreatedByRequestId string     `json:"created_by_request_id"`
+	Name               *string    `json:"name,omitempty"`
+}
+
+func (s Session) TableName() StorageTableName {
+	return StorageTableNameSessions
+}
+
+func NewSession(createdByRequestId string) Session {
+	return Session{
+		CreatedByRequestId: createdByRequestId,
+	}
+}
+
+type RequestSession struct {
+	ID        string     `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	SessionID string     `json:"session_id"`
+	RequestID string     `json:"request_id"`
+}
+
+func (rs RequestSession) TableName() StorageTableName {
+	return StorageTableNameRequestSessions
+}

@@ -51,8 +51,7 @@ func TestEventStoringReActAgent(t *testing.T) {
 		t.Fatalf("Error creating request: %v", err)
 	}
 
-	ctx := context.Background()
-	ctx = context_keys.SetRequestID(ctx, createdReq.ID)
+	ctx := context_keys.SetRequestID(context.Background(), createdReq.ID)
 
 	response, reasoning, err := agent.Run(ctx, "What is the current price of the dollar")
 	if err != nil {

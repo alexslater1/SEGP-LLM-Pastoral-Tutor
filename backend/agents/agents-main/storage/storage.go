@@ -9,9 +9,11 @@ import (
 type StorageTableName string
 
 const (
-	StorageTableNameAgentRequests StorageTableName = "agent_requests"
-	StorageTableNameAgentEvents   StorageTableName = "agent_events"
-	StorageTableNameChats         StorageTableName = "Chat"
+	StorageTableNameAgentRequests   StorageTableName = "agent_requests"
+	StorageTableNameAgentEvents     StorageTableName = "agent_events"
+	StorageTableNameChats           StorageTableName = "Chat"
+	StorageTableNameSessions        StorageTableName = "sessions"
+	StorageTableNameRequestSessions StorageTableName = "request_sessions"
 )
 
 type Storage interface {

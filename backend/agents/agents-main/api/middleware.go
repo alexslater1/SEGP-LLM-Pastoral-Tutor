@@ -1,13 +1,18 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/storage"
 )
 
 type Middleware func(http.Handler) http.Handler
@@ -39,8 +44,7 @@ func (w *wrappedWriter) Write(data []byte) (int, error) {
 	return w.ResponseWriter.Write(data)
 }
 
-
-func Auth(next http.Handler) http.Handler {
+func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var jwtSecret = os.Getenv("SUPABASE_JWT_SECRET")
 
@@ -81,5 +85,74 @@ func Auth(next http.Handler) http.Handler {
 		// Add user ID to context
 		ctx := context.WithValue(r.Context(), "USER_ID", userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract the request path (if needed)
+		path := r.URL.Path
+		_ = path // currently unused but retained as in the original code
+
+		var extractedData map[string]interface{}
+
+		switch r.Method {
+		case http.MethodPost:
+			// Extract the request body as a map[string]interface{}
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, "Error reading request body", http.StatusBadRequest)
+				return
+			}
+			// Restore the request body for downstream handlers
+			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+			// Only attempt to unmarshal if the body is non-empty
+			if len(bodyBytes) > 0 {
+				if err := json.Unmarshal(bodyBytes, &extractedData); err != nil {
+					http.Error(w, "Invalid JSON in request body", http.StatusBadRequest)
+					return
+				}
+			}
+
+		case http.MethodGet:
+			// Extract query parameters as a map[string]interface{}
+			extractedData = make(map[string]interface{})
+			for key, values := range r.URL.Query() {
+				if len(values) == 1 {
+					extractedData[key] = values[0]
+				} else {
+					extractedData[key] = values
+				}
+			}
+		default:
+			// do nothign
+		}
+
+		createdReq, err := storage.Store(store, storage.NewAgentRequest(path, extractedData, ""))
+		if err != nil {
+			http.Error(w, "Error storing request", http.StatusInternalServerError)
+			return
+		}
+
+		ctx := context_keys.SetRequestID(r.Context(), createdReq.ID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Allow CORS
+		w.Header().Set("Access-Control-Allow-Origin", "*")                            // Frontend URL
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")   // Allowed methods
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization") // Include Authorization header
+
+		if r.Method == http.MethodOptions {
+			// Respond to preflight requests
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }

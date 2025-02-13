@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/segp/agents-main/agent"
+	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/storage"
 )
@@ -55,13 +56,7 @@ func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, ""))
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
-			return
-		}
-
-		response, reasoning, err := agent.Run(req.Query, createdReq.ID)
+		response, reasoning, err := agent.Run(r.Context(), req.Query)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error running agent %v", err.Error()), http.StatusInternalServerError)
 		}
@@ -88,36 +83,25 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			return
 		}
 
-		chatId := req.ChatId
-		if req.ChatId == "" {
-			createdChat, err := storage.Store(store, storage.NewChat(req.UserId, nil))
-			if err != nil {
-				http.Error(w, fmt.Sprintf("error creating chat %v", err.Error()), http.StatusInternalServerError)
-				return
-			}
-			chatId = createdChat.ID
-		}
-
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, chatId))
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
+		requestId, ok := context_keys.GetRequestID(r.Context())
+		if !ok {
+			slog.Error("request_id not found in context")
 			return
 		}
 
-		slog.Info("Created request", "request_id", createdReq.ID, "chat_id", chatId)
-
 		go func() {
-			response, reasoning, err := agent.Run(req.Query, createdReq.ID)
+			response, reasoning, err := agent.Run(r.Context(), req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
-				storage.Store(store, storage.NewAgentEvent(createdReq.ID, "error", map[string]string{"error": err.Error()}))
+
+				storage.Store(store, storage.NewAgentEvent(requestId, "error", map[string]string{"error": err.Error()}))
 				return
 			}
 
 			slog.Info("agent response", "response", *response, "reason", *reasoning)
 		}()
 
-		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: createdReq.ID, ChatId: chatId})
+		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: requestId, ChatId: "TODO"})
 	}
 }
 
