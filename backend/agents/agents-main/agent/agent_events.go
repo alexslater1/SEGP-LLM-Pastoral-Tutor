@@ -10,8 +10,8 @@ import (
 type AgentEventType string
 
 const (
-	AgentEventTypeCreateRequest  AgentEventType = "create_request"
 	AgentEventTypeThink          AgentEventType = "think"
+	AgentEventTypeQuery          AgentEventType = "query"
 	AgentEventTypeToolCallChoice AgentEventType = "tool_call_choice"
 	AgentEventTypeToolCallResult AgentEventType = "tool_call_result"
 	AgentEventTypeAnswerSuccess  AgentEventType = "answer_success"
@@ -25,17 +25,15 @@ type AgentEvent struct {
 	Data      map[string]interface{}
 }
 
-func NewCreateRequestEvent(ctx context.Context, query string) AgentEvent {
+func NewQueryEvent(ctx context.Context, query string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
 		requestId = "none"
 	}
 	return AgentEvent{
-		Type:      AgentEventTypeCreateRequest,
+		Type:      AgentEventTypeQuery,
 		RequestID: requestId,
-		Data: map[string]interface{}{
-			"query": query,
-		},
+		Data:      map[string]interface{}{"query": query},
 	}
 }
 

@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewCreateRequestEvent(t *testing.T) {
+func TestNewQueryEvent(t *testing.T) {
 	requestID := "req123"
 	query := "test query"
 
-	event := NewCreateRequestEvent(context_keys.SetRequestID(context.Background(), requestID), query)
+	event := NewQueryEvent(context_keys.SetRequestID(context.Background(), requestID), query)
 
-	assert.Equal(t, AgentEventTypeCreateRequest, event.Type)
+	assert.Equal(t, AgentEventTypeQuery, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
 	assert.Equal(t, query, event.Data["query"])
 }
