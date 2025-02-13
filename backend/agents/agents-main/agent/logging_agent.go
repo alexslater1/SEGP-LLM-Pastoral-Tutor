@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"log"
 	"strings"
 )
@@ -9,17 +10,17 @@ type LoggingAgent struct {
 	Agent Agent
 }
 
-func NewLoggingAgent(agent Agent) Agent {
+func NewLoggingAgent(agent Agent) *LoggingAgent {
 	return &LoggingAgent{Agent: agent}
 }
 
-func (a *LoggingAgent) Run(input string, requestId string) (*string, *string, error) {
+func (a *LoggingAgent) Run(ctx context.Context, input string) (*string, *string, error) {
 	ch := a.Subscribe()
 	defer a.Unsubscribe(ch)
 
 	go a.loggingLoop(ch)
 
-	return a.Agent.Run(input, requestId)
+	return a.Agent.Run(ctx, input)
 }
 
 func (a *LoggingAgent) Subscribe() <-chan AgentEvent {

@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/segp/agents-main/agent"
+	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/storage"
 )
@@ -20,9 +22,8 @@ const (
 )
 
 type ChatCompletionRequest struct {
-	Query  string `json:"query"`
-	ChatId string `json:"chat_id"`
-	UserId string `json:"user_id"`
+	Query     string `json:"query"`
+	SessionId string `json:"session_id"`
 }
 
 type ChatCompletionResponse struct {
@@ -39,35 +40,7 @@ type ChatCompletionV2StatusResponse struct {
 
 type ChatCompletionV2Response struct {
 	RequestId string `json:"request_id"`
-	ChatId    string `json:"chat_id"`
-}
-
-func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req ChatCompletionRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, fmt.Sprintf("error decoding json %v", err.Error()), http.StatusBadRequest)
-			return
-		}
-
-		if req.Query == "" {
-			http.Error(w, "query is required", http.StatusBadRequest)
-			return
-		}
-
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, ""))
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
-			return
-		}
-
-		response, reasoning, err := agent.Run(req.Query, createdReq.ID)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error running agent %v", err.Error()), http.StatusInternalServerError)
-		}
-
-		json.NewEncoder(w).Encode(ChatCompletionResponse{Response: *response, Reason: *reasoning})
-	}
+	SessionID string `json:"session_id"`
 }
 
 func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.History) http.HandlerFunc {
@@ -83,53 +56,36 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			return
 		}
 
-		if req.UserId == "" {
-			http.Error(w, "user_id is required", http.StatusBadRequest)
+		requestId, ok := context_keys.GetRequestID(r.Context())
+		if !ok {
+			slog.Error("request_id not found in context")
 			return
 		}
 
-		chatHistory := []string{}
-
-		chatId := req.ChatId
-		if req.ChatId == "" {
-			createdChat, err := storage.Store(store, storage.NewChat(req.UserId, nil))
-			if err != nil {
-				http.Error(w, fmt.Sprintf("error creating chat %v", err.Error()), http.StatusInternalServerError)
-				return
-			}
-			chatId = createdChat.ID
-		} else {
-			h, err := history.GetChatHistory(chatId)
-			if err != nil {
-				slog.Error("error getting history", "error", err.Error())
-				return
-			}
-			chatHistory = h
-		}
-
-		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, chatId))
+		// TODO: put this in different thread maybe? Idk might break some stuff
+		ctx, err := linkSessionToRequest(r.Context(), store)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("error linking session to request %v", err.Error()), http.StatusInternalServerError)
 			return
 		}
-
-		slog.Info("Created request", "request_id", createdReq.ID, "chat_id", chatId)
 
 		go func() {
-			newQuery := fmt.Sprintf("Previous Chat History: %s\n\nNew Query: %s", chatHistory, req.Query)
-			slog.Info("new query", "query", newQuery)
-
-			response, reasoning, err := agent.Run(newQuery, createdReq.ID)
+			response, reasoning, err := agent.Run(r.Context(), req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
-				storage.Store(store, storage.NewAgentEvent(createdReq.ID, "error", map[string]string{"error": err.Error()}))
 				return
 			}
 
 			slog.Info("agent response", "response", *response, "reason", *reasoning)
 		}()
 
-		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: createdReq.ID, ChatId: chatId})
+		sessionId, ok := context_keys.GetSessionID(ctx)
+		if !ok {
+			slog.Error("session_id not found in context")
+			return
+		}
+
+		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: requestId, SessionID: sessionId})
 	}
 }
 
@@ -168,4 +124,29 @@ func chatCompletionV2StatusResponseFromEventsFastAgent(events []storage.AgentEve
 	}
 
 	return createStatusFromEvent(newestEvent)
+}
+
+func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.Context, error) {
+	requestID, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		return ctx, fmt.Errorf("request_id not found in context")
+	}
+
+	sessionID, ok := context_keys.GetSessionID(ctx)
+	if !ok {
+		session, err := storage.Store(store, storage.NewSession(requestID))
+		if err != nil {
+			return ctx, fmt.Errorf("error creating session %v", err.Error())
+		}
+
+		ctx = context_keys.SetSessionID(ctx, session.ID)
+		sessionID = session.ID
+	}
+
+	_, err := storage.Store(store, storage.NewRequestSession(sessionID, requestID))
+	if err != nil {
+		return ctx, fmt.Errorf("error creating request session %v", err.Error())
+	}
+
+	return ctx, nil
 }

@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/segp/agents-main/clock"
+	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/tools"
@@ -23,24 +25,31 @@ type FastAgent struct {
 	LLM         llm.LLM
 	Knowledge   knowledge.Knowledge
 	Clock       clock.Clock
+	History     history.History
 
 	subscribers []chan AgentEvent
 }
 
-func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock) *FastAgent {
+func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
 	return &FastAgent{
 		Background:  background,
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Knowledge:   knowledge,
 		Clock:       clock,
+		History:     history,
 
 		subscribers: []chan AgentEvent{},
 	}
 }
 
-func (a *FastAgent) Run(query string, requestId string) (*string, *string, error) {
-	return a.logicLoop(query, requestId)
+func (a *FastAgent) Run(ctx context.Context, query string) (*string, *string, error) {
+	a.publish(NewQueryEvent(ctx, query))
+	answer, reasoning, err := a.logicLoop(ctx, query)
+	if err != nil {
+		a.publish(NewAnswerErrorEvent(ctx, err.Error()))
+	}
+	return answer, reasoning, err
 }
 
 func (a *FastAgent) Subscribe() <-chan AgentEvent {
@@ -69,16 +78,16 @@ func (a *FastAgent) publish(event AgentEvent) {
 	}
 }
 
-func (a *FastAgent) handleNoTool(toolChoice *tools.ToolCall, requestId string) (*string, *string, error) {
-	answer, reason, err := a.extractAnswerAndReason(requestId, toolChoice)
+func (a *FastAgent) handleNoTool(ctx context.Context, toolChoice *tools.ToolCall) (*string, *string, error) {
+	answer, reason, err := a.extractAnswerAndReason(toolChoice)
 	if err != nil {
 		return nil, nil, err
 	}
-	a.publish(NewAnswerSuccessEvent(requestId, *answer, *reason))
+	a.publish(NewAnswerSuccessEvent(ctx, *answer, *reason))
 	return answer, reason, nil
 }
 
-func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string, error) {
+func (a *FastAgent) logicLoop(ctx context.Context, query string) (*string, *string, error) {
 	slog.Info("Starting FAST AGENT logic loop for query", "query", query)
 
 	var prevThoughts *string
@@ -93,20 +102,20 @@ func (a *FastAgent) logicLoop(query string, requestId string) (*string, *string,
 			return nil, nil, err
 		}
 
-		thoughts, toolChoice, err := a.thinkAndChooseTool(i, query, knowledgeContext, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls, requestId)
+		thoughts, toolChoice, err := a.thinkAndChooseTool(ctx, i, query, knowledgeContext, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		if toolChoice.Name == "no_tool" {
-			return a.handleNoTool(toolChoice, requestId)
+			return a.handleNoTool(ctx, toolChoice)
 		}
 
 		result, err := a.ToolHandler.Call(*toolChoice)
 		if err != nil {
 			return nil, nil, err
 		}
-		a.publish(NewToolCallResultEvent(requestId, result))
+		a.publish(NewToolCallResultEvent(ctx, result))
 
 		prevThoughts = thoughts
 		prevToolCallResult = result
@@ -153,13 +162,13 @@ func structuredOutputToToolCall(structuredOutputCompletion *string) *tools.ToolC
 	}
 }
 
-func (a *FastAgent) thinkAndChooseTool(iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall, requestId string) (*string, *tools.ToolCall, error) {
+func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall) (*string, *tools.ToolCall, error) {
 	kc := ""
 	if knowledgeContext != nil {
 		kc = *knowledgeContext
 	}
 
-	prompt, err := a.thinkingAndActPrompt(iteration, query, &kc, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls, requestId)
+	prompt, err := a.thinkingAndActPrompt(ctx, iteration, query, &kc, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -175,7 +184,7 @@ func (a *FastAgent) thinkAndChooseTool(iteration int, query string, knowledgeCon
 	}
 
 	if toolCall.Name != "no_tool" {
-		a.publish(NewToolCallChoiceEvent(requestId, *toolCall))
+		a.publish(NewToolCallChoiceEvent(ctx, *toolCall))
 	}
 
 	var parsedArgs map[string]interface{}
@@ -196,11 +205,16 @@ func (a *FastAgent) thinkAndChooseTool(iteration int, query string, knowledgeCon
 	return &thoughts, toolCall, nil
 }
 
-func (a *FastAgent) thinkingAndActPrompt(iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall, requestId string) (*string, error) {
+func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall) (*string, error) {
 	prompt := ""
 
+	chatHistory, err := a.chatHistory(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if iteration == 0 {
-		prompt = fmt.Sprintf("You are a reAct agent. Your goal is to solve the following query: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", query, *knowledgeContext)
+		prompt = fmt.Sprintf("You are a reAct agent. Here are previous messages: %+v. Your goal is to solve the following query: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", chatHistory, query, *knowledgeContext)
 	} else {
 		prompt = fmt.Sprintf("You are a reAct agent, currently in the process of solving the query: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
@@ -221,6 +235,14 @@ func (a *FastAgent) thinkingAndActPrompt(iteration int, query string, knowledgeC
 	}
 
 	return &prompt, nil
+}
+
+func (a *FastAgent) chatHistory(ctx context.Context) ([]string, error) {
+	sessionId, ok := context_keys.GetSessionID(ctx)
+	if !ok {
+		return nil, nil
+	}
+	return a.History.GetMessageHistory(sessionId)
 }
 
 func (a *FastAgent) iterationBasedPrompt(iteration int) string {
@@ -246,7 +268,7 @@ func (a *FastAgent) toolChoicesString() (string, error) {
 }
 
 // TODO: remove duplication of this
-func (a *FastAgent) extractAnswerAndReason(requestId string, toolCall *tools.ToolCall) (*string, *string, error) {
+func (a *FastAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *string, error) {
 	var arguments map[string]string
 	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
 		return nil, nil, err

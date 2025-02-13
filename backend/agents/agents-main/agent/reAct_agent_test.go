@@ -1,11 +1,13 @@
 package agent
 
 import (
+	"context"
 	"log"
 	"os"
 	"testing"
 
 	"github.com/joho/godotenv"
+	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -24,7 +26,10 @@ func TestReActAgent(t *testing.T) {
 
 	agent := NewDefaultLoggingReActAgent()
 
-	response, reasoning, err := agent.Run("What is the current price of the dollar", "test-request-id")
+	ctx := context.Background()
+	ctx = context_keys.SetRequestID(ctx, "test-request-id")
+
+	response, reasoning, err := agent.Run(ctx, "What is the current price of the dollar")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}
@@ -46,7 +51,9 @@ func TestEventStoringReActAgent(t *testing.T) {
 		t.Fatalf("Error creating request: %v", err)
 	}
 
-	response, reasoning, err := agent.Run("What is the current price of the dollar", createdReq.ID)
+	ctx := context_keys.SetRequestID(context.Background(), createdReq.ID)
+
+	response, reasoning, err := agent.Run(ctx, "What is the current price of the dollar")
 	if err != nil {
 		t.Fatalf("Error running agent: %v", err)
 	}

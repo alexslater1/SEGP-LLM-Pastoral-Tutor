@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api/handlers"
@@ -13,51 +12,41 @@ import (
 type Server struct {
 	listenAddr string
 	router     *http.ServeMux
+
+	storage storage.Storage
+	agent   agent.Agent
+	history history.History
 }
 
-func NewServer(listenAddr string) *Server {
+func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, history history.History) *Server {
 	s := &Server{
 		listenAddr: listenAddr,
 		router:     http.NewServeMux(),
+		storage:    storage,
+		agent:      agent,
+		history:    history,
 	}
 
 	s.routes()
 	return s
 }
 
-func (s *Server) corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow CORS
-		w.Header().Set("Access-Control-Allow-Origin", "*")                            // Frontend URL
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")   // Allowed methods
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization") // Include Authorization header
-
-		if r.Method == http.MethodOptions {
-			// Respond to preflight requests
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 func (s *Server) routes() {
-	agent := agent.NewDefaultEventStoringLoggingFastAgent()
-	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
-	history := history.NewStoreHistory(store)
-
-	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent, store))
-	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(agent, store, history))
-	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(store))
-
-	s.router.HandleFunc("GET /chats/{chat_id}", handlers.ChatHistory(store))
+	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.agent, s.storage, s.history))
+	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(s.storage))
+	s.router.HandleFunc("GET /sessions/{session_id}", handlers.ChatHistory(s.history))
 }
 
 func (s *Server) Start() error {
+	requestIdMiddlewareClosure := func(next http.Handler) http.Handler {
+		return requestIdMiddleware(next, s.storage)
+	}
+
 	stack := CreateMiddlewareStack(
-		s.corsMiddleware, // CORS middleware should be first
-		// Auth,
+		corsMiddleware, // CORS middleware should be first
+		authMiddleware,
+		requestIdMiddlewareClosure,
+		sessionIDMiddleware,
 	)
 
 	return http.ListenAndServe(s.listenAddr, stack(s.router))

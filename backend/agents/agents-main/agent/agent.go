@@ -15,7 +15,7 @@ import (
 )
 
 type Agent interface {
-	Run(input string, requestId string) (*string, *string, error)
+	Run(ctx context.Context, input string) (*string, *string, error)
 	Subscribe() <-chan AgentEvent
 	Unsubscribe(ch <-chan AgentEvent)
 }
@@ -41,6 +41,8 @@ func NewDefaultFastAgent() Agent {
 		// knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
 		knowledge = knowledge.NewLocalKnowledge()
 		clock     = clock.NewRealClock()
+		store     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+		history   = history.NewAgentEventHistory(store)
 	)
 
 	return NewFastAgent(
@@ -49,6 +51,7 @@ func NewDefaultFastAgent() Agent {
 		llm,
 		knowledge,
 		clock,
+		history,
 	)
 }
 

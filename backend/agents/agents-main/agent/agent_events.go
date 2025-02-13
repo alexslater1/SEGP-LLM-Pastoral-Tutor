@@ -1,14 +1,17 @@
 package agent
 
 import (
+	"context"
+
+	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/tools"
 )
 
 type AgentEventType string
 
 const (
-	AgentEventTypeCreateRequest  AgentEventType = "create_request"
 	AgentEventTypeThink          AgentEventType = "think"
+	AgentEventTypeQuery          AgentEventType = "query"
 	AgentEventTypeToolCallChoice AgentEventType = "tool_call_choice"
 	AgentEventTypeToolCallResult AgentEventType = "tool_call_result"
 	AgentEventTypeAnswerSuccess  AgentEventType = "answer_success"
@@ -22,17 +25,23 @@ type AgentEvent struct {
 	Data      map[string]interface{}
 }
 
-func NewCreateRequestEvent(requestId string, query string) AgentEvent {
+func NewQueryEvent(ctx context.Context, query string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
 	return AgentEvent{
-		Type:      AgentEventTypeCreateRequest,
+		Type:      AgentEventTypeQuery,
 		RequestID: requestId,
-		Data: map[string]interface{}{
-			"query": query,
-		},
+		Data:      map[string]interface{}{"query": query},
 	}
 }
 
-func NewThinkEvent(requestId string, thoughts string) AgentEvent {
+func NewThinkEvent(ctx context.Context, thoughts string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeThink,
 		RequestID: requestId,
@@ -42,7 +51,11 @@ func NewThinkEvent(requestId string, thoughts string) AgentEvent {
 	}
 }
 
-func NewToolCallResultEvent(requestId string, toolCallResult *string) AgentEvent {
+func NewToolCallResultEvent(ctx context.Context, toolCallResult *string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallResult,
 		RequestID: requestId,
@@ -52,7 +65,23 @@ func NewToolCallResultEvent(requestId string, toolCallResult *string) AgentEvent
 	}
 }
 
-func NewAnswerSuccessEvent(requestId string, answer string, reason string) AgentEvent {
+func NewAnswerErrorEvent(ctx context.Context, error string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
+	return AgentEvent{
+		Type:      AgentEventTypeAnswerError,
+		RequestID: requestId,
+		Data:      map[string]interface{}{"error": error},
+	}
+}
+
+func NewAnswerSuccessEvent(ctx context.Context, answer string, reason string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeAnswerSuccess,
 		RequestID: requestId,
@@ -63,7 +92,11 @@ func NewAnswerSuccessEvent(requestId string, answer string, reason string) Agent
 	}
 }
 
-func NewObservationEvent(requestId string, observation string) AgentEvent {
+func NewObservationEvent(ctx context.Context, observation string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeObservation,
 		RequestID: requestId,
@@ -73,7 +106,11 @@ func NewObservationEvent(requestId string, observation string) AgentEvent {
 	}
 }
 
-func NewToolCallChoiceEvent(requestId string, toolCall tools.ToolCall) AgentEvent {
+func NewToolCallChoiceEvent(ctx context.Context, toolCall tools.ToolCall) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallChoice,
 		RequestID: requestId,
