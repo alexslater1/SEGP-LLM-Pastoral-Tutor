@@ -20,69 +20,18 @@ func NewAgentEventHistory(storage storage.Storage) *AgentEventHistory {
 }
 
 func (h *AgentEventHistory) GetMessageHistory(sessionId string) ([]string, error) {
-	agentRequestSessions, err := storage.GetAll[storage.RequestSession](h.store, map[string]string{"session_id": sessionId})
+	messagesAndActions, err := h.GetMessagesAndActions(sessionId)
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Slice(agentRequestSessions, func(i, j int) bool {
-		return agentRequestSessions[i].CreatedAt.Before(*agentRequestSessions[j].CreatedAt)
-	})
-
-	requestEventsTasks := utils.DoAsyncList(agentRequestSessions, func(agentRequestSession storage.RequestSession) ([]storage.AgentEvent, error) {
-		agentEvents, err := storage.GetAll[storage.AgentEvent](h.store, map[string]string{"request_id": agentRequestSession.RequestID})
-		if err != nil {
-			return nil, err
-		}
-
-		sort.Slice(agentEvents, func(i, j int) bool {
-			return agentEvents[i].CreatedAt.Before(*agentEvents[j].CreatedAt)
-		})
-
-		return agentEvents, nil
-	})
-
-	requestEventsLists, err := utils.GetAsyncList(requestEventsTasks)
-	if err != nil {
-		return nil, err
+	messages := []string{}
+	for _, messageAndAction := range messagesAndActions {
+		message, response := messageAndResponseFrom(messageAndAction)
+		messages = append(messages, fmt.Sprintf("Query: %s\nResponse: %s\n", message, response))
 	}
 
-	history := make([]string, len(agentRequestSessions))
-	for i, requestEvents := range requestEventsLists {
-		history[i] = h.getQueryResponseFromAgentEvents(requestEvents)
-	}
-
-	return history, nil
-}
-
-func (h *AgentEventHistory) getQueryResponseFromAgentEvents(agentEvents []storage.AgentEvent) string {
-	var query *string
-	var response *string
-
-	for _, event := range agentEvents {
-		switch event.Type {
-		case "query":
-			q := event.Metadata.(map[string]interface{})["query"].(string)
-			query = &q
-		case "answer_success":
-			r := event.Metadata.(map[string]interface{})["answer"].(string)
-			response = &r
-		case "error":
-			r := "[ERROR]"
-			response = &r
-		}
-	}
-
-	if query == nil {
-		panic("IMPOSSIBLE STATE: shouldnt get here right?? idk should handle this possibly at some point")
-	}
-
-	if response == nil {
-		r := "[PENDING]	"
-		response = &r
-	}
-
-	return fmt.Sprintf("Query: %s\nResponse: %s", *query, *response)
+	return messages, nil
 }
 
 func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesAndActions, error) {
@@ -196,4 +145,22 @@ func responseStatusFrom(answer string, error string) StatusResponseType {
 	}
 
 	return StatusResponseTypePending
+}
+
+func messageAndResponseFrom(messageAndAction MessagesAndActions) (string, string) {
+	message := messageAndAction.Query
+
+	if messageAndAction.Type == StatusResponseTypeCompleted {
+		return message, messageAndAction.Answer
+	}
+
+	if messageAndAction.Type == StatusResponseTypePending {
+		return message, "[PENDING]"
+	}
+
+	if messageAndAction.Type == StatusResponseTypeError {
+		return message, "[ERROR]"
+	}
+
+	panic(fmt.Sprintf("unknown status response type: %v", messageAndAction.Type))
 }
