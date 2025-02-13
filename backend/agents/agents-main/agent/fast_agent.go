@@ -40,7 +40,12 @@ func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM
 }
 
 func (a *FastAgent) Run(ctx context.Context, query string) (*string, *string, error) {
-	return a.logicLoop(ctx, query)
+	a.publish(NewQueryEvent(ctx, query))
+	answer, reasoning, err := a.logicLoop(ctx, query)
+	if err != nil {
+		a.publish(NewAnswerErrorEvent(ctx, err.Error()))
+	}
+	return answer, reasoning, err
 }
 
 func (a *FastAgent) Subscribe() <-chan AgentEvent {

@@ -20,6 +20,17 @@ func TestNewQueryEvent(t *testing.T) {
 	assert.Equal(t, query, event.Data["query"])
 }
 
+func TestNewAnswerErrorEvent(t *testing.T) {
+	requestID := "req123"
+	error := "test error"
+
+	event := NewAnswerErrorEvent(context_keys.SetRequestID(context.Background(), requestID), error)
+
+	assert.Equal(t, AgentEventTypeAnswerError, event.Type)
+	assert.Equal(t, requestID, event.RequestID)
+	assert.Equal(t, error, event.Data["error"])
+}
+
 func TestNewThinkEvent(t *testing.T) {
 	requestID := "req123"
 	thoughts := "thinking process"

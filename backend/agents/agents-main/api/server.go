@@ -33,7 +33,6 @@ func (s *Server) routes() {
 	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 	history := history.NewStoreHistory(store)
 
-	s.router.HandleFunc("POST /completion", handlers.ChatCompletion(agent, store))
 	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(agent, store, history))
 	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(store))
 

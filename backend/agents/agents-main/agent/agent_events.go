@@ -65,6 +65,18 @@ func NewToolCallResultEvent(ctx context.Context, toolCallResult *string) AgentEv
 	}
 }
 
+func NewAnswerErrorEvent(ctx context.Context, error string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = "none"
+	}
+	return AgentEvent{
+		Type:      AgentEventTypeAnswerError,
+		RequestID: requestId,
+		Data:      map[string]interface{}{"error": error},
+	}
+}
+
 func NewAnswerSuccessEvent(ctx context.Context, answer string, reason string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {

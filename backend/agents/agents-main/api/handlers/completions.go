@@ -44,28 +44,6 @@ type ChatCompletionV2Response struct {
 	ChatId    string `json:"chat_id"`
 }
 
-func ChatCompletion(agent agent.Agent, store storage.Storage) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req ChatCompletionRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, fmt.Sprintf("error decoding json %v", err.Error()), http.StatusBadRequest)
-			return
-		}
-
-		if req.Query == "" {
-			http.Error(w, "query is required", http.StatusBadRequest)
-			return
-		}
-
-		response, reasoning, err := agent.Run(r.Context(), req.Query)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error running agent %v", err.Error()), http.StatusInternalServerError)
-		}
-
-		json.NewEncoder(w).Encode(ChatCompletionResponse{Response: *response, Reason: *reasoning})
-	}
-}
-
 func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.History) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
@@ -101,8 +79,6 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			response, reasoning, err := agent.Run(r.Context(), req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
-
-				storage.Store(store, storage.NewAgentEvent(requestId, "error", map[string]string{"error": err.Error()}))
 				return
 			}
 
