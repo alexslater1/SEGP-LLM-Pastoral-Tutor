@@ -61,3 +61,17 @@ func TestGetRequestIDWithoutSetting(t *testing.T) {
 		t.Error("GetRequestID was not false when no request ID was set")
 	}
 }
+
+func TestSetAndGetUserID(t *testing.T) {
+	const userID = "user123"
+	ctx := context.Background()
+
+	// Add the user ID to the context.
+	ctxWithUser := SetUserID(ctx, userID)
+
+	// Retrieve the user ID from the context.
+	got, ok := GetUserID(ctxWithUser)
+	if !ok {
+		t.Errorf("Expected user ID %q, got %q", userID, got)
+	}
+}
