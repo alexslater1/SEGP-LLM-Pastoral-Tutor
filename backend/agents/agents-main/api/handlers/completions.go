@@ -24,7 +24,6 @@ const (
 type ChatCompletionRequest struct {
 	Query  string `json:"query"`
 	ChatId string `json:"chat_id"`
-	UserId string `json:"user_id"`
 }
 
 type ChatCompletionResponse struct {
@@ -54,11 +53,6 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 
 		if req.Query == "" {
 			http.Error(w, "query is required", http.StatusBadRequest)
-			return
-		}
-
-		if req.UserId == "" {
-			http.Error(w, "user_id is required", http.StatusBadRequest)
 			return
 		}
 
@@ -149,7 +143,7 @@ func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.C
 		sessionID = session.ID
 	}
 
-	_, err := storage.Store(store, storage.NewRequestSession(requestID, sessionID))
+	_, err := storage.Store(store, storage.NewRequestSession(sessionID, requestID))
 	if err != nil {
 		return ctx, fmt.Errorf("error creating request session %v", err.Error())
 	}

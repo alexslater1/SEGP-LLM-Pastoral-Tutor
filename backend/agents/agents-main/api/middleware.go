@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 
 	"encoding/json"
 	"io"
@@ -133,7 +134,7 @@ func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler 
 
 		createdReq, err := storage.Store(store, storage.NewAgentRequest(path, extractedData, ""))
 		if err != nil {
-			http.Error(w, "Error storing request", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
 			return
 		}
 
