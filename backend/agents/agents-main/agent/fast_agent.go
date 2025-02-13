@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/segp/agents-main/clock"
+	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/tools"
@@ -23,17 +25,19 @@ type FastAgent struct {
 	LLM         llm.LLM
 	Knowledge   knowledge.Knowledge
 	Clock       clock.Clock
+	History     history.History
 
 	subscribers []chan AgentEvent
 }
 
-func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock) *FastAgent {
+func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
 	return &FastAgent{
 		Background:  background,
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Knowledge:   knowledge,
 		Clock:       clock,
+		History:     history,
 
 		subscribers: []chan AgentEvent{},
 	}
@@ -204,8 +208,13 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall) (*string, error) {
 	prompt := ""
 
+	chatHistory, err := a.chatHistory(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if iteration == 0 {
-		prompt = fmt.Sprintf("You are a reAct agent. Your goal is to solve the following query: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", query, *knowledgeContext)
+		prompt = fmt.Sprintf("You are a reAct agent. Here are previous messages: %+v. Your goal is to solve the following query: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", chatHistory, query, *knowledgeContext)
 	} else {
 		prompt = fmt.Sprintf("You are a reAct agent, currently in the process of solving the query: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
@@ -226,6 +235,14 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	return &prompt, nil
+}
+
+func (a *FastAgent) chatHistory(ctx context.Context) ([]string, error) {
+	sessionId, ok := context_keys.GetSessionID(ctx)
+	if !ok {
+		return nil, nil
+	}
+	return a.History.GetMessageHistory(sessionId)
 }
 
 func (a *FastAgent) iterationBasedPrompt(iteration int) string {

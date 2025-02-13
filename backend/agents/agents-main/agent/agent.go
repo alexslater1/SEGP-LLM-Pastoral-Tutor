@@ -41,6 +41,8 @@ func NewDefaultFastAgent() Agent {
 		// knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
 		knowledge = knowledge.NewLocalKnowledge()
 		clock     = clock.NewRealClock()
+		store     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+		history   = history.NewAgentEventHistory(store)
 	)
 
 	return NewFastAgent(
@@ -49,6 +51,7 @@ func NewDefaultFastAgent() Agent {
 		llm,
 		knowledge,
 		clock,
+		history,
 	)
 }
 

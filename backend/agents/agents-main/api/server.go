@@ -38,16 +38,15 @@ func (s *Server) routes() {
 }
 
 func (s *Server) Start() error {
-	requestIdMiddlewareClosure := func(http.Handler) http.Handler {
-		return requestIdMiddleware(s.router, s.storage)
+	requestIdMiddlewareClosure := func(next http.Handler) http.Handler {
+		return requestIdMiddleware(next, s.storage)
 	}
 
 	stack := CreateMiddlewareStack(
-		authMiddleware,
 		corsMiddleware, // CORS middleware should be first
+		authMiddleware,
 		requestIdMiddlewareClosure,
 		sessionIDMiddleware,
-		// Auth,
 	)
 
 	return http.ListenAndServe(s.listenAddr, stack(s.router))
