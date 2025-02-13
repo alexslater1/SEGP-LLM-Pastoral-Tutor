@@ -88,8 +88,6 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			return
 		}
 
-		chatHistory := []string{}
-
 		chatId := req.ChatId
 		if req.ChatId == "" {
 			createdChat, err := storage.Store(store, storage.NewChat(req.UserId, nil))
@@ -98,13 +96,6 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 				return
 			}
 			chatId = createdChat.ID
-		} else {
-			h, err := history.GetMessageHistory(chatId)
-			if err != nil {
-				slog.Error("error getting history", "error", err.Error())
-				return
-			}
-			chatHistory = h
 		}
 
 		createdReq, err := storage.Store(store, storage.NewAgentRequest("/completion", map[string]string{"query": req.Query}, chatId))
@@ -116,10 +107,7 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 		slog.Info("Created request", "request_id", createdReq.ID, "chat_id", chatId)
 
 		go func() {
-			newQuery := fmt.Sprintf("Previous Chat History: %s\n\nNew Query: %s", chatHistory, req.Query)
-			slog.Info("new query", "query", newQuery)
-
-			response, reasoning, err := agent.Run(newQuery, createdReq.ID)
+			response, reasoning, err := agent.Run(req.Query, createdReq.ID)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				storage.Store(store, storage.NewAgentEvent(createdReq.ID, "error", map[string]string{"error": err.Error()}))
