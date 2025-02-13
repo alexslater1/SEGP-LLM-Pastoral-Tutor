@@ -43,6 +43,7 @@ func (s *Server) Start() error {
 	}
 
 	stack := CreateMiddlewareStack(
+		authMiddleware,
 		corsMiddleware, // CORS middleware should be first
 		requestIdMiddlewareClosure,
 		sessionIDMiddleware,

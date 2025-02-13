@@ -89,6 +89,7 @@ func authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// TODO: add user id to the request table? (quick)
 func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract the request path (if needed)
