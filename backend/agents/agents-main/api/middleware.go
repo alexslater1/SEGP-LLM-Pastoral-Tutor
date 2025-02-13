@@ -140,6 +140,35 @@ func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler 
 	})
 }
 
+func sessionIDMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if the request has a body to read
+		if r.Body != nil {
+			// Read the request body
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, "Error reading request body", http.StatusBadRequest)
+				return
+			}
+			// Restore the request body so that downstream handlers can access it
+			r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+			// Only attempt to unmarshal if the body is non-empty
+			if len(bodyBytes) > 0 {
+				var payload map[string]interface{}
+				if err := json.Unmarshal(bodyBytes, &payload); err == nil {
+					if sessionID, ok := payload["session_id"].(string); ok {
+						// If session_id is found, add it to the context
+						r = r.WithContext(context_keys.SetSessionID(r.Context(), sessionID))
+					}
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Allow CORS

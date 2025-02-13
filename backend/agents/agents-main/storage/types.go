@@ -92,6 +92,13 @@ type RequestSession struct {
 	RequestID string     `json:"request_id"`
 }
 
+func NewRequestSession(sessionID string, requestID string) RequestSession {
+	return RequestSession{
+		SessionID: sessionID,
+		RequestID: requestID,
+	}
+}
+
 func (rs RequestSession) TableName() StorageTableName {
 	return StorageTableNameRequestSessions
 }

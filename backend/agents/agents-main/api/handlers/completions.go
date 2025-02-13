@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -89,6 +90,13 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			return
 		}
 
+		// TODO: put this in different thread maybe? Idk might break some stuff
+		ctx, err := linkSessionToRequest(r.Context(), store)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error linking session to request %v", err.Error()), http.StatusInternalServerError)
+			return
+		}
+
 		go func() {
 			response, reasoning, err := agent.Run(r.Context(), req.Query)
 			if err != nil {
@@ -101,7 +109,13 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			slog.Info("agent response", "response", *response, "reason", *reasoning)
 		}()
 
-		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: requestId, ChatId: "TODO"})
+		sessionId, ok := context_keys.GetSessionID(ctx)
+		if !ok {
+			slog.Error("session_id not found in context")
+			return
+		}
+
+		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: requestId, ChatId: sessionId})
 	}
 }
 
@@ -140,4 +154,29 @@ func chatCompletionV2StatusResponseFromEventsFastAgent(events []storage.AgentEve
 	}
 
 	return createStatusFromEvent(newestEvent)
+}
+
+func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.Context, error) {
+	requestID, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		return ctx, fmt.Errorf("request_id not found in context")
+	}
+
+	sessionID, ok := context_keys.GetSessionID(ctx)
+	if !ok {
+		session, err := storage.Store(store, storage.NewSession(requestID))
+		if err != nil {
+			return ctx, fmt.Errorf("error creating session %v", err.Error())
+		}
+
+		ctx = context_keys.SetSessionID(ctx, session.ID)
+		sessionID = session.ID
+	}
+
+	_, err := storage.Store(store, storage.NewRequestSession(requestID, sessionID))
+	if err != nil {
+		return ctx, fmt.Errorf("error creating request session %v", err.Error())
+	}
+
+	return ctx, nil
 }
