@@ -32,7 +32,7 @@ type ChatHistoryResponse struct {
 
 func ChatHistory(history history.History) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		chatId := r.PathValue("chat_id")
+		chatId := r.PathValue("session_id")
 		messageAndActions, err := history.GetMessagesAndActions(chatId)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to get message history: %v", err), http.StatusInternalServerError)

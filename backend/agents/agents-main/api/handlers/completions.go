@@ -22,8 +22,8 @@ const (
 )
 
 type ChatCompletionRequest struct {
-	Query  string `json:"query"`
-	ChatId string `json:"chat_id"`
+	Query     string `json:"query"`
+	SessionId string `json:"session_id"`
 }
 
 type ChatCompletionResponse struct {
@@ -40,7 +40,7 @@ type ChatCompletionV2StatusResponse struct {
 
 type ChatCompletionV2Response struct {
 	RequestId string `json:"request_id"`
-	ChatId    string `json:"chat_id"`
+	SessionID string `json:"session_id"`
 }
 
 func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.History) http.HandlerFunc {
@@ -85,7 +85,7 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			return
 		}
 
-		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: requestId, ChatId: sessionId})
+		json.NewEncoder(w).Encode(ChatCompletionV2Response{RequestId: requestId, SessionID: sessionId})
 	}
 }
 

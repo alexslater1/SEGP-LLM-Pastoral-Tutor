@@ -13,7 +13,6 @@ type AgentRequest struct {
 	CreatedAt *time.Time  `json:"created_at,omitempty"`
 	Endpoint  string      `json:"endpoint"`
 	Metadata  interface{} `json:"metadata,omitempty"`
-	ChatID    string      `json:"chat_id,omitempty"`
 }
 
 func (ar AgentRequest) TableName() StorageTableName {
@@ -24,7 +23,6 @@ func NewAgentRequest(endpoint string, metadata interface{}, chatID string) Agent
 	return AgentRequest{
 		Endpoint: endpoint,
 		Metadata: metadata,
-		ChatID:   chatID,
 	}
 }
 
