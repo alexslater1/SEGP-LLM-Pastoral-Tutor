@@ -10,11 +10,11 @@ func NewLocalHistory() *LocalHistory {
 	}
 }
 
-func (s *LocalHistory) GetChatHistory(chatId string) ([]string, error) {
+func (s *LocalHistory) GetMessageHistory(sessionId string) ([]string, error) {
 	return s.ChatHistory, nil
 }
 
-func (s *LocalHistory) AddChatHistory(chatHistory []string) error {
-	s.ChatHistory = append(s.ChatHistory, chatHistory...)
+func (s *LocalHistory) AddMessageHistory(messageHistory []string) error {
+	s.ChatHistory = append(s.ChatHistory, messageHistory...)
 	return nil
 }

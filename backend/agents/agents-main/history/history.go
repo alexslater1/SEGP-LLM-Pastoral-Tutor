@@ -1,5 +1,5 @@
 package history
 
 type History interface {
-	GetChatHistory(chatId string) ([]string, error)
+	GetMessageHistory(sessionId string) ([]string, error)
 }

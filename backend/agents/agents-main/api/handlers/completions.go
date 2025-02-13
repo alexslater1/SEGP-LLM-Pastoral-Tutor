@@ -99,7 +99,7 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			}
 			chatId = createdChat.ID
 		} else {
-			h, err := history.GetChatHistory(chatId)
+			h, err := history.GetMessageHistory(chatId)
 			if err != nil {
 				slog.Error("error getting history", "error", err.Error())
 				return

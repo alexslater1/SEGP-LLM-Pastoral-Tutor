@@ -18,10 +18,10 @@ func NewStoreHistory(storage storage.Storage) *StoreHistory {
 	}
 }
 
-func (s *StoreHistory) GetChatHistory(chatId string) ([]string, error) {
+func (s *StoreHistory) GetMessageHistory(sessionId string) ([]string, error) {
 	history := []string{}
 
-	agentRequests, err := storage.GetAll[storage.AgentRequest](s.storage, map[string]string{"chat_id": chatId})
+	agentRequests, err := storage.GetAll[storage.AgentRequest](s.storage, map[string]string{"chat_id": sessionId})
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (s *StoreHistory) GetChatHistory(chatId string) ([]string, error) {
 
 	for i, agentRequest := range agentRequests {
 		query := agentRequest.Metadata.(map[string]interface{})["query"].(string)
-		answer := s.getChatMessageFromAgentEvents(agentEventsList[i])
+		answer := s.getMessageFromAgentEvents(agentEventsList[i])
 
 		history = append(history, fmt.Sprintf("Query: %s\nResponse: %s", query, answer))
 	}
@@ -54,7 +54,7 @@ func (s *StoreHistory) GetChatHistory(chatId string) ([]string, error) {
 	return history, nil
 }
 
-func (s *StoreHistory) getChatMessageFromAgentEvents(agentEvents []storage.AgentEvent) string {
+func (s *StoreHistory) getMessageFromAgentEvents(agentEvents []storage.AgentEvent) string {
 	for _, event := range agentEvents {
 		if event.Type == "error" {
 			return "[ERROR]"

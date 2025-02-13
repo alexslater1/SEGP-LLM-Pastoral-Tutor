@@ -163,17 +163,17 @@ func TestStoreHistory(t *testing.T) {
 	storage.StoreAll(store, events[1]...)
 	storage.StoreAll(store, events[2]...)
 
-	h1, err := history.GetChatHistory(chatId1)
+	h1, err := history.GetMessageHistory(chatId1)
 	if err != nil {
 		t.Errorf("Error getting chat history: %v", err)
 	}
 
-	h2, err := history.GetChatHistory(chatId2)
+	h2, err := history.GetMessageHistory(chatId2)
 	if err != nil {
 		t.Errorf("Error getting chat history: %v", err)
 	}
 
-	h3, err := history.GetChatHistory(chatId3)
+	h3, err := history.GetMessageHistory(chatId3)
 	if err != nil {
 		t.Errorf("Error getting chat history: %v", err)
 	}
@@ -191,7 +191,7 @@ func TestStoreHistoryWithSupabase(t *testing.T) {
 	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 	history := NewStoreHistory(store)
 
-	h, err := history.GetChatHistory("2fea8a5f-b82c-4261-9889-3e42136d9ef0")
+	h, err := history.GetMessageHistory("2fea8a5f-b82c-4261-9889-3e42136d9ef0")
 	if err != nil {
 		t.Errorf("Error getting chat history: %v", err)
 	}
