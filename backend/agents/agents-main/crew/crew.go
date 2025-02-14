@@ -17,12 +17,12 @@ type Crew struct {
 
 func NewCrew(entityGraph EntityGraph) *Crew {
 	agentMap := make(map[string]agent.Agent)
-	for e := range entityGraph {
+	for e, entities := range entityGraph {
 		a, ok := e.(agent.Agent)
 		if !ok {
 			panic(fmt.Sprintf("entity %s is not an agent. Keys must be agents", e.Id()))
 		}
-		agentMap[a.Id()] = a
+		agentMap[a.Id()] = agent.NewCrewAgent(a, entities)
 	}
 
 	return &Crew{agentMap: agentMap}
@@ -40,7 +40,10 @@ func (c *Crew) Run(ctx context.Context, input string, startAgentId string) (*str
 	entityId := startAgentId
 	task := input
 	for {
-		agent := c.agentMap[entityId]
+		agent, ok := c.agentMap[entityId]
+		if !ok {
+			return nil, nil, fmt.Errorf("agent %s not found in entity graph", entityId)
+		}
 		slog.Info("Crew: running agent", "agent", entityId, "task", task)
 
 		agentResponse, err := agent.Run(ctx, input)
@@ -50,6 +53,10 @@ func (c *Crew) Run(ctx context.Context, input string, startAgentId string) (*str
 
 		if agentResponse.OffloadTask == nil {
 			return agentResponse.Answer, agentResponse.Reason, nil
+		}
+
+		if agentResponse.OffloadTask.Entity == entity.UserEntity {
+			return &agentResponse.OffloadTask.Task, nil, nil
 		}
 
 		entityId = agentResponse.OffloadTask.Entity.Id()

@@ -35,5 +35,9 @@ func (e *EmailTool) Definition() ToolDefinition {
 }
 
 func (e *EmailTool) SendEmail(htmlBody string) (string, error) {
-	return e.emailClient.SendEmail(e.to, e.subject, htmlBody)
+	id, err := e.emailClient.SendEmail(e.to, e.subject, htmlBody)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Email sent with id: %s", id), nil
 }

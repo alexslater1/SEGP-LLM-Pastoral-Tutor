@@ -28,7 +28,7 @@ type AgentEvent struct {
 func NewQueryEvent(ctx context.Context, query string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeQuery,
@@ -40,7 +40,7 @@ func NewQueryEvent(ctx context.Context, query string) AgentEvent {
 func NewThinkEvent(ctx context.Context, thoughts string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeThink,
@@ -54,7 +54,7 @@ func NewThinkEvent(ctx context.Context, thoughts string) AgentEvent {
 func NewToolCallResultEvent(ctx context.Context, toolCallResult *string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallResult,
@@ -68,7 +68,7 @@ func NewToolCallResultEvent(ctx context.Context, toolCallResult *string) AgentEv
 func NewAnswerSuccessEvent(ctx context.Context, answer string, reason string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeAnswerSuccess,
@@ -83,7 +83,7 @@ func NewAnswerSuccessEvent(ctx context.Context, answer string, reason string) Ag
 func NewToolCallChoiceEvent(ctx context.Context, toolCall tools.ToolCall) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallChoice,
@@ -97,7 +97,7 @@ func NewToolCallChoiceEvent(ctx context.Context, toolCall tools.ToolCall) AgentE
 func NewOffloadTaskEvent(ctx context.Context, entityId string, task string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeOffloadTask,
@@ -109,7 +109,7 @@ func NewOffloadTaskEvent(ctx context.Context, entityId string, task string) Agen
 func NewAnswerErrorEvent(ctx context.Context, error string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeAnswerError,
