@@ -290,7 +290,13 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 		return nil, err
 	}
 
-	prompt += ` You have these tools at your disposal: ` + toolChoiceString + ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
+	prompt += ` You have these tools at your disposal: ` + toolChoiceString
+
+	if len(a.canOffloadToEntities()) > 0 {
+		prompt += ` You have these entities at your disposal to (possibly) offload the task to: ` + a.entitiesString()
+	}
+
+	prompt += ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
 
 	prompt += ` Ensure to also provide a "description_of_action" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator.`
 
@@ -299,6 +305,15 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	return &prompt, nil
+}
+
+func (a *FastAgent) entitiesString() string {
+	entities := a.canOffloadToEntities()
+	entitiesString := ""
+	for _, entity := range entities {
+		entitiesString += fmt.Sprintf("{entity_id: %s, Info: %s}\n", entity.Id(), entity.Description())
+	}
+	return entitiesString
 }
 
 func (a *FastAgent) chatHistory(ctx context.Context) ([]string, error) {
@@ -320,8 +335,15 @@ func (a *FastAgent) iterationBasedPrompt(iteration int) string {
 	}
 }
 
+func (a *FastAgent) getToolDefinitions() []tools.ToolDefinition {
+	if len(a.entityIdsCanOffloadTo) > 0 {
+		return a.ToolHandler.ToolDefinitionsWithOffloadingTool()
+	}
+	return a.ToolHandler.ToolDefinitions()
+}
+
 func (a *FastAgent) toolChoicesString() (string, error) {
-	availableTools := a.ToolHandler.ToolDefinitions()
+	availableTools := a.getToolDefinitions()
 
 	toolChoiceString, err := json.Marshal(availableTools)
 	if err != nil {

@@ -2,7 +2,7 @@ package entity
 
 const (
 	UserEntityId    = "user"
-	UserDescription = "The external user who gave the query"
+	UserDescription = "This is the external user who gave the initial query. The task which you can give them should be a question which is refining their original query, if necessary."
 )
 
 var UserEntity = &userEntity{}
