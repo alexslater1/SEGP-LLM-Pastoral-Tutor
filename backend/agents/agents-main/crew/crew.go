@@ -2,22 +2,34 @@ package crew
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/segp/agents-main/agent"
-	"github.com/segp/agents-main/llm"
+	"github.com/segp/agents-main/entity"
 )
 
+type EntityGraph map[string][]string
+
 type Crew struct {
-	Agents     []agent.Agent
-	ManagerLLM llm.LLM
+	EntityGraph EntityGraph
+	AgentMap    map[string]agent.Agent
 }
 
-func NewCrew(agents []agent.Agent, managerLLM llm.LLM) *Crew {
-	if managerLLM != nil {
-		panic("managerLLM logic not implemented yet")
+func NewCrew(agents []agent.Agent, entityGraph EntityGraph) *Crew {
+	agentMap := make(map[string]agent.Agent)
+	for _, agent := range agents {
+		agentMap[agent.Id()] = agent
 	}
 
-	return &Crew{Agents: agents, ManagerLLM: managerLLM}
+	for _, entityIds := range entityGraph {
+		for _, entityId := range entityIds {
+			if _, ok := agentMap[entityId]; entityId != entity.UserEntityId && !ok {
+				panic(fmt.Sprintf("entity %s not found in agent map", entityId))
+			}
+		}
+	}
+
+	return &Crew{EntityGraph: entityGraph, AgentMap: agentMap}
 }
 
 func (c *Crew) Run(ctx context.Context, input string) (*string, *string, error) {
