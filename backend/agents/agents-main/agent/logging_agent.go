@@ -39,6 +39,18 @@ func (a *LoggingAgent) Unsubscribe(ch <-chan AgentEvent) {
 	a.Agent.Unsubscribe(ch)
 }
 
+func (a *LoggingAgent) clone() Agent {
+	return NewLoggingAgent(a.Agent.clone())
+}
+
+func (a *LoggingAgent) addCanOffloadToEntity(entityIds ...string) {
+	a.Agent.addCanOffloadToEntity(entityIds...)
+}
+
+func (a *LoggingAgent) canOffloadToEntities() []string {
+	return a.Agent.canOffloadToEntities()
+}
+
 func (a *LoggingAgent) loggingLoop(ch <-chan AgentEvent) {
 	for event := range ch {
 		a.handleLoggingEvent(event)

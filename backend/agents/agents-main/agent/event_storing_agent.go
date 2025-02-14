@@ -36,6 +36,18 @@ func (a *EventStoringAgent) Unsubscribe(ch <-chan AgentEvent) {
 	a.Agent.Unsubscribe(ch)
 }
 
+func (a *EventStoringAgent) clone() Agent {
+	return NewEventStoringAgent(a.Agent.clone(), a.storage)
+}
+
+func (a *EventStoringAgent) addCanOffloadToEntity(entityIds ...string) {
+	a.Agent.addCanOffloadToEntity(entityIds...)
+}
+
+func (a *EventStoringAgent) canOffloadToEntities() []string {
+	return a.Agent.canOffloadToEntities()
+}
+
 func (a *EventStoringAgent) storageLoop(ch <-chan AgentEvent) {
 	for event := range ch {
 		a.handleStoreEvent(event)

@@ -13,6 +13,7 @@ import (
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/tools"
+	"github.com/segp/agents-main/utils"
 )
 
 const (
@@ -30,14 +31,16 @@ type FastAgent struct {
 	Clock       clock.Clock
 	History     history.History
 
-	subscribers []chan AgentEvent
+	subscribers           []chan AgentEvent
+	entityIdsCanOffloadTo []string
 }
 
-func NewFastAgent(id string, description string, prompt string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
+func newFastAgent(id string, description string, prompt string, defaultEntityIdsCanOffloadTo []string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
 	return &FastAgent{
-		ID:     id,
-		Desc:   description,
-		Prompt: prompt,
+		ID:                    id,
+		Desc:                  description,
+		Prompt:                prompt,
+		entityIdsCanOffloadTo: defaultEntityIdsCanOffloadTo,
 
 		ToolHandler: toolHandler,
 		LLM:         llm,
@@ -80,6 +83,31 @@ func (a *FastAgent) Unsubscribe(ch <-chan AgentEvent) {
 			break
 		}
 	}
+}
+
+func (a *FastAgent) clone() Agent {
+	return &FastAgent{
+		ID:     a.ID,
+		Desc:   a.Desc,
+		Prompt: a.Prompt,
+
+		ToolHandler: a.ToolHandler,
+		LLM:         a.LLM,
+		Knowledge:   a.Knowledge,
+		Clock:       a.Clock,
+		History:     a.History,
+
+		subscribers:           a.subscribers,
+		entityIdsCanOffloadTo: a.entityIdsCanOffloadTo,
+	}
+}
+
+func (a *FastAgent) canOffloadToEntities() []string {
+	return utils.Sorted(a.entityIdsCanOffloadTo, func(s string) string { return s })
+}
+
+func (a *FastAgent) addCanOffloadToEntity(entityIds ...string) {
+	a.entityIdsCanOffloadTo = utils.RemoveDuplicates(append(a.entityIdsCanOffloadTo, entityIds...))
 }
 
 func (a *FastAgent) publish(event AgentEvent) {

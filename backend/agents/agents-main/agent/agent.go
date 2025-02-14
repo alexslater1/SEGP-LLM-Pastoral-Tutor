@@ -36,6 +36,10 @@ type Agent interface {
 	Run(ctx context.Context, input string) (*AgentResponse, error)
 	Subscribe() <-chan AgentEvent
 	Unsubscribe(ch <-chan AgentEvent)
+
+	addCanOffloadToEntity(...string)
+	canOffloadToEntities() []string
+	clone() Agent
 }
 
 func NewDefaultUserQueryAgent() Agent {
@@ -50,11 +54,11 @@ func NewDefaultUserQueryAgent() Agent {
 		history   = history.NewAgentEventHistory(store)
 	)
 
-	return NewFastAgent(
+	return newFastAgent(
 		"user_query_agent",
 		"An agent that receives the user's query from the frontend. Has a plethora of tools to achieve general tasks.",
 		"You are a user query agent. You will be given a real user's query which comes directly from the frontend.",
-
+		[]string{entity.UserEntityId},
 		toolHandler,
 		llm,
 		knowledge,
