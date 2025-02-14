@@ -14,7 +14,7 @@ func NewLoggingAgent(agent Agent) *LoggingAgent {
 	return &LoggingAgent{Agent: agent}
 }
 
-func (a *LoggingAgent) Run(ctx context.Context, input string) (*string, *string, error) {
+func (a *LoggingAgent) Run(ctx context.Context, input string) (*AgentResponse, error) {
 	ch := a.Subscribe()
 	defer a.Unsubscribe(ch)
 

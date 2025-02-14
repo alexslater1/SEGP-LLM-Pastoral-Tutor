@@ -19,7 +19,7 @@ func NewEventStoringAgent(agent Agent, storage storage.Storage) *EventStoringAge
 	}
 }
 
-func (a *EventStoringAgent) Run(ctx context.Context, input string) (*string, *string, error) {
+func (a *EventStoringAgent) Run(ctx context.Context, input string) (*AgentResponse, error) {
 	ch := a.Subscribe()
 	defer a.Unsubscribe(ch)
 

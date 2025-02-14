@@ -38,8 +38,8 @@ func NewToolHandler(tools []Tool) *ToolHandler {
 		toolMap[tool.Definition().Name] = tool
 	}
 
-	if _, ok := toolMap["no_tool"]; !ok {
-		toolMap["no_tool"] = NewNoTool()
+	if _, ok := toolMap["give_answer"]; !ok {
+		toolMap["give_answer"] = NewGiveAnswerTool()
 	}
 
 	return &ToolHandler{

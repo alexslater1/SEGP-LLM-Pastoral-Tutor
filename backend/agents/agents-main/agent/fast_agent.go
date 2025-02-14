@@ -57,13 +57,13 @@ func (a *FastAgent) Description() string {
 	return a.Desc
 }
 
-func (a *FastAgent) Run(ctx context.Context, query string) (*string, *string, error) {
+func (a *FastAgent) Run(ctx context.Context, query string) (*AgentResponse, error) {
 	a.publish(NewQueryEvent(ctx, query))
-	answer, reasoning, err := a.logicLoop(ctx, query)
+	response, err := a.logicLoop(ctx, query)
 	if err != nil {
 		a.publish(NewAnswerErrorEvent(ctx, err.Error()))
 	}
-	return answer, reasoning, err
+	return response, err
 }
 
 func (a *FastAgent) Subscribe() <-chan AgentEvent {
@@ -92,16 +92,33 @@ func (a *FastAgent) publish(event AgentEvent) {
 	}
 }
 
-func (a *FastAgent) handleNoTool(ctx context.Context, toolChoice *tools.ToolCall) (*string, *string, error) {
+func (a *FastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, error) {
 	answer, reason, err := a.extractAnswerAndReason(toolChoice)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	a.publish(NewAnswerSuccessEvent(ctx, *answer, *reason))
-	return answer, reason, nil
+	return &AgentResponse{
+		Answer: answer,
+		Reason: reason,
+	}, nil
 }
 
-func (a *FastAgent) logicLoop(ctx context.Context, query string) (*string, *string, error) {
+func (a *FastAgent) handleOffloadTask(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, error) {
+	entityId, task, err := a.extractEntityIdAndTask(toolChoice)
+	if err != nil {
+		return nil, err
+	}
+	a.publish(NewOffloadTaskEvent(ctx, *entityId, *task))
+	return &AgentResponse{
+		OffloadTask: &OffloadTask{
+			EntityID: *entityId,
+			Task:     *task,
+		},
+	}, nil
+}
+
+func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse, error) {
 	slog.Info("Starting FAST AGENT logic loop for query", "query", query)
 
 	var prevThoughts *string
@@ -113,21 +130,25 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*string, *stri
 	for i := 0; i < maxIterations; i++ {
 		knowledgeContext, err := a.Knowledge.Get(query)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		thoughts, toolChoice, err := a.thinkAndChooseTool(ctx, i, query, knowledgeContext, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		if toolChoice.Name == "no_tool" {
-			return a.handleNoTool(ctx, toolChoice)
+		if toolChoice.Name == "give_answer" {
+			return a.handleGiveAnswer(ctx, toolChoice)
+		}
+
+		if toolChoice.Name == "offload_task" {
+			return a.handleOffloadTask(ctx, toolChoice)
 		}
 
 		result, err := a.ToolHandler.Call(*toolChoice)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		a.publish(NewToolCallResultEvent(ctx, result))
 
@@ -137,7 +158,7 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*string, *stri
 		prevToolCalls = append(prevToolCalls, *toolChoice)
 	}
 
-	return nil, nil, fmt.Errorf("failed to find answer after 10 iterations")
+	return nil, fmt.Errorf("failed to find answer after 10 iterations")
 }
 
 type StructuredOutput struct {
@@ -197,7 +218,7 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 		return nil, nil, fmt.Errorf("failed to parse tool call from structured output")
 	}
 
-	if toolCall.Name != "no_tool" {
+	if toolCall.Name != "give_answer" {
 		a.publish(NewToolCallChoiceEvent(ctx, *toolCall))
 	}
 
@@ -240,7 +261,7 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 		return nil, err
 	}
 
-	prompt += ` You have these tools at your disposal: ` + toolChoiceString + ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
+	prompt += ` You have these tools at your disposal: ` + toolChoiceString + ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
 
 	prompt += ` Ensure to also provide a "description_of_action" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator.`
 
@@ -294,6 +315,18 @@ func (a *FastAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *
 	// a.publish(NewAnswerSuccessEvent(requestId, answer, reason))
 
 	return &answer, &reason, nil
+}
+
+func (a *FastAgent) extractEntityIdAndTask(toolCall *tools.ToolCall) (*string, *string, error) {
+	var arguments map[string]string
+	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
+		return nil, nil, err
+	}
+
+	entityId := arguments["entity_id"]
+	task := arguments["task"]
+
+	return &entityId, &task, nil
 }
 
 func (a *FastAgent) formattedToolsStringFrom(prevToolCalls []tools.ToolCall) string {

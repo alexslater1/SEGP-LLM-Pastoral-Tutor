@@ -18,10 +18,22 @@ const (
 	defaultSubscriberBufferSize = 100
 )
 
+type OffloadTask struct {
+	EntityID string
+	Task     string
+}
+
+type AgentResponse struct {
+	Answer *string
+	Reason *string
+
+	OffloadTask *OffloadTask
+}
+
 type Agent interface {
 	entity.Entity
 
-	Run(ctx context.Context, input string) (*string, *string, error)
+	Run(ctx context.Context, input string) (*AgentResponse, error)
 	Subscribe() <-chan AgentEvent
 	Unsubscribe(ch <-chan AgentEvent)
 }

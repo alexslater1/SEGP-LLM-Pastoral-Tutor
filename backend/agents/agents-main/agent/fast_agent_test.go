@@ -160,13 +160,13 @@ func TestFastAgentRun(t *testing.T) {
 	agent := NewDefaultLoggingUserQueryAgent()
 	ctx := context_keys.SetRequestID(context.Background(), "2fea8a5f-b82c-4261-9889-3e42136d9ef0")
 
-	answer, reason, err := agent.Run(ctx, "what about in 3 days?")
+	response, err := agent.Run(ctx, "what about in 3 days?")
 	if err != nil {
 		t.Fatalf("error running agent: %v", err)
 	}
 
-	t.Logf("answer: %s", *answer)
-	t.Logf("reason: %s", *reason)
+	t.Logf("answer: %s", *response.Answer)
+	t.Logf("reason: %s", *response.Reason)
 }
 
 func TestFastAgentAskQuestion(t *testing.T) {
@@ -179,13 +179,13 @@ func TestFastAgentAskQuestion(t *testing.T) {
 	}), llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set")), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory())
 
 	query := "What is the temperature?"
-	answer, reason, err := agent.Run(context.Background(), query)
+	response, err := agent.Run(context.Background(), query)
 	if err != nil {
 		t.Fatalf("error running agent: %v", err)
 	}
 
-	t.Logf("answer: %s", *answer)
-	t.Logf("reason: %s", *reason)
+	t.Logf("answer: %s", *response.Answer)
+	t.Logf("reason: %s", *response.Reason)
 }
 
 func TestFastAgentDescription(t *testing.T) {
