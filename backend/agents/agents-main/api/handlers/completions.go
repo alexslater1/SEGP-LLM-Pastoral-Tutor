@@ -78,7 +78,6 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 
 			if response.OffloadTask != nil {
 				slog.Info("offloading task", "entity_id", response.OffloadTask.Entity.Id(), "task", response.OffloadTask.Task)
-				return
 			}
 
 			slog.Info("agent response", "answer", *response.Answer, "reason", *response.Reason)

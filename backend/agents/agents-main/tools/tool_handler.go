@@ -102,6 +102,14 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 			return nil, fmt.Errorf("query is required")
 		}
 		return typedTool.GoogleSearchFirstResultsPageContentsFor(query.(string))
+
+	case *EmailTool:
+		htmlBody, ok := parsedArgs["html_body"]
+		if !ok {
+			return nil, fmt.Errorf("html_body is required")
+		}
+		id, err := typedTool.SendEmail(htmlBody.(string))
+		return &id, err
 	}
 	return nil, fmt.Errorf("no tool matched the name %s", toolCall.Name)
 }
