@@ -12,21 +12,21 @@ type MockLLM struct {
 	responses []LLMResponse
 }
 
-type MockLLMResponseType string 
+type MockLLMResponseType string
 
 const (
-	ChatResponse MockLLMResponseType = "ChatResponse"
+	ChatResponse       MockLLMResponseType = "ChatResponse"
 	StructuredResponse MockLLMResponseType = "StructuredResponse"
-	ToolResponse MockLLMResponseType = "ToolResponse"
+	ToolResponse       MockLLMResponseType = "ToolResponse"
 )
 
 type LLMResponse struct {
-	Type MockLLMResponseType
+	Type     MockLLMResponseType
 	Response any
 }
 
 type MockLLMCallChainBuilder struct {
-	llm *MockLLM
+	llm       *MockLLM
 	responses []LLMResponse
 }
 
@@ -39,7 +39,7 @@ func NewMockLLM() *MockLLM {
 
 func (m *MockLLM) NewCallChain() *MockLLMCallChainBuilder {
 	return &MockLLMCallChainBuilder{
-		llm: m,
+		llm:       m,
 		responses: make([]LLMResponse, 0),
 	}
 }
@@ -66,13 +66,13 @@ func (m *MockLLMCallChainBuilder) Set() *MockLLM {
 
 // ChatCompletion implements the LLM interface
 func (m *MockLLM) ChatCompletion(ctx context.Context, prompt string) (*string, error) {
-    response := m.responses[0]
-    m.responses = m.responses[1:]
-    
-    if response.Type != ChatResponse {
-        panic(fmt.Sprintf("expected ChatResponse, got %s", response.Type))
-    }
-    
+	response := m.responses[0]
+	m.responses = m.responses[1:]
+
+	if response.Type != ChatResponse {
+		panic(fmt.Sprintf("expected ChatResponse, got %s", response.Type))
+	}
+
 	str, ok := response.Response.(string)
 	if !ok {
 		panic(fmt.Sprintf("expected string, got %T", response.Response))
@@ -83,8 +83,9 @@ func (m *MockLLM) ChatCompletion(ctx context.Context, prompt string) (*string, e
 
 // StructuredOutputCompletion implements the LLM interface
 func (m *MockLLM) StructuredOutputCompletion(ctx context.Context, prompt string, schema interface{}) (*string, error) {
-    response := m.responses[0]
-    m.responses = m.responses[1:]
+
+	response := m.responses[0]
+	m.responses = m.responses[1:]
 
 	if response.Type != StructuredResponse {
 		panic(fmt.Sprintf("expected StructuredResponse, got %s", response.Type))
