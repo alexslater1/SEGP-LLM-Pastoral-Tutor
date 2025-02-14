@@ -145,8 +145,6 @@ func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler 
 
 func sessionIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("sessionIDMiddleware")
-
 		// Check if the request has a body to read
 		if r.Body != nil {
 			// Read the request body
@@ -162,7 +160,6 @@ func sessionIDMiddleware(next http.Handler) http.Handler {
 			if len(bodyBytes) > 0 {
 				var payload map[string]interface{}
 				if err := json.Unmarshal(bodyBytes, &payload); err == nil {
-					fmt.Println("payload: ", payload)
 					if sessionID, ok := payload["session_id"].(string); ok {
 						// If session_id is found, add it to the context
 						r = r.WithContext(context_keys.SetSessionID(r.Context(), sessionID))
