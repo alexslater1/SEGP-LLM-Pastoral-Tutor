@@ -9,6 +9,7 @@ import (
 
 	"github.com/segp/agents-main/clock"
 	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/entity"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
@@ -32,10 +33,10 @@ type FastAgent struct {
 	History     history.History
 
 	subscribers           []chan AgentEvent
-	entityIdsCanOffloadTo []string
+	entityIdsCanOffloadTo []entity.Entity
 }
 
-func newFastAgent(id string, description string, prompt string, defaultEntityIdsCanOffloadTo []string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
+func newFastAgent(id string, description string, prompt string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History, defaultEntityIdsCanOffloadTo ...entity.Entity) *FastAgent {
 	return &FastAgent{
 		ID:                    id,
 		Desc:                  description,
@@ -102,12 +103,12 @@ func (a *FastAgent) clone() Agent {
 	}
 }
 
-func (a *FastAgent) canOffloadToEntities() []string {
-	return utils.Sorted(a.entityIdsCanOffloadTo, func(s string) string { return s })
+func (a *FastAgent) canOffloadToEntities() []entity.Entity {
+	return utils.Sorted(a.entityIdsCanOffloadTo, func(e entity.Entity) string { return e.Id() })
 }
 
-func (a *FastAgent) addCanOffloadToEntity(entityIds ...string) {
-	a.entityIdsCanOffloadTo = utils.RemoveDuplicates(append(a.entityIdsCanOffloadTo, entityIds...))
+func (a *FastAgent) addCanOffloadToEntity(entities ...entity.Entity) {
+	a.entityIdsCanOffloadTo = utils.RemoveDuplicates(append(a.entityIdsCanOffloadTo, entities...))
 }
 
 func (a *FastAgent) publish(event AgentEvent) {
@@ -133,15 +134,15 @@ func (a *FastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.Tool
 }
 
 func (a *FastAgent) handleOffloadTask(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, error) {
-	entityId, task, err := a.extractEntityIdAndTask(toolChoice)
+	entity, task, err := a.extractEntityAndTask(toolChoice)
 	if err != nil {
 		return nil, err
 	}
-	a.publish(NewOffloadTaskEvent(ctx, *entityId, *task))
+	a.publish(NewOffloadTaskEvent(ctx, entity.Id(), *task))
 	return &AgentResponse{
 		OffloadTask: &OffloadTask{
-			EntityID: *entityId,
-			Task:     *task,
+			Entity: entity,
+			Task:   *task,
 		},
 	}, nil
 }
@@ -345,16 +346,30 @@ func (a *FastAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *
 	return &answer, &reason, nil
 }
 
-func (a *FastAgent) extractEntityIdAndTask(toolCall *tools.ToolCall) (*string, *string, error) {
+func (a *FastAgent) extractEntityAndTask(toolCall *tools.ToolCall) (entity.Entity, *string, error) {
 	var arguments map[string]string
 	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
 		return nil, nil, err
 	}
 
-	entityId := arguments["entity_id"]
 	task := arguments["task"]
+	entityId := arguments["entity_id"]
 
-	return &entityId, &task, nil
+	entity, err := a.matchEntityIdToEntity(entityId)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return entity, &task, nil
+}
+
+func (a *FastAgent) matchEntityIdToEntity(entityId string) (entity.Entity, error) {
+	for _, entity := range a.canOffloadToEntities() {
+		if entity.Id() == entityId {
+			return entity, nil
+		}
+	}
+	return nil, fmt.Errorf("entity not found")
 }
 
 func (a *FastAgent) formattedToolsStringFrom(prevToolCalls []tools.ToolCall) string {

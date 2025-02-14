@@ -19,8 +19,8 @@ const (
 )
 
 type OffloadTask struct {
-	EntityID string
-	Task     string
+	Entity entity.Entity
+	Task   string
 }
 
 type AgentResponse struct {
@@ -38,8 +38,8 @@ type Agent interface {
 	Unsubscribe(ch <-chan AgentEvent)
 
 	// change to set can offload to???
-	addCanOffloadToEntity(...string)
-	canOffloadToEntities() []string
+	addCanOffloadToEntity(...entity.Entity)
+	canOffloadToEntities() []entity.Entity
 	clone() Agent
 }
 
@@ -59,12 +59,14 @@ func NewDefaultUserQueryAgent() Agent {
 		"user_query_agent",
 		"An agent that receives the user's query from the frontend. Has a plethora of tools to achieve general tasks.",
 		"You are a user query agent. You will be given a real user's query which comes directly from the frontend.",
-		[]string{entity.UserEntityId},
+
 		toolHandler,
 		llm,
 		knowledge,
 		clock,
 		history,
+
+		entity.UserEntity,
 	)
 }
 

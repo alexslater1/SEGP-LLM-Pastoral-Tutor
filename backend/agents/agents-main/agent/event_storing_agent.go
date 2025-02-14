@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/segp/agents-main/entity"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -40,11 +41,11 @@ func (a *EventStoringAgent) clone() Agent {
 	return NewEventStoringAgent(a.Agent.clone(), a.storage)
 }
 
-func (a *EventStoringAgent) addCanOffloadToEntity(entityIds ...string) {
-	a.Agent.addCanOffloadToEntity(entityIds...)
+func (a *EventStoringAgent) addCanOffloadToEntity(entities ...entity.Entity) {
+	a.Agent.addCanOffloadToEntity(entities...)
 }
 
-func (a *EventStoringAgent) canOffloadToEntities() []string {
+func (a *EventStoringAgent) canOffloadToEntities() []entity.Entity {
 	return a.Agent.canOffloadToEntities()
 }
 

@@ -1,19 +1,23 @@
 package agent
 
-import "context"
+import (
+	"context"
+
+	"github.com/segp/agents-main/entity"
+)
 
 type CrewAgent struct {
-	agent                 Agent
-	entityIdsCanOffloadTo []string
+	agent                     Agent
+	entitiesCanOffloadTasksTo []entity.Entity
 }
 
-func NewCrewAgent(agent Agent, entityIdsCanOffloadTo []string) Agent {
+func NewCrewAgent(agent Agent, entities []entity.Entity) Agent {
 	clonedAgent := agent.clone()
-	clonedAgent.addCanOffloadToEntity(append(agent.canOffloadToEntities(), entityIdsCanOffloadTo...)...)
+	clonedAgent.addCanOffloadToEntity(entities...)
 
 	return &CrewAgent{
-		agent:                 clonedAgent,
-		entityIdsCanOffloadTo: clonedAgent.canOffloadToEntities(),
+		agent:                     clonedAgent,
+		entitiesCanOffloadTasksTo: entities,
 	}
 }
 
@@ -38,13 +42,13 @@ func (a *CrewAgent) Unsubscribe(ch <-chan AgentEvent) {
 }
 
 func (a *CrewAgent) clone() Agent {
-	return NewCrewAgent(a.agent.clone(), a.entityIdsCanOffloadTo)
+	return NewCrewAgent(a.agent.clone(), a.entitiesCanOffloadTasksTo)
 }
 
-func (a *CrewAgent) addCanOffloadToEntity(entityIds ...string) {
-	a.agent.addCanOffloadToEntity(entityIds...)
+func (a *CrewAgent) addCanOffloadToEntity(entities ...entity.Entity) {
+	a.agent.addCanOffloadToEntity(entities...)
 }
 
-func (a *CrewAgent) canOffloadToEntities() []string {
-	return a.entityIdsCanOffloadTo
+func (a *CrewAgent) canOffloadToEntities() []entity.Entity {
+	return a.agent.canOffloadToEntities()
 }

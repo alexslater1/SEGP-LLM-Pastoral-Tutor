@@ -12,9 +12,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCrewAgent(t *testing.T) {
-	fastAgent := newFastAgent("test", "test", "test", []string{entity.UserEntityId}, tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory())
-	crewAgent := NewCrewAgent(fastAgent, []string{"entity_id_1", "entity_id_2"})
+type testEntity struct {
+	id          string
+	description string
+}
 
-	assert.Equal(t, []string{"entity_id_1", "entity_id_2", "user"}, crewAgent.canOffloadToEntities())
+func newTestEntity(id string, description string) entity.Entity {
+	return &testEntity{id: id, description: description}
+}
+
+func (e *testEntity) Id() string {
+	return e.id
+}
+
+func (e *testEntity) Description() string {
+	return e.description
+}
+
+func TestCrewAgent(t *testing.T) {
+
+	fastAgent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory(), entity.UserEntity)
+	crewAgent := NewCrewAgent(fastAgent, []entity.Entity{newTestEntity("entity_id_1", "test"), newTestEntity("entity_id_2", "test")})
+
+	assert.Equal(t, []entity.Entity{newTestEntity("entity_id_1", "test"), newTestEntity("entity_id_2", "test"), entity.UserEntity}, crewAgent.canOffloadToEntities())
 }

@@ -9,41 +9,41 @@ import (
 	"github.com/segp/agents-main/entity"
 )
 
-type EntityGraph map[string][]string
+type EntityGraph map[entity.Entity][]entity.Entity
 
 type Crew struct {
-	AgentMap map[string]agent.Agent
+	agentMap map[string]agent.Agent
 }
 
-func NewCrew(agents []agent.Agent, entityGraph EntityGraph) *Crew {
+func NewCrew(entityGraph EntityGraph) *Crew {
 	agentMap := make(map[string]agent.Agent)
-	for _, agent := range agents {
-		agentMap[agent.Id()] = agent
-	}
-
-	for _, entityIds := range entityGraph {
-		for _, entityId := range entityIds {
-			if _, ok := agentMap[entityId]; entityId != entity.UserEntityId && !ok {
-				panic(fmt.Sprintf("entity %s not found in agent map", entityId))
-			}
+	for e := range entityGraph {
+		a, ok := e.(agent.Agent)
+		if !ok {
+			panic(fmt.Sprintf("entity %s is not an agent. Keys must be agents", e.Id()))
 		}
+		agentMap[a.Id()] = a
 	}
 
-	return &Crew{AgentMap: crewAgentsMapFrom(entityGraph, agentMap)}
+	return &Crew{agentMap: agentMap}
 }
 
-func (c *Crew) Run(ctx context.Context, input string, startAgentEntityId string) (*string, *string, error) {
+func (c *Crew) Run(ctx context.Context, input string, startAgentId string) (*string, *string, error) {
+	if startAgentId == entity.UserEntity.Id() {
+		return nil, nil, fmt.Errorf("user entity cannot be start agent entity")
+	}
 
+	if _, ok := c.agentMap[startAgentId]; !ok {
+		return nil, nil, fmt.Errorf("start agent entity %s not found in entity graph", startAgentId)
+	}
+
+	entityId := startAgentId
 	task := input
-	entityId := startAgentEntityId
 	for {
+		agent := c.agentMap[entityId]
 		slog.Info("Crew: running agent", "agent", entityId, "task", task)
-		agent, ok := c.AgentMap[entityId]
-		if !ok {
-			return nil, nil, fmt.Errorf("agent %s not found", entityId)
-		}
 
-		agentResponse, err := agent.Run(ctx, task)
+		agentResponse, err := agent.Run(ctx, input)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -52,16 +52,7 @@ func (c *Crew) Run(ctx context.Context, input string, startAgentEntityId string)
 			return agentResponse.Answer, agentResponse.Reason, nil
 		}
 
-		entityId = agentResponse.OffloadTask.EntityID
+		entityId = agentResponse.OffloadTask.Entity.Id()
 		task = agentResponse.OffloadTask.Task
 	}
-}
-
-func crewAgentsMapFrom(entityGraph EntityGraph, agentMap map[string]agent.Agent) map[string]agent.Agent {
-	crewAgentMap := make(map[string]agent.Agent)
-	for entityId, agentIds := range entityGraph {
-		crewAgentMap[entityId] = agent.NewCrewAgent(agentMap[entityId], agentIds)
-	}
-
-	return crewAgentMap
 }

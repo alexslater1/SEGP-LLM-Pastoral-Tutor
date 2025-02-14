@@ -5,18 +5,20 @@ const (
 	UserDescription = "The external user who gave the query"
 )
 
+var UserEntity = &userEntity{}
+
 type Entity interface {
 	Id() string
 	Description() string
 }
 
-type UserEntity struct {
+type userEntity struct {
 }
 
-func (u *UserEntity) Id() string {
+func (u *userEntity) Id() string {
 	return UserEntityId
 }
 
-func (u *UserEntity) Description() string {
+func (u *userEntity) Description() string {
 	return UserDescription
 }
