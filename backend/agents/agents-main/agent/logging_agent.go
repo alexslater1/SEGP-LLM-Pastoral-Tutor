@@ -23,6 +23,14 @@ func (a *LoggingAgent) Run(ctx context.Context, input string) (*string, *string,
 	return a.Agent.Run(ctx, input)
 }
 
+func (a *LoggingAgent) Id() string {
+	return a.Agent.Id()
+}
+
+func (a *LoggingAgent) Description() string {
+	return a.Agent.Description()
+}
+
 func (a *LoggingAgent) Subscribe() <-chan AgentEvent {
 	return a.Agent.Subscribe()
 }

@@ -5,35 +5,28 @@ import (
 	"os"
 
 	"github.com/segp/agents-main/clock"
+	"github.com/segp/agents-main/entity"
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
-	"github.com/segp/agents-main/memory"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
 )
 
+const (
+	defaultSubscriberBufferSize = 100
+)
+
 type Agent interface {
+	entity.Entity
+
 	Run(ctx context.Context, input string) (*string, *string, error)
 	Subscribe() <-chan AgentEvent
 	Unsubscribe(ch <-chan AgentEvent)
 }
 
-func NewDefaultReActAgent() Agent {
-	var (
-		toolHandler = tools.NewDefaultToolHandler(googleSearch.NewNonHeadlessRodClient(), knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL")))
-		llm         = llm.NewOpenAiLLM(os.Getenv("OPENAI_API_KEY"))
-		memory      = memory.NewReActMemory()
-		history     = history.NewLocalHistory()
-		knowledge   = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
-		agent       = NewReActAgent("You are a ReAct agent", toolHandler, llm, memory, history, knowledge)
-	)
-
-	return agent
-}
-
-func NewDefaultFastAgent() Agent {
+func NewDefaultUserQueryAgent() Agent {
 	var (
 		googleSearchClient = googleSearch.NewRodClient()
 		toolHandler        = tools.NewGoogleSearchToolHandler(googleSearchClient)
@@ -46,7 +39,10 @@ func NewDefaultFastAgent() Agent {
 	)
 
 	return NewFastAgent(
-		"You are a ReAct agent",
+		"user_query_agent",
+		"An agent that receives the user's query from the frontend. Has a plethora of tools to achieve general tasks.",
+		"You are a user query agent. You will be given a real user's query which comes directly from the frontend.",
+
 		toolHandler,
 		llm,
 		knowledge,
@@ -55,26 +51,14 @@ func NewDefaultFastAgent() Agent {
 	)
 }
 
-func NewDefaultLoggingReActAgent() Agent {
-	return NewLoggingAgent(NewDefaultReActAgent())
+func NewDefaultLoggingUserQueryAgent() Agent {
+	return NewLoggingAgent(NewDefaultUserQueryAgent())
 }
 
-func NewDefaultEventStoringReActAgent() Agent {
-	return NewEventStoringAgent(NewDefaultReActAgent(), storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY")))
+func NewDefaultEventStoringUserQueryAgent() Agent {
+	return NewEventStoringAgent(NewDefaultUserQueryAgent(), storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY")))
 }
 
-func NewDefaultEventStoringLoggingReActAgent() Agent {
-	return NewLoggingAgent(NewDefaultEventStoringReActAgent())
-}
-
-func NewDefaultLoggingFastAgent() Agent {
-	return NewLoggingAgent(NewDefaultFastAgent())
-}
-
-func NewDefaultEventStoringFastAgent() Agent {
-	return NewEventStoringAgent(NewDefaultFastAgent(), storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY")))
-}
-
-func NewDefaultEventStoringLoggingFastAgent() Agent {
-	return NewLoggingAgent(NewDefaultEventStoringFastAgent())
+func NewDefaultEventStoringLoggingUserQueryAgent() Agent {
+	return NewLoggingAgent(NewDefaultEventStoringUserQueryAgent())
 }

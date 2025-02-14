@@ -20,7 +20,10 @@ const (
 )
 
 type FastAgent struct {
-	Background  string
+	ID     string
+	Desc   string
+	Prompt string
+
 	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
 	Knowledge   knowledge.Knowledge
@@ -30,9 +33,12 @@ type FastAgent struct {
 	subscribers []chan AgentEvent
 }
 
-func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
+func NewFastAgent(id string, description string, prompt string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
 	return &FastAgent{
-		Background:  background,
+		ID:     id,
+		Desc:   description,
+		Prompt: prompt,
+
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Knowledge:   knowledge,
@@ -41,6 +47,14 @@ func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM
 
 		subscribers: []chan AgentEvent{},
 	}
+}
+
+func (a *FastAgent) Id() string {
+	return a.ID
+}
+
+func (a *FastAgent) Description() string {
+	return a.Desc
 }
 
 func (a *FastAgent) Run(ctx context.Context, query string) (*string, *string, error) {
