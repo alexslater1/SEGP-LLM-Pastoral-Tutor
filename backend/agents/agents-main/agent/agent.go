@@ -37,6 +37,7 @@ type Agent interface {
 	Subscribe() <-chan AgentEvent
 	Unsubscribe(ch <-chan AgentEvent)
 
+	// change to set can offload to???
 	addCanOffloadToEntity(...string)
 	canOffloadToEntities() []string
 	clone() Agent

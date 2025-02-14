@@ -3,6 +3,7 @@ package crew
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/entity"
@@ -11,8 +12,7 @@ import (
 type EntityGraph map[string][]string
 
 type Crew struct {
-	EntityGraph EntityGraph
-	AgentMap    map[string]agent.Agent
+	AgentMap map[string]agent.Agent
 }
 
 func NewCrew(agents []agent.Agent, entityGraph EntityGraph) *Crew {
@@ -29,18 +29,39 @@ func NewCrew(agents []agent.Agent, entityGraph EntityGraph) *Crew {
 		}
 	}
 
-	return &Crew{EntityGraph: entityGraph, AgentMap: agentMap}
+	return &Crew{AgentMap: crewAgentsMapFrom(entityGraph, agentMap)}
 }
 
-func (c *Crew) Run(ctx context.Context, input string) (*string, *string, error) {
+func (c *Crew) Run(ctx context.Context, input string, startAgentEntityId string) (*string, *string, error) {
 
-	/*
-	 1. Pass input into first agent
-	 2. Get response from first agent
-	 3. If response says to pipe into next agent, pass response into next agent + back to 2 but for new agent
+	task := input
+	entityId := startAgentEntityId
+	for {
+		slog.Info("Crew: running agent", "agent", entityId, "task", task)
+		agent, ok := c.AgentMap[entityId]
+		if !ok {
+			return nil, nil, fmt.Errorf("agent %s not found", entityId)
+		}
 
-	 4. Return final response
-	*/
+		agentResponse, err := agent.Run(ctx, task)
+		if err != nil {
+			return nil, nil, err
+		}
 
-	panic("not implemented")
+		if agentResponse.OffloadTask == nil {
+			return agentResponse.Answer, agentResponse.Reason, nil
+		}
+
+		entityId = agentResponse.OffloadTask.EntityID
+		task = agentResponse.OffloadTask.Task
+	}
+}
+
+func crewAgentsMapFrom(entityGraph EntityGraph, agentMap map[string]agent.Agent) map[string]agent.Agent {
+	crewAgentMap := make(map[string]agent.Agent)
+	for entityId, agentIds := range entityGraph {
+		crewAgentMap[entityId] = agent.NewCrewAgent(agentMap[entityId], agentIds)
+	}
+
+	return crewAgentMap
 }
