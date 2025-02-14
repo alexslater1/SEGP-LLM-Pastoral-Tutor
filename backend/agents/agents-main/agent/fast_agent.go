@@ -214,9 +214,9 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	if iteration == 0 {
-		prompt = fmt.Sprintf("You are a reAct agent. Here are previous messages: %+v. Your goal is to solve the following query: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", chatHistory, query, *knowledgeContext)
+		prompt = fmt.Sprintf("You are a reAct agent. Here are previous messages: %+v. Your goal is to solve the following: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", chatHistory, query, *knowledgeContext)
 	} else {
-		prompt = fmt.Sprintf("You are a reAct agent, currently in the process of solving the query: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", query, *prevThoughts, *prevToolCall, *prevToolCallResult)
+		prompt = fmt.Sprintf("You are a reAct agent, currently in the process of solving: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
 
 	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem."

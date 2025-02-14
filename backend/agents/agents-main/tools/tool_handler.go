@@ -116,7 +116,7 @@ func (t *ToolHandler) ToolDefinitions() []ToolDefinition {
 	sort.Slice(toolDefinitions, func(i, j int) bool {
 		return toolDefinitions[i].Name < toolDefinitions[j].Name
 	})
-	
+
 	return toolDefinitions
 }
 
