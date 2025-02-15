@@ -38,8 +38,8 @@ func NewToolHandler(tools []Tool) *ToolHandler {
 		toolMap[tool.Definition().Name] = tool
 	}
 
-	if _, ok := toolMap["no_tool"]; !ok {
-		toolMap["no_tool"] = NewNoTool()
+	if _, ok := toolMap["give_answer"]; !ok {
+		toolMap["give_answer"] = NewGiveAnswerTool()
 	}
 
 	return &ToolHandler{
@@ -102,6 +102,14 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 			return nil, fmt.Errorf("query is required")
 		}
 		return typedTool.GoogleSearchFirstResultsPageContentsFor(query.(string))
+
+	case *EmailTool:
+		htmlBody, ok := parsedArgs["html_body"]
+		if !ok {
+			return nil, fmt.Errorf("html_body is required")
+		}
+		id, err := typedTool.SendEmail(htmlBody.(string))
+		return &id, err
 	}
 	return nil, fmt.Errorf("no tool matched the name %s", toolCall.Name)
 }
@@ -116,50 +124,11 @@ func (t *ToolHandler) ToolDefinitions() []ToolDefinition {
 	sort.Slice(toolDefinitions, func(i, j int) bool {
 		return toolDefinitions[i].Name < toolDefinitions[j].Name
 	})
-	
+
 	return toolDefinitions
 }
 
-func (t *ToolHandler) ToolDefinitionsWithDescribingAction() []ToolDefinition {
-	return t.toolDefinitionsWithDescribingAction()
-}
-
-func (t *ToolHandler) toolDefinitionsWithDescribingAction() []ToolDefinition {
-	toolDefinitions := []ToolDefinition{}
-
-	describingAction := Parameter{
-		Name:        "descriptionOfAction",
-		Description: "A short description of the action you are taking. Present continuous tense, and must be specific to the tool being used. For example \"Searching Google results for italian restaurants near Imperial College London\".",
-		Type:        ParameterTypeString,
-	}
-
-	for _, tool := range t.Tools {
-		definition := tool.Definition()
-		newDefinition := ToolDefinition{
-			Name:        definition.Name,
-			Description: definition.Description,
-			Parameters:  append(definition.Parameters, describingAction),
-		}
-		toolDefinitions = append(toolDefinitions, newDefinition)
-	}
-	return toolDefinitions
-}
-
-func (t *ToolHandler) ToolDefinitionsWithThoughts(toolDefinitions []ToolDefinition) []ToolDefinition {
-	tds := []ToolDefinition{}
-
-	thinkingParameter := Parameter{
-		Name:        "_thinking",
-		Description: "Put your thoughts here",
-		Type:        ParameterTypeString,
-	}
-
-	for _, tool := range toolDefinitions {
-		tds = append(tds, ToolDefinition{
-			Name:        tool.Name,
-			Description: tool.Description,
-			Parameters:  append([]Parameter{thinkingParameter}, tool.Parameters...),
-		})
-	}
-	return tds
+func (t *ToolHandler) ToolDefinitionsWithOffloadingTool() []ToolDefinition {
+	toolDefinitions := t.ToolDefinitions()
+	return append(toolDefinitions, NewOffloadTaskTool().Definition())
 }

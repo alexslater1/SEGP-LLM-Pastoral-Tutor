@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/segp/agents-main/entity"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -19,7 +20,7 @@ func NewEventStoringAgent(agent Agent, storage storage.Storage) *EventStoringAge
 	}
 }
 
-func (a *EventStoringAgent) Run(ctx context.Context, input string) (*string, *string, error) {
+func (a *EventStoringAgent) Run(ctx context.Context, input string) (*AgentResponse, error) {
 	ch := a.Subscribe()
 	defer a.Unsubscribe(ch)
 
@@ -34,6 +35,18 @@ func (a *EventStoringAgent) Subscribe() <-chan AgentEvent {
 
 func (a *EventStoringAgent) Unsubscribe(ch <-chan AgentEvent) {
 	a.Agent.Unsubscribe(ch)
+}
+
+func (a *EventStoringAgent) clone() Agent {
+	return NewEventStoringAgent(a.Agent.clone(), a.storage)
+}
+
+func (a *EventStoringAgent) addCanOffloadToEntity(entities ...entity.Entity) {
+	a.Agent.addCanOffloadToEntity(entities...)
+}
+
+func (a *EventStoringAgent) canOffloadToEntities() []entity.Entity {
+	return a.Agent.canOffloadToEntities()
 }
 
 func (a *EventStoringAgent) storageLoop(ch <-chan AgentEvent) {

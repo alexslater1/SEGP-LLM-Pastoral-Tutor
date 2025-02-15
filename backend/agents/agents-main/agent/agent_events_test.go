@@ -20,17 +20,6 @@ func TestNewQueryEvent(t *testing.T) {
 	assert.Equal(t, query, event.Data["query"])
 }
 
-func TestNewAnswerErrorEvent(t *testing.T) {
-	requestID := "req123"
-	error := "test error"
-
-	event := NewAnswerErrorEvent(context_keys.SetRequestID(context.Background(), requestID), error)
-
-	assert.Equal(t, AgentEventTypeAnswerError, event.Type)
-	assert.Equal(t, requestID, event.RequestID)
-	assert.Equal(t, error, event.Data["error"])
-}
-
 func TestNewThinkEvent(t *testing.T) {
 	requestID := "req123"
 	thoughts := "thinking process"
@@ -66,17 +55,6 @@ func TestNewAnswerSuccessEvent(t *testing.T) {
 	assert.Equal(t, reason, event.Data["reason"])
 }
 
-func TestNewObservationEvent(t *testing.T) {
-	requestID := "req123"
-	observation := "test observation"
-
-	event := NewObservationEvent(context_keys.SetRequestID(context.Background(), requestID), observation)
-
-	assert.Equal(t, AgentEventTypeObservation, event.Type)
-	assert.Equal(t, requestID, event.RequestID)
-	assert.Equal(t, observation, event.Data["observation"])
-}
-
 func TestNewToolCallChoiceEvent(t *testing.T) {
 	requestID := "req123"
 	toolCall := tools.ToolCall{
@@ -89,4 +67,28 @@ func TestNewToolCallChoiceEvent(t *testing.T) {
 	assert.Equal(t, AgentEventTypeToolCallChoice, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
 	assert.Equal(t, toolCall, event.Data["toolCallChoice"])
+}
+
+func TestNewOffloadTaskEvent(t *testing.T) {
+	requestID := "req123"
+	entityId := "ent123"
+	task := "test task"
+
+	event := NewOffloadTaskEvent(context_keys.SetRequestID(context.Background(), requestID), entityId, task)
+
+	assert.Equal(t, AgentEventTypeOffloadTask, event.Type)
+	assert.Equal(t, requestID, event.RequestID)
+	assert.Equal(t, entityId, event.Data["entityId"])
+	assert.Equal(t, task, event.Data["task"])
+}
+
+func TestNewAnswerErrorEvent(t *testing.T) {
+	requestID := "req123"
+	error := "test error"
+
+	event := NewAnswerErrorEvent(context_keys.SetRequestID(context.Background(), requestID), error)
+
+	assert.Equal(t, AgentEventTypeAnswerError, event.Type)
+	assert.Equal(t, requestID, event.RequestID)
+	assert.Equal(t, error, event.Data["error"])
 }

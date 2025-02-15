@@ -70,13 +70,17 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 		}
 
 		go func() {
-			response, reasoning, err := agent.Run(r.Context(), req.Query)
+			response, err := agent.Run(r.Context(), req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				return
 			}
 
-			slog.Info("agent response", "response", *response, "reason", *reasoning)
+			if response.OffloadTask != nil {
+				slog.Info("offloading task", "entity_id", response.OffloadTask.Entity.Id(), "task", response.OffloadTask.Task)
+			}
+
+			slog.Info("agent response", "answer", *response.Answer, "reason", *response.Reason)
 		}()
 
 		sessionId, ok := context_keys.GetSessionID(ctx)

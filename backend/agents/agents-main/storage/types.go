@@ -29,7 +29,7 @@ func NewAgentRequest(endpoint string, metadata interface{}, chatID string) Agent
 type AgentEvent struct {
 	ID        int         `json:"id,omitempty"`
 	CreatedAt *time.Time  `json:"created_at,omitempty"`
-	RequestID string      `json:"request_id"`
+	RequestID string      `json:"request_id,omitempty"`
 	Type      string      `json:"type"`
 	Metadata  interface{} `json:"metadata,omitempty"`
 }

@@ -20,7 +20,7 @@ func main() {
 
 	var (
 		store   = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE_KEY"))
-		agent   = agent.NewDefaultEventStoringLoggingFastAgent()
+		agent   = agent.NewDefaultEventStoringLoggingUserQueryAgent()
 		history = history.NewAgentEventHistory(store)
 	)
 

@@ -2,11 +2,15 @@ package agent
 
 import (
 	"context"
+	"log"
 	"os"
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/clock"
 	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/email"
+	"github.com/segp/agents-main/entity"
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
@@ -15,6 +19,13 @@ import (
 	"github.com/segp/agents-main/utils"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	if err := godotenv.Load("../../../.env"); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	os.Exit(m.Run())
+}
 
 func TestToolCallChoiceString(t *testing.T) {
 	var (
@@ -29,7 +40,7 @@ func TestToolCallChoiceString(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = NewFastAgent("test", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, entity.UserEntity)
 	)
 
 	toolChoicesString, err := agent.toolChoicesString()
@@ -48,7 +59,7 @@ func TestThinkingAndActPromptFirstIteration(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = NewFastAgent("test", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, entity.UserEntity)
 
 		query            = "test query"
 		knowledgeContext = "test knowledge context"
@@ -76,7 +87,7 @@ func TestThinkingAndActPromptSubsequentIteration(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = NewFastAgent("test ", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, entity.UserEntity)
 
 		query            = "test query"
 		knowledgeContext = "test knowledge context"
@@ -104,7 +115,7 @@ func TestThinkAndChooseTool(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = NewFastAgent("test", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, entity.UserEntity)
 
 		query            = "test query"
 		knowledgeContext = "test knowledge context"
@@ -132,7 +143,7 @@ func TestThinkAndChooseTool(t *testing.T) {
 func TestSubscribe(t *testing.T) {
 	clock := clock.NewMockClock()
 	h := history.NewLocalHistory()
-	agent := NewFastAgent("test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock, h)
+	agent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock, h, entity.UserEntity)
 	ch := agent.Subscribe()
 	agent.publish(NewToolCallChoiceEvent(context.Background(), tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}))
 	event := <-ch
@@ -144,7 +155,7 @@ func TestSubscribe(t *testing.T) {
 func TestUnsubscribe(t *testing.T) {
 	clock := clock.NewMockClock()
 	h := history.NewLocalHistory()
-	agent := NewFastAgent("test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock, h)
+	agent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock, h, entity.UserEntity)
 	ch := agent.Subscribe()
 	agent.Unsubscribe(ch)
 	agent.publish(NewToolCallChoiceEvent(context.Background(), tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}))
@@ -157,16 +168,16 @@ func TestFastAgentRun(t *testing.T) {
 		t.Skip("skipping test in CI")
 	}
 
-	agent := NewDefaultLoggingFastAgent()
+	agent := NewDefaultLoggingUserQueryAgent()
 	ctx := context_keys.SetRequestID(context.Background(), "2fea8a5f-b82c-4261-9889-3e42136d9ef0")
 
-	answer, reason, err := agent.Run(ctx, "what about in 3 days?")
+	response, err := agent.Run(ctx, "what about in 3 days?")
 	if err != nil {
 		t.Fatalf("error running agent: %v", err)
 	}
 
-	t.Logf("answer: %s", *answer)
-	t.Logf("reason: %s", *reason)
+	t.Logf("answer: %s", *response.Answer)
+	t.Logf("reason: %s", *response.Reason)
 }
 
 func TestFastAgentAskQuestion(t *testing.T) {
@@ -174,16 +185,59 @@ func TestFastAgentAskQuestion(t *testing.T) {
 		t.Skip("skipping test in CI")
 	}
 
-	agent := NewFastAgent("test", tools.NewToolHandler([]tools.Tool{
+	agent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{
 		// tools.NewGoogleSearchFirstResultsPageContentsTool(googleSearch.NewMockGoogleSearchClient(), 3),
 	}), llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set")), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory())
 
 	query := "What is the temperature?"
-	answer, reason, err := agent.Run(context.Background(), query)
+	response, err := agent.Run(context.Background(), query)
 	if err != nil {
 		t.Fatalf("error running agent: %v", err)
 	}
 
-	t.Logf("answer: %s", *answer)
-	t.Logf("reason: %s", *reason)
+	t.Logf("answer: %s", *response.Answer)
+	t.Logf("reason: %s", *response.Reason)
+}
+
+func TestFastAgentDescription(t *testing.T) {
+	agent := newFastAgent("test", "a description", "a prompt", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory(), entity.UserEntity)
+	assert.Equal(t, "a description", agent.Description())
+}
+
+func TestFastAgentId(t *testing.T) {
+	agent := newFastAgent("test", "a description", "a prompt", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory(), entity.UserEntity)
+	assert.Equal(t, "test", agent.Id())
+}
+
+func TestPersonalTutorAgent(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("skipping test in CI")
+	}
+
+	var (
+		knowledge = knowledge.NewLocalKnowledge()
+		llm       = llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set"))
+		clock     = clock.NewMockClock()
+		h         = history.NewLocalHistory()
+
+		id     = "personal_tutor_agent"
+		desc   = "A personal tutor agent"
+		prompt = "You are a personal tutor agent. You are meant to provide support for a student at imperial college london. You are a layer between the students and their personal tutor. Students interact with you via a chatbot. In the case where you have flagged something concerning, you must use the email tool to send an email to the personal tutor, raising this concern and your reasons. You must also always reply to the user in a way which is supportive."
+
+		agent = newFastAgent(id, desc, prompt, tools.NewToolHandler([]tools.Tool{
+			tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "personal.tutor@imperial.ac.uk", "To be used to send an email to a personal tutor, in case of a concern."),
+		}), llm, knowledge, clock, h, entity.UserEntity)
+	)
+
+	resp, err := agent.Run(context.Background(), "What's 1 + 1?")
+	if err != nil {
+		t.Fatalf("error running agent: %v", err)
+	}
+
+	if resp.OffloadTask != nil {
+		t.Logf("offload task: %v", resp.OffloadTask)
+	} else {
+		t.Logf("answer: %s", *resp.Answer)
+		t.Logf("reason: %s", *resp.Reason)
+	}
 }

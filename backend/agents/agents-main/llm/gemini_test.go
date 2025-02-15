@@ -506,7 +506,7 @@ func TestGeminiChatCompletionLLMThinkingWithStructuredOutput(t *testing.T) {
 		} `json:"answer"`
 	}
 
-	ts := []tools.ToolDefinition{tools.NewGoogleSearchResultsTool(nil).Definition(), tools.NewNoTool().Definition()}
+	ts := []tools.ToolDefinition{tools.NewGoogleSearchResultsTool(nil).Definition(), tools.NewGiveAnswerTool().Definition()}
 	definitionStr := ""
 
 	for _, t := range ts {
@@ -533,7 +533,7 @@ func TestStructuredOutputCompletionWithTools(t *testing.T) {
 
 	gs := googleSearch.NewRodClient()
 
-	ts := []tools.ToolDefinition{tools.NewGoogleSearchResultsTool(gs).Definition(), tools.NewNoTool().Definition()}
+	ts := []tools.ToolDefinition{tools.NewGoogleSearchResultsTool(gs).Definition(), tools.NewGiveAnswerTool().Definition()}
 
 	prompt := "What is the current price of the usd"
 
