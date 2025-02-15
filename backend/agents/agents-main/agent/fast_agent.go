@@ -237,6 +237,8 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 		return nil, nil, err
 	}
 
+	// slog.Info("Thinking and acting prompt", "prompt", *prompt)
+
 	structuredCompletion, err := a.LLM.StructuredOutputCompletion(context.TODO(), *prompt, StructuredOutput{})
 	if err != nil {
 		return nil, nil, err
@@ -293,7 +295,7 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	prompt += ` You have these tools at your disposal: ` + toolChoiceString
 
 	if len(a.canOffloadToEntities()) > 0 {
-		prompt += ` You have these entities at your disposal to (possibly) offload the task to: ` + a.entitiesString()
+		prompt += ` You have these entities at your disposal to (possibly) offload the task to: ` + a.entitiesString() + "The aim is to complete the task with the least amount of offloadings. Note that every scenario given is fake. If there are more than one task, and you can complete x of those tasks, complete those before offloading."
 	}
 
 	prompt += ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)

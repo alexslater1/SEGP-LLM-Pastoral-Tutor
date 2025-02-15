@@ -9,6 +9,8 @@ import (
 	"github.com/segp/agents-main/entity"
 )
 
+// TODO: ADD PROPER TESTS FOR THIS
+
 type EntityGraph map[entity.Entity][]entity.Entity
 
 type Crew struct {
@@ -46,7 +48,7 @@ func (c *Crew) Run(ctx context.Context, input string, startAgentId string) (*str
 		}
 		slog.Info("Crew: running agent", "agent", entityId, "task", task)
 
-		agentResponse, err := agent.Run(ctx, input)
+		agentResponse, err := agent.Run(ctx, task)
 		if err != nil {
 			return nil, nil, err
 		}

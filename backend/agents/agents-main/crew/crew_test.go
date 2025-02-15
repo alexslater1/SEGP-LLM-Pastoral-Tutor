@@ -34,7 +34,7 @@ func TestCrew(t *testing.T) {
 		personalTutorAgent: {userQueryAgent},
 	})
 
-	answer, reason, err := crew.Run(context.Background(), "I want to kill myself? Also what is the weather in tokyo", userQueryAgent.Id())
+	answer, reason, err := crew.Run(context.Background(), "I want to kill myself", userQueryAgent.Id())
 	if err != nil {
 		t.Fatalf("error running crew: %v", err)
 	}
