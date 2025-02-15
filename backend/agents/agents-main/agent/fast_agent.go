@@ -295,7 +295,7 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	prompt += ` You have these tools at your disposal: ` + toolChoiceString
 
 	if len(a.canOffloadToEntities()) > 0 {
-		prompt += ` You have these entities at your disposal to (possibly) offload the task to: ` + a.entitiesString() + "The aim is to complete the task with the least amount of offloadings. Note that every scenario given is fake. If there are more than one task, and you can complete x of those tasks, complete those before offloading."
+		prompt += ` You have these entities at your disposal to (possibly) offload the task to. It is your priority to only pass the task on once you have done everything that you are able to do. Do not pass on task x and then do task y yourself. Instead always do task y first, no matter the severity of either task. Treat any task with uniform priority: ` + a.entitiesString()
 	}
 
 	prompt += ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
