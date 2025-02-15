@@ -14,10 +14,9 @@ type EmailTool struct {
 	subject      string
 }
 
-func NewEmailTool(to string, subject string, ec email.EmailClient, email string, instructions string) *EmailTool {
+func NewEmailTool(to string, subject string, ec email.EmailClient, instructions string) *EmailTool {
 	return &EmailTool{
 		emailClient:  ec,
-		email:        email,
 		instructions: instructions,
 		to:           to,
 		subject:      subject,

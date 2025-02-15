@@ -225,7 +225,7 @@ func TestPersonalTutorAgent(t *testing.T) {
 		prompt = "You are a personal tutor agent. You are meant to provide support for a student at imperial college london. You are a layer between the students and their personal tutor. Students interact with you via a chatbot. In the case where you have flagged something concerning, you must use the email tool to send an email to the personal tutor, raising this concern and your reasons. You must also always reply to the user in a way which is supportive."
 
 		agent = newFastAgent(id, desc, prompt, tools.NewToolHandler([]tools.Tool{
-			tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "personal.tutor@imperial.ac.uk", "To be used to send an email to a personal tutor, in case of a concern."),
+			tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
 		}), llm, knowledge, clock, h, entity.UserEntity)
 	)
 

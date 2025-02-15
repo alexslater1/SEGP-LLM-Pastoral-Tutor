@@ -82,7 +82,7 @@ func NewPersonalTutorAgent() Agent {
 		agentEventHistory = history.NewAgentEventHistory(supabaseStore)
 
 		toolHandler = tools.NewToolHandler([]tools.Tool{
-			tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "personal.tutor@imperial.ac.uk", "To be used to send an email to a personal tutor, in case of a concern."),
+			tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
 		})
 	)
 

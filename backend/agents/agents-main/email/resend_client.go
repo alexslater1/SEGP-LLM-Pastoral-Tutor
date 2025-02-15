@@ -2,6 +2,7 @@ package email
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/resend/resend-go/v2"
 )
@@ -19,6 +20,8 @@ func (c *ResendClient) SendEmail(to string, subject string, htmlBody string) (st
 		return "", fmt.Errorf("invalid email address: %s", to)
 	}
 
+	slog.Info("Sending email", "to", to, "with subject", subject, "and body", htmlBody)
+
 	params := &resend.SendEmailRequest{
 		From:    emailFrom,
 		To:      []string{to},
@@ -27,5 +30,9 @@ func (c *ResendClient) SendEmail(to string, subject string, htmlBody string) (st
 	}
 
 	resp, err := c.client.Emails.Send(params)
-	return resp.Id, err
+	if err != nil {
+		return "", err
+	}
+
+	return resp.Id, nil
 }
