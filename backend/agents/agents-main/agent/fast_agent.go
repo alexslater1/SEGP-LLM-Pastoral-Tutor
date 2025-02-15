@@ -133,18 +133,29 @@ func (a *FastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.Tool
 	}, nil
 }
 
-func (a *FastAgent) handleOffloadTask(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, error) {
-	entity, task, err := a.extractEntityAndTask(toolChoice)
+func (a *FastAgent) handleOffloadTask(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, bool, error) {
+	ent, task, somethingElseShouldBeDone, err := a.extractEntityAndTask(toolChoice)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	a.publish(NewOffloadTaskEvent(ctx, entity.Id(), *task))
-	return &AgentResponse{
-		OffloadTask: &OffloadTask{
-			Entity: entity,
-			Task:   *task,
-		},
-	}, nil
+	a.publish(NewOffloadTaskEvent(ctx, ent.Id(), *task))
+
+	if ent == entity.UserEntity {
+		return &AgentResponse{
+			OffloadTask: &OffloadTask{
+				Entity: ent,
+				Task:   *task,
+			},
+		}, false, nil
+	}
+
+	agent := ent.(Agent)
+	resp, err := agent.Run(ctx, *task)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return resp, somethingElseShouldBeDone, nil
 }
 
 func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse, error) {
@@ -172,17 +183,26 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse
 		}
 
 		if toolChoice.Name == "offload_task" {
-			return a.handleOffloadTask(ctx, toolChoice)
-		}
+			resp, somethingElseShouldBeDone, err := a.handleOffloadTask(ctx, toolChoice)
+			if err != nil {
+				return nil, err
+			}
+			if !somethingElseShouldBeDone {
+				return resp, nil
+			}
+			p := fmt.Sprintf("The result of the task was: %s. The agent's reasoning for this answer was: %s", *resp.Answer, *resp.Reason)
+			prevToolCallResult = &p
+		} else {
 
-		result, err := a.ToolHandler.Call(*toolChoice)
-		if err != nil {
-			return nil, err
+			result, err := a.ToolHandler.Call(*toolChoice)
+			if err != nil {
+				return nil, err
+			}
+			a.publish(NewToolCallResultEvent(ctx, result))
+			prevToolCallResult = result
 		}
-		a.publish(NewToolCallResultEvent(ctx, result))
 
 		prevThoughts = thoughts
-		prevToolCallResult = result
 		prevToolCall = toolChoice
 		prevToolCalls = append(prevToolCalls, *toolChoice)
 	}
@@ -370,21 +390,22 @@ func (a *FastAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *
 	return &answer, &reason, nil
 }
 
-func (a *FastAgent) extractEntityAndTask(toolCall *tools.ToolCall) (entity.Entity, *string, error) {
+func (a *FastAgent) extractEntityAndTask(toolCall *tools.ToolCall) (entity.Entity, *string, bool, error) {
 	var arguments map[string]string
 	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
 	task := arguments["task"]
 	entityId := arguments["entity_id"]
+	somethingElseShouldBeDone := arguments["something_else_should_be_done"]
 
 	entity, err := a.matchEntityIdToEntity(entityId)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
-	return entity, &task, nil
+	return entity, &task, somethingElseShouldBeDone == "true", nil
 }
 
 func (a *FastAgent) matchEntityIdToEntity(entityId string) (entity.Entity, error) {

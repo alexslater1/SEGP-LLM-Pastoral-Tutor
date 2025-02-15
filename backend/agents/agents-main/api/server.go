@@ -5,6 +5,7 @@ import (
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api/handlers"
+	"github.com/segp/agents-main/crew"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/storage"
 )
@@ -15,15 +16,17 @@ type Server struct {
 
 	storage storage.Storage
 	agent   agent.Agent
+	crew    *crew.Crew
 	history history.History
 }
 
-func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, history history.History) *Server {
+func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, crew *crew.Crew, history history.History) *Server {
 	s := &Server{
 		listenAddr: listenAddr,
 		router:     http.NewServeMux(),
 		storage:    storage,
 		agent:      agent,
+		crew:       crew,
 		history:    history,
 	}
 
@@ -32,7 +35,7 @@ func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, hi
 }
 
 func (s *Server) routes() {
-	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.agent, s.storage, s.history))
+	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.crew, s.agent, s.storage, s.history))
 	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(s.storage))
 	s.router.HandleFunc("GET /sessions/{session_id}", handlers.ChatHistory(s.history))
 }
