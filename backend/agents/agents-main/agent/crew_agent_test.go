@@ -32,7 +32,10 @@ func (e *testEntity) Description() string {
 func TestCrewAgent(t *testing.T) {
 
 	fastAgent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory(), entity.UserEntity)
-	crewAgent := NewCrewAgent(fastAgent, []entity.Entity{newTestEntity("entity_id_1", "test"), newTestEntity("entity_id_2", "test")})
 
+	crewAgent := NewCrewAgent(fastAgent)
+	assert.Equal(t, []entity.Entity{entity.UserEntity}, crewAgent.canOffloadToEntities())
+
+	crewAgent.AddCanOffloadToEntity(newTestEntity("entity_id_1", "test"), newTestEntity("entity_id_2", "test"))
 	assert.Equal(t, []entity.Entity{newTestEntity("entity_id_1", "test"), newTestEntity("entity_id_2", "test"), entity.UserEntity}, crewAgent.canOffloadToEntities())
 }

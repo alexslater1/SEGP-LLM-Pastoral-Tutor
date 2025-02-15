@@ -18,13 +18,20 @@ type Crew struct {
 }
 
 func NewCrew(entityGraph EntityGraph) *Crew {
-	agentMap := make(map[string]agent.Agent)
+	crewAgentMap := make(map[*agent.CrewAgent][]entity.Entity)
 	for e, entities := range entityGraph {
 		a, ok := e.(agent.Agent)
 		if !ok {
 			panic(fmt.Sprintf("entity %s is not an agent. Keys must be agents", e.Id()))
 		}
-		agentMap[a.Id()] = agent.NewCrewAgent(a, entities)
+
+		crewAgentMap[agent.NewCrewAgent(a)] = entities
+	}
+
+	agentMap := make(map[string]agent.Agent)
+	for crewAgent, entities := range crewAgentMap {
+		crewAgent.AddCanOffloadToEntity(entities...)
+		agentMap[crewAgent.Id()] = crewAgent
 	}
 
 	return &Crew{agentMap: agentMap}

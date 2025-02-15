@@ -29,7 +29,7 @@ func main() {
 
 		crew = crew.NewCrew(map[entity.Entity][]entity.Entity{
 			userQueryAgent:     {personalTutorAgent, entity.UserEntity},
-			personalTutorAgent: {userQueryAgent},
+			personalTutorAgent: {},
 		})
 	)
 

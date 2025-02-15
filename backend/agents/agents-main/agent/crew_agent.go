@@ -11,14 +11,19 @@ type CrewAgent struct {
 	entitiesCanOffloadTasksTo []entity.Entity
 }
 
-func NewCrewAgent(agent Agent, entities []entity.Entity) Agent {
+func NewCrewAgent(agent Agent) *CrewAgent {
 	clonedAgent := agent.clone()
-	clonedAgent.addCanOffloadToEntity(entities...)
+	// clonedAgent.addCanOffloadToEntity(entities...)
 
 	return &CrewAgent{
 		agent:                     clonedAgent,
-		entitiesCanOffloadTasksTo: entities,
+		entitiesCanOffloadTasksTo: clonedAgent.canOffloadToEntities(),
+		// entitiesCanOffloadTasksTo: entities,
 	}
+}
+
+func (a *CrewAgent) AddCanOffloadToEntity(entities ...entity.Entity) {
+	a.addCanOffloadToEntity(entities...)
 }
 
 func (a *CrewAgent) Run(ctx context.Context, input string) (*AgentResponse, error) {
@@ -42,7 +47,7 @@ func (a *CrewAgent) Unsubscribe(ch <-chan AgentEvent) {
 }
 
 func (a *CrewAgent) clone() Agent {
-	return NewCrewAgent(a.agent.clone(), a.entitiesCanOffloadTasksTo)
+	return NewCrewAgent(a.agent.clone())
 }
 
 func (a *CrewAgent) addCanOffloadToEntity(entities ...entity.Entity) {
