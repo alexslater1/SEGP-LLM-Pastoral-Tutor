@@ -100,3 +100,19 @@ func NewRequestSession(sessionID string, requestID string) RequestSession {
 func (rs RequestSession) TableName() StorageTableName {
 	return StorageTableNameRequestSessions
 }
+
+type LastCheck struct {
+	ID string     `json:"id"`
+	CheckedAt *time.Time `json:"checked_at"`
+}
+
+func NewLastCheck(sessionID string, checkedAt *time.Time) LastCheck {
+	return LastCheck{
+		ID: sessionID,
+		CheckedAt: checkedAt,
+	}
+}
+
+func (ls LastCheck) TableName() StorageTableName {
+	return StorageTableNameLastChecks
+}
