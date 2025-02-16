@@ -22,24 +22,14 @@ import {
 import { auth } from '@/app/(auth)/auth';
 import { models } from '@/lib/ai/models';
 import {
-  codePrompt,
-  systemPrompt,
-  updateDocumentPrompt,
-} from '@/lib/ai/prompts';
-import {
   deleteChatById,
   getChatById,
-  getDocumentById,
   saveChat,
-  saveDocument,
   saveMessages,
-  saveSuggestions,
 } from '@/lib/db/queries';
-import type { Suggestion } from '@/lib/db/schema';
 import {
   generateUUID,
   getMostRecentUserMessage,
-  sanitizeResponseMessages,
 } from '@/lib/utils';
 
 import { generateTitleFromUserMessage } from '../../actions';

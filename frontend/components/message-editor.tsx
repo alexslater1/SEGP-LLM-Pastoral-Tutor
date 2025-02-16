@@ -1,6 +1,6 @@
 'use client';
 
-import { ChatRequestOptions, Message } from 'ai';
+import { Message } from '@/types/message';
 import { Button } from './ui/button';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Textarea } from './ui/textarea';
@@ -14,9 +14,7 @@ export type MessageEditorProps = {
   setMessages: (
     messages: Message[] | ((messages: Message[]) => Message[]),
   ) => void;
-  reload: (
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  reload: () => void;
 };
 
 export function MessageEditor({

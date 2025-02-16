@@ -1,25 +1,20 @@
 'use client';
 
-import type { ChatRequestOptions, Message } from 'ai';
+import { Message, Status } from '@/types/message';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useMemo, useState, useEffect } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
-import { DocumentToolCall, DocumentToolResult } from './document';
 import { PencilEditIcon, SparklesIcon } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
-import { PreviewAttachment } from './preview-attachment';
-import { Weather } from './weather';
 import equal from 'fast-deep-equal';
-import { cn, getMessageAnnotationContent } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
-import { DocumentPreview } from './document-preview';
-import { Status, StatusResponse } from '@/app/(chat)/api/chat/api-queries';
 
 const PurePreviewMessage = ({
   chatId,
@@ -30,39 +25,26 @@ const PurePreviewMessage = ({
   reload,
   isReadonly,
 }: {
-  chatId: string;
+  chatId: string | null;
   message: Message;
   vote: Vote | undefined;
   isLoading: boolean;
   setMessages: (
     messages: Message[] | ((messages: Message[]) => Message[]),
   ) => void;
-  reload: (
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  reload: () => void;
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
   function getLastStatusOrMessage(): string {
-    if (!message.annotations || message.content.trim() !== "") {
-      return message.content.trim()
+    if (message.status === Status.COMPLETED || message.status === Status.FAILED) {
+      return message.content
+    } else if (message.actions.length > 0) {
+      return message.actions[message.actions.length - 1]
+    } else {
+      return "Thinking..."
     }
-    if (!message.annotations.length || message.annotations.length == 0) {
-      return message.content.trim()
-    }
-
-    let lastAnnotation = message.annotations[message.annotations.length - 1]
-    if (!(lastAnnotation as StatusResponse)) {
-      return message.content.trim()
-    }
-
-    let parsedAnnotation = lastAnnotation as StatusResponse
-    if (!parsedAnnotation.type || parsedAnnotation.type !== Status.PENDING) {
-      return message.content.trim()
-    }
-        
-    return parsedAnnotation.current_action || "Thinking..."
   }
 
   return (
@@ -91,17 +73,6 @@ const PurePreviewMessage = ({
           )}
 
           <div className="flex flex-col gap-2 w-full">
-            {message.experimental_attachments && (
-              <div className="flex flex-row justify-end gap-2">
-                {message.experimental_attachments.map((attachment) => (
-                  <PreviewAttachment
-                    key={attachment.url}
-                    attachment={attachment}
-                  />
-                ))}
-              </div>
-            )}
-
             {message.content && mode === 'view' && (
               <div className="flex flex-row gap-2 items-start">
                 {message.role === 'user' && !isReadonly && (
@@ -148,71 +119,6 @@ const PurePreviewMessage = ({
               </div>
             )}
 
-            {message.toolInvocations && message.toolInvocations.length > 0 && (
-              <div className="flex flex-col gap-4">
-                {message.toolInvocations.map((toolInvocation) => {
-                  const { toolName, toolCallId, state, args } = toolInvocation;
-
-                  if (state === 'result') {
-                    const { result } = toolInvocation;
-
-                    return (
-                      <div key={toolCallId}>
-                        {toolName === 'getWeather' ? (
-                          <Weather weatherAtLocation={result} />
-                        ) : toolName === 'createDocument' ? (
-                          <DocumentPreview
-                            isReadonly={isReadonly}
-                            result={result}
-                          />
-                        ) : toolName === 'updateDocument' ? (
-                          <DocumentToolResult
-                            type="update"
-                            result={result}
-                            isReadonly={isReadonly}
-                          />
-                        ) : toolName === 'requestSuggestions' ? (
-                          <DocumentToolResult
-                            type="request-suggestions"
-                            result={result}
-                            isReadonly={isReadonly}
-                          />
-                        ) : (
-                          <pre>{JSON.stringify(result, null, 2)}</pre>
-                        )}
-                      </div>
-                    );
-                  }
-                  return (
-                    <div
-                      key={toolCallId}
-                      className={cx({
-                        skeleton: ['getWeather'].includes(toolName),
-                      })}
-                    >
-                      {toolName === 'getWeather' ? (
-                        <Weather />
-                      ) : toolName === 'createDocument' ? (
-                        <DocumentPreview isReadonly={isReadonly} args={args} />
-                      ) : toolName === 'updateDocument' ? (
-                        <DocumentToolCall
-                          type="update"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'requestSuggestions' ? (
-                        <DocumentToolCall
-                          type="request-suggestions"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
             {!isReadonly && (
               <MessageActions
                 key={`action-${message.id}`}
@@ -234,13 +140,8 @@ export const PreviewMessage = memo(
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.message.content !== nextProps.message.content) return false;
-    if (
-      !equal(
-        prevProps.message.toolInvocations,
-        nextProps.message.toolInvocations,
-      )
-    )
-      return false;
+    if (prevProps.message.status !== nextProps.message.status) return false;
+    if (prevProps.message.actions !== nextProps.message.actions) return false;
     if (!equal(prevProps.vote, nextProps.vote)) return false;
 
     return true;

@@ -1,10 +1,9 @@
-import type { Message } from 'ai';
+import { Message } from '@/types/message';
 import { toast } from 'sonner';
 import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 
 import type { Vote } from '@/lib/db/schema';
-import { getMessageIdFromAnnotations } from '@/lib/utils';
 
 import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
 import { Button } from './ui/button';
@@ -23,7 +22,7 @@ export function PureMessageActions({
   vote,
   isLoading,
 }: {
-  chatId: string;
+  chatId: string | null;
   message: Message;
   vote: Vote | undefined;
   isLoading: boolean;
@@ -33,8 +32,7 @@ export function PureMessageActions({
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
-  if (message.toolInvocations && message.toolInvocations.length > 0)
-    return null;
+  if (!chatId) return null;
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -62,13 +60,11 @@ export function PureMessageActions({
               disabled={vote?.isUpvoted}
               variant="outline"
               onClick={async () => {
-                const messageId = getMessageIdFromAnnotations(message);
-
                 const upvote = fetch('/api/vote', {
                   method: 'PATCH',
                   body: JSON.stringify({
                     chatId,
-                    messageId,
+                    messageId: message.id,
                     type: 'up',
                   }),
                 });
@@ -116,13 +112,11 @@ export function PureMessageActions({
               variant="outline"
               disabled={vote && !vote.isUpvoted}
               onClick={async () => {
-                const messageId = getMessageIdFromAnnotations(message);
-
                 const downvote = fetch('/api/vote', {
                   method: 'PATCH',
                   body: JSON.stringify({
                     chatId,
-                    messageId,
+                    messageId: message.id,
                     type: 'down',
                   }),
                 });

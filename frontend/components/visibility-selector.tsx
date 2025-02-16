@@ -45,15 +45,21 @@ export function VisibilitySelector({
   className,
   selectedVisibilityType,
 }: {
-  chatId: string;
+  chatId: string | null;
   selectedVisibilityType: VisibilityType;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
 
-  const { visibilityType, setVisibilityType } = useChatVisibility({
+  // TODO: Use this once we can query the visibility from the backend, maybe
+  /*const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId,
     initialVisibility: selectedVisibilityType,
-  });
+  });*/
+
+  const visibilityType = selectedVisibilityType;
+  const setVisibilityType = (visibilityType: VisibilityType) => {
+    console.log(visibilityType);
+  };
 
   const selectedVisibility = useMemo(
     () => visibilities.find((visibility) => visibility.id === visibilityType),
