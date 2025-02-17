@@ -1,5 +1,5 @@
-import { Message } from '@/types/message';
-import { PreviewMessage, ThinkingMessage } from './message';
+import { Message, Status } from '@/types/message';
+import { ErrorMessage, PreviewMessage, ThinkingMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { memo, useEffect } from 'react';
 import { Vote } from '@/lib/db/schema';
@@ -41,20 +41,32 @@ function PureMessages({
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
       {messages.map((message, index) => (
-        <PreviewMessage
-          key={message.id}
-          chatId={chatId}
-          message={message}
-          isLoading={isLoading && messages.length - 1 === index}
-          vote={
-            votes
-              ? votes.find((vote) => vote.messageId === message.id)
-              : undefined
-          }
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-        />
+        message.status === Status.COMPLETED ?
+          <PreviewMessage
+            // This key is used to force the component to re-render (with the nice animation) when the message is updated
+            key={message.id + message.actions.length + message.content.length}
+            chatId={chatId}
+            message={message}
+            isLoading={isLoading && messages.length - 1 === index}
+            vote={
+              votes
+                ? votes.find((vote) => vote.messageId === message.id)
+                : undefined
+            }
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+          /> :
+        message.status === Status.PENDING && message.actions.length !== 0 ?
+          <ThinkingMessage 
+            key={message.id + message.actions.length + message.content.length} 
+            message={message.actions[message.actions.length - 1]} 
+          /> :
+        message.status === Status.PENDING && message.actions.length === 0 ?
+          <ThinkingMessage 
+            key={message.id + message.actions.length + message.content.length} 
+          /> :
+          <ErrorMessage error={message.content} />
       ))}
 
       {isLoading &&

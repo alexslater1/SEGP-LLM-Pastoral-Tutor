@@ -7,7 +7,7 @@ import { memo, useMemo, useState, useEffect } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
-import { PencilEditIcon, SparklesIcon } from './icons';
+import { CrossIcon, PencilEditIcon, SparklesIcon } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import equal from 'fast-deep-equal';
@@ -148,7 +148,7 @@ export const PreviewMessage = memo(
   },
 );
 
-export const ThinkingMessage = () => {
+export const ThinkingMessage = ({ message = "Thinking..." }: { message?: string }) => {
   const role = 'assistant';
 
   return (
@@ -172,7 +172,39 @@ export const ThinkingMessage = () => {
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex flex-col gap-4 text-muted-foreground">
-            Thinking...
+            {message}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export const ErrorMessage = ({ error }: { error: string }) => {
+  const role = 'assistant';
+
+  return (
+    <motion.div
+      className="w-full mx-auto max-w-3xl px-4 group/message "
+      initial={{ y: 5, opacity: 0 }}
+      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
+      data-role={role}
+    >
+      <div
+        className={cx(
+          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
+          {
+            'group-data-[role=user]/message:bg-muted': true,
+          },
+        )}
+      >
+        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
+          <CrossIcon size={14} color="red" />
+        </div>
+
+        <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col gap-4 text-muted-foreground text-red-500">
+            {error}
           </div>
         </div>
       </div>

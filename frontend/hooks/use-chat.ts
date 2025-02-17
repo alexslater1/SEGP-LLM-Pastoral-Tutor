@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 
 const STATUS_QUERY_INTERVAL_SECONDS = 1;
 const BACKEND_AGENT_URL="https://segp-backend-agent.serve.freemyip.com"
+const IGNORED_ACTIONS = ["Thinking", "Thinking..."]
 
 export type ChatItem = {
   messages: Message[];
@@ -254,7 +255,11 @@ export function useChat({ id }: ChatItemProps): ChatItem {
       lastMessage.content = statusResponse.answer as string;
       setCheckStatus(false);
       resetStatusCheckedCount();
-    } else if (statusResponse.type === Status.PENDING && statusResponse.current_action !== lastMessage.actions[lastMessage.actions.length - 1]) {
+    } else if (
+        statusResponse.type === Status.PENDING && 
+        statusResponse.current_action !== lastMessage.actions[lastMessage.actions.length - 1] &&
+        !IGNORED_ACTIONS.includes(statusResponse.current_action as string)
+    ) {
       lastMessage.status = Status.PENDING;
       lastMessage.actions.push(statusResponse.current_action as string)
       incrementStatusCheckedCount();
