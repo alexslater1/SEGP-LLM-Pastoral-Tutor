@@ -18,6 +18,7 @@ export type ChatItem = {
   reload: () => void;
   error: string | null;
   id: string | null;
+  attemptedInitialMessageLoad: boolean;
 }
 
 export type ChatItemProps = {
@@ -30,7 +31,7 @@ type BackendResponsePastQueryAndAnswer = {
   current_action?: string,
   error?: string,
   query: string,
-  requestID: string,
+  request_id: string,
   actions: string[],
 }
 
@@ -69,7 +70,7 @@ export function useChat({ id }: ChatItemProps): ChatItem {
   });
 
   const error = useRef<string | null>(null);
-  const session_id = useRef<string | null>(null);
+  const session_id = useRef<string | null>(id);
 
   let newChatState = chatState;
 
@@ -289,11 +290,12 @@ export function useChat({ id }: ChatItemProps): ChatItem {
       updateChatState();
      },
     append,
-    isLoading: chatState.isAwaitingResponse,
+    isLoading: chatState.isAwaitingResponse || chatState.checkStatus,
     stop,
     reload,
     error: error.current,
     id: session_id.current,
+    attemptedInitialMessageLoad: chatState.attemptedIntitialMessageLoad,
   };
 }
 
@@ -301,21 +303,22 @@ function parseBackendResponse(response: BackendReponsePastQueriesAndAnswers): Me
   let messages: Message[] = [];
   response.forEach((item) => {
     messages.push({
-      id: item.requestID + Role.USER,
-      requestID: item.requestID,
+      id: item.request_id + Role.USER,
+      requestID: item.request_id,
       content: item.query,
       role: Role.USER,
       actions: [],
       status: Status.COMPLETED,
     });
     messages.push({
-      id: item.requestID + Role.ASSISTANT,
-      requestID: item.requestID,
+      id: item.request_id + Role.ASSISTANT,
+      requestID: item.request_id,
       content: item.type === Status.COMPLETED ? item.answer as string : 
                item.type === Status.PENDING ? "Thinking..." :
                item.error as string,
       role: Role.ASSISTANT,
-      actions: item.actions.concat(item.type === Status.PENDING ? [item.current_action as string] : []),
+      actions: item.actions.filter((action) => !IGNORED_ACTIONS.includes(action))
+        .concat(item.type === Status.PENDING ? [item.current_action as string] : []),
       status: item.type,
     });
   });

@@ -23,7 +23,7 @@ import {
   DialogOverlay,
   DialogClose,
 } from './ui/dialog';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import equal from 'fast-deep-equal';
 import { InfoIcon } from 'lucide-react';
 
@@ -40,6 +40,8 @@ export function PureMessageActions({
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
@@ -64,25 +66,30 @@ export function PureMessageActions({
           <TooltipContent>Copy</TooltipContent>
         </Tooltip>
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button 
-              className="py-1 px-2 h-fit text-muted-foreground"
-              variant="outline"
-            >
-              <InfoIcon />
-            </Button>
-          </DialogTrigger>
+              
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                className="py-1 px-2 h-fit text-muted-foreground"
+                variant="outline"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <InfoIcon />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Message Actions</TooltipContent>
+          </Tooltip>
           <DialogPortal>
             <DialogOverlay />
             <DialogContent>
               <DialogTitle>Message Actions</DialogTitle>
               <DialogDescription>
                 {message.actions.length > 0 ?
-                 (message.actions.map((action, index) => (
-                  <div key={index}>{`${index + 1}: ${action}`}</div>
-                ))) :
-                <div>No actions for this message</div>
+                (message.actions.reduce((prev, action, index) => (
+                  <>{prev}<br/>{index + 1}. {action}</>
+                ), <></>)) :
+                  'No actions found'
                 }
               </DialogDescription>
               <DialogClose>Close</DialogClose>

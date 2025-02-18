@@ -73,37 +73,43 @@ const PurePreviewMessage = ({
           )}
 
           <div className="flex flex-col gap-2 w-full">
-            {message.content && mode === 'view' && (
-              <div className="flex flex-row gap-2 items-start">
-                {message.role === 'user' && !isReadonly && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
-                        onClick={() => {
-                          setMode('edit');
-                        }}
-                      >
-                        <PencilEditIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit message</TooltipContent>
-                  </Tooltip>
-                )}
+            <motion.div
+              className="w-full mx-auto max-w-3xl px-4 group/message"
+              initial={{ y: 5, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+            >
+              {message.content && mode === 'view' && (
+                <div className="flex flex-row gap-2 items-start">
+                  {message.role === 'user' && !isReadonly && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
+                          onClick={() => {
+                            setMode('edit');
+                          }}
+                        >
+                          <PencilEditIcon />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit message</TooltipContent>
+                    </Tooltip>
+                  )}
 
-                <div
-                  className={cn('flex flex-col gap-4', {
-                    'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                      message.role === 'user',
-                  })}
-                >
-                  <Markdown>
-                    {getLastStatusOrMessage()}
-                  </Markdown>
+                  <div
+                    className={cn('flex flex-col gap-4', {
+                      'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                        message.role === 'user',
+                    })}
+                  >
+                    <Markdown>
+                      {getLastStatusOrMessage()}
+                    </Markdown>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </motion.div>
 
             {message.content && mode === 'edit' && (
               <div className="flex flex-row gap-2 items-start">
@@ -152,31 +158,41 @@ export const ThinkingMessage = ({ message = "Thinking..." }: { message?: string 
   const role = 'assistant';
 
   return (
-    <motion.div
-      className="w-full mx-auto max-w-3xl px-4 group/message "
-      initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
-      data-role={role}
-    >
-      <div
-        className={cx(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
-          {
-            'group-data-[role=user]/message:bg-muted': true,
-          },
-        )}
+    <AnimatePresence>
+      <motion.div
+        className="w-full mx-auto max-w-3xl px-4 group/message "
+        initial={{ y: 5, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        data-role={role}
       >
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
-        </div>
-
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">
-            {message}
+        <div
+          className={cx(
+            'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
+            {
+              'group-data-[role=user]/message:bg-muted': true,
+            },
+          )}
+        >
+          <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
+            <SparklesIcon size={14} />
           </div>
+
+          <motion.div
+            key={message.length}
+            className="w-full mx-auto max-w-3xl px-4 group/message "
+            initial={{ y: 5, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            data-role={role}
+          >
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex flex-col gap-4 text-muted-foreground">
+                {message}
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

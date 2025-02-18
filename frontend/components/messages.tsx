@@ -43,8 +43,7 @@ function PureMessages({
       {messages.map((message, index) => (
         message.status === Status.COMPLETED ?
           <PreviewMessage
-            // This key is used to force the component to re-render (with the nice animation) when the message is updated
-            key={message.id + message.actions.length + message.content.length}
+            key={message.id}
             chatId={chatId}
             message={message}
             isLoading={isLoading && messages.length - 1 === index}
@@ -59,12 +58,12 @@ function PureMessages({
           /> :
         message.status === Status.PENDING && message.actions.length !== 0 ?
           <ThinkingMessage 
-            key={message.id + message.actions.length + message.content.length} 
+            key={message.id} 
             message={message.actions[message.actions.length - 1]} 
           /> :
         message.status === Status.PENDING && message.actions.length === 0 ?
           <ThinkingMessage 
-            key={message.id + message.actions.length + message.content.length} 
+            key={message.id} 
           /> :
           <ErrorMessage error={message.content} />
       ))}
