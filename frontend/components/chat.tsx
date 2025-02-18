@@ -46,23 +46,21 @@ export function Chat({
   );
 
   return (
-    <>
-      {!attemptedInitialMessageLoad ? 
-        <InitialMessage messageType="loading" />
-      : error ?
-        <InitialMessage messageType="error" />
-      :(
-        <div className="flex flex-col min-w-0 h-dvh bg-background">
-          <ChatHeader
-            chatId={current_id}
-            selectedVisibilityType={selectedVisibilityType}
-            isReadonly={isReadonly}
-          />
+    !attemptedInitialMessageLoad ? 
+      <FullScreenMessage messageType="loading" />
+    : error ?
+      <FullScreenMessage messageType="error" error={error} />
+    :(
+      <div className="flex flex-col min-w-0 h-dvh bg-background">
+        <ChatHeader
+          chatId={current_id}
+          selectedVisibilityType={selectedVisibilityType}
+          isReadonly={isReadonly}
+        />
 
-          {messages.length == 0 && (
-            <InitialMessage messageType="initial" />
-          )}
-
+        {messages.length == 0 ? (
+          <FullScreenMessage messageType="initial" />
+        ) : (
           <Messages
             chatId={current_id}
             isLoading={isLoading}
@@ -72,30 +70,31 @@ export function Chat({
             reload={reload}
             isReadonly={isReadonly}
           />
+        )}
 
-          <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
-            {!isReadonly && (
-              <MultimodalInput
-                chatId={current_id}
-                input={input}
-                setInput={setInput}
-                handleSubmit={handleSubmit}
-                isLoading={isLoading}
-                stop={stop}
-                messages={messages}
-                append={append}
-              />
-            )}
-          </form>
-        </div>
-      )}
-    </>
+        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+          {!isReadonly && (
+            <MultimodalInput
+              chatId={current_id}
+              input={input}
+              setInput={setInput}
+              handleSubmit={handleSubmit}
+              isLoading={isLoading}
+              stop={stop}
+              messages={messages}
+              append={append}
+            />
+          )}
+        </form>
+      </div>
+    )
   );
 }
 
 function FadeInWrapper({children}: {children: React.ReactNode}) {
   return (
     <motion.div
+      className="h-full flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -105,15 +104,15 @@ function FadeInWrapper({children}: {children: React.ReactNode}) {
   )
 }
 
-function InitialMessage({messageType}: {messageType: MessageType}) {
+function FullScreenMessage({messageType, error}: {messageType: MessageType, error?: string}) {
   switch (messageType) {
     case 'initial':
       return (
         <FadeInWrapper>
-          <div className="flex flex-col items-center justify-center h-dvh p-16">
+          <div className="flex flex-col items-center justify-center p-16">
             <div className="text-center text-white">
               <p className="text-5xl font-bold">
-                Hi, I’m the Imperial College tutor agent
+                Hi, I'm the Imperial College tutor agent
               </p>
               <p className="text-4xl font-bold p-8">
                 Ask me anything
@@ -142,8 +141,11 @@ function InitialMessage({messageType}: {messageType: MessageType}) {
               <p className="text-5xl font-bold">
                 Error loading chat
               </p>
-              <p className="text-4xl font-bold p-8">
+              <p className="text-4xl font-bold pt-8">
                 Please try again
+              </p>
+              <p className="text-1xl p-3 text-muted-foreground">
+                {error}
               </p>
             </div>
           </div>

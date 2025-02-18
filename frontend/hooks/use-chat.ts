@@ -195,8 +195,6 @@ export function useChat({ id }: ChatItemProps): ChatItem {
         setMessages(messages);
         setCheckStatus(checkStatus);
       }
-    } else {
-      error.current = "Could not find chat ID";
     }
     
     setIsAwaitingResponse(false);
