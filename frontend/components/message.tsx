@@ -19,7 +19,6 @@ import { MessageEditor } from './message-editor';
 const PurePreviewMessage = ({
   chatId,
   message,
-  vote,
   isLoading,
   setMessages,
   reload,
@@ -27,7 +26,6 @@ const PurePreviewMessage = ({
 }: {
   chatId: string | null;
   message: Message;
-  vote: Vote | undefined;
   isLoading: boolean;
   setMessages: (
     messages: Message[] | ((messages: Message[]) => Message[]),
@@ -130,7 +128,6 @@ const PurePreviewMessage = ({
                 key={`action-${message.id}`}
                 chatId={chatId}
                 message={message}
-                vote={vote}
                 isLoading={isLoading}
               />
             )}
@@ -148,7 +145,6 @@ export const PreviewMessage = memo(
     if (prevProps.message.content !== nextProps.message.content) return false;
     if (prevProps.message.status !== nextProps.message.status) return false;
     if (prevProps.message.actions !== nextProps.message.actions) return false;
-    if (!equal(prevProps.vote, nextProps.vote)) return false;
 
     return true;
   },
