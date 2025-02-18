@@ -219,7 +219,7 @@ export const ErrorMessage = ({ error }: { error: string }) => {
         </div>
 
         <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground text-red-500">
+          <div className="flex flex-col gap-4 text-red-500">
             {error}
           </div>
         </div>
