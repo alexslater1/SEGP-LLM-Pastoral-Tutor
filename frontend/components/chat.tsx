@@ -1,12 +1,9 @@
 'use client';
 
 import { useChat } from '@/hooks/use-chat';
-import useSWR, { useSWRConfig } from 'swr';
 import { motion } from 'framer-motion';
 
 import { ChatHeader } from '@/components/chat-header';
-import type { Vote } from '@/lib/db/schema';
-import { fetcher } from '@/lib/utils';
 
 import { MultimodalInput } from './multimodal-input';
 import { Messages } from './messages';
@@ -40,11 +37,6 @@ export function Chat({
     id,
   });
 
-  const { data: votes } = useSWR<Array<Vote>>(
-    `/api/vote?chatId=${current_id}`,
-    fetcher,
-  );
-
   return (
     !attemptedInitialMessageLoad ? 
       <FullScreenMessage messageType="loading" />
@@ -64,7 +56,6 @@ export function Chat({
           <Messages
             chatId={current_id}
             isLoading={isLoading}
-            votes={votes}
             messages={messages}
             setMessages={setMessages}
             reload={reload}
@@ -112,7 +103,7 @@ function FullScreenMessage({messageType, error}: {messageType: MessageType, erro
           <div className="flex flex-col items-center justify-center p-16">
             <div className="text-center text-white">
               <p className="text-5xl font-bold">
-                Hi, I'm the Imperial College tutor agent
+                Hi, I&apos;m the Imperial College tutor agent
               </p>
               <p className="text-4xl font-bold p-8">
                 Ask me anything
