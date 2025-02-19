@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { User } from '@/lib/supabase/user';
 import { memo, useEffect, useState } from 'react';
+import { useChatHistory } from '@/hooks/use-chat-history';
 import { toast } from 'sonner';
-import useSWR from 'swr';
 
 import {
   CheckCircleFillIcon,
@@ -46,9 +46,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { Chat } from '@/lib/db/schema';
-import { fetcher } from '@/lib/utils';
-import { useChatVisibility } from '@/hooks/use-chat-visibility';
+import type { Chat } from '@/hooks/use-chat-history';
 
 type GroupedChats = {
   today: Chat[];
@@ -164,21 +162,22 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   const { id } = useParams();
   const pathname = usePathname();
   const {
-    data: history,
+    history,
     isLoading,
-    mutate,
-  } = useSWR<Array<Chat>>(/*user ? '/api/history' :*/ null, fetcher, {
-    fallbackData: [],
-  });
+    refresh: mutate,
+    error,
+  } = useChatHistory();
 
   useEffect(() => {
     mutate();
-  }, [pathname, mutate]);
+  }, [pathname]);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
+
   const handleDelete = async () => {
+    /*
     const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
       method: 'DELETE',
     });
@@ -195,6 +194,9 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       },
       error: 'Failed to delete chat',
     });
+    */
+
+    toast.message('Deleting chat... (not really)');
 
     setShowDeleteDialog(false);
 

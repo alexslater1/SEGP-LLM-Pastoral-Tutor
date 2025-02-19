@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signIn, signUp } from "../app/(auth)/actions";
 import { useState } from "react";
+import { getUserSession } from "@/lib/supabase/client";
 
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const [error, setError] = useState("");
@@ -13,6 +14,11 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
     const { error } = await signIn(formData);
     if (error) {
       setError(error);
+    }
+
+    const login_session = await getUserSession();
+    if (login_session) {
+      console.log("login_session: ", login_session.access_token);
     }
   }
 

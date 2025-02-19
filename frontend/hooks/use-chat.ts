@@ -5,7 +5,6 @@ import { getUserSession } from "@/lib/supabase/client";
 import { Session } from "@supabase/supabase-js";
 
 const STATUS_QUERY_INTERVAL_SECONDS = 1;
-const BACKEND_AGENT_URL="https://segp-backend-agent.serve.freemyip.com"
 const IGNORED_ACTIONS = ["Thinking", "Thinking..."]
 
 export type ChatItem = {
@@ -292,8 +291,6 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     const statusResponse = 
       await checkStatusByRequestID(chatState.messages[chatState.messages.length - 1].requestID, login_session);
 
-    console.log(statusResponse);
-
     let lastMessage = structuredClone(chatState.messages[chatState.messages.length - 1]);
     if (statusResponse.type === Status.COMPLETED) {
       lastMessage.status = Status.COMPLETED;
@@ -372,7 +369,7 @@ function parseBackendResponse(response: BackendReponsePastQueriesAndAnswers): Me
 async function fetchAllMessagesByID (id: string, session: Session) {
   try {
     const completionEndpoint = "/sessions/" + id
-    const response = await fetch(BACKEND_AGENT_URL + completionEndpoint, {
+    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -404,7 +401,7 @@ async function fetchAllMessagesByID (id: string, session: Session) {
 async function sendMessageToBackend (id: string | null, message: string, session: Session) {
   try {
     const completionEndpoint = "/completion/v2"
-    const response = await fetch(BACKEND_AGENT_URL + completionEndpoint, {
+    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${session.access_token}`,
@@ -443,7 +440,7 @@ async function sendMessageToBackend (id: string | null, message: string, session
 async function checkStatusByRequestID(requestID: string, session: Session) {
   try {
     const completionEndpoint = "/completion/v2/status/" + requestID
-    const response = await fetch(BACKEND_AGENT_URL + completionEndpoint, {
+    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
