@@ -1,6 +1,8 @@
 import { Message, Status, Role } from "@/types/message";
 import { generateUUID } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
+import { getUserSession } from "@/lib/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 const STATUS_QUERY_INTERVAL_SECONDS = 1;
 const BACKEND_AGENT_URL="https://segp-backend-agent.serve.freemyip.com"
@@ -56,6 +58,7 @@ type ChatState = {
   attemptedIntitialMessageLoad: boolean;
   input: string;
   statusCheckedCount: number;
+  userStoppedLoading: boolean;
 }
 
 export function useChat({ id }: ChatItemProps): ChatItem {
@@ -65,9 +68,11 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     checkStatus: false,
     attemptedIntitialMessageLoad: false,
     input: '',
-    statusCheckedCount: 0 // Incase 2 or more consecutive status checks are made which don't 
-                          // update the state. We still want the next status check to be made
+    statusCheckedCount: 0, // Incase 2 or more consecutive status checks are made which don't 
+                           // update the state. We still want the next status check to be made
+    userStoppedLoading: false,
   });
+
 
   const error = useRef<string | null>(null);
   const session_id = useRef<string | null>(id);
@@ -91,6 +96,13 @@ export function useChat({ id }: ChatItemProps): ChatItem {
                !chatState.isAwaitingResponse && 
                chatState.checkStatus) {
       checkStatus();
+    } else if (chatState.messages.length > 0 && 
+               !chatState.isAwaitingResponse && 
+               !chatState.checkStatus &&
+               !chatState.userStoppedLoading &&
+               chatState.messages[chatState.messages.length - 1].status === Status.PENDING) {
+      setCheckStatus(true);
+      updateChatState();
     }
   }, [chatState]);
 
@@ -145,6 +157,13 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     };
   }
 
+  const setUserStoppedLoading = (userStoppedLoading: boolean) => {
+    newChatState = { 
+      ...newChatState, 
+      userStoppedLoading: userStoppedLoading 
+    };
+  }
+
   const updateChatState = () => {
     setChatState(newChatState);
   }
@@ -158,6 +177,7 @@ export function useChat({ id }: ChatItemProps): ChatItem {
   const handleSubmit = () => {
     setIsAwaitingResponse(true);
     setCheckStatus(false);
+    setUserStoppedLoading(false);
     setMessages((messages) => {
       let id = generateUUID();
       return [...messages, {
@@ -175,6 +195,7 @@ export function useChat({ id }: ChatItemProps): ChatItem {
   const stop = () => {
     setIsAwaitingResponse(false);
     setCheckStatus(false);
+    setUserStoppedLoading(true);
     updateChatState();
   }
 
@@ -182,13 +203,17 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     setIsAwaitingResponse(true);
     setMessages([]);
     setCheckStatus(false);
+    setUserStoppedLoading(false);
     updateChatState();
   }
 
   // Pre-condition: chatState.messages.length === 0 && chatState.isLoading === true
   const loadAllMessages = async () => {
-    if (session_id.current) {
-      const { messages, checkStatus, error: loadError } = await fetchAllMessagesByID(session_id.current);
+    const login_session = await getUserSession();
+    if (!login_session) {
+      error.current = "User not logged in";
+    } else if (session_id.current) {
+      const { messages, checkStatus, error: loadError } = await fetchAllMessagesByID(session_id.current, login_session);
       if (loadError) {
         error.current = loadError;
       } else {
@@ -203,8 +228,17 @@ export function useChat({ id }: ChatItemProps): ChatItem {
   }
 
   const sendMessageAndAddResponse = async (query?: string) => {
+    const login_session = await getUserSession();
+    if (!login_session) {
+      error.current = "User not logged in";
+      setIsAwaitingResponse(false);
+      setInput('');
+      updateChatState()
+      return;
+    }
+
     const { requestID, sessionID, checkStatus, error: sendError } = 
-      await sendMessageToBackend(session_id.current, query ? query : chatState.input);
+      await sendMessageToBackend(session_id.current, query ? query : chatState.input, login_session);
 
     if (sendError) {
       let id = generateUUID();
@@ -238,6 +272,16 @@ export function useChat({ id }: ChatItemProps): ChatItem {
   }
 
   const checkStatus = async () => {
+    const login_session = await getUserSession();
+    if (!login_session) {
+      error.current = "User not logged in";
+      setIsAwaitingResponse(false);
+      setCheckStatus(false);
+      resetStatusCheckedCount();
+      updateChatState()
+      return;
+    }
+
     await new Promise(resolve => setTimeout(resolve, 1000 * STATUS_QUERY_INTERVAL_SECONDS));
     if (chatState.messages[chatState.messages.length - 1].role === Role.USER) {
       setCheckStatus(false);
@@ -246,7 +290,9 @@ export function useChat({ id }: ChatItemProps): ChatItem {
       return;
     }
     const statusResponse = 
-      await checkStatusByRequestID(chatState.messages[chatState.messages.length - 1].requestID);
+      await checkStatusByRequestID(chatState.messages[chatState.messages.length - 1].requestID, login_session);
+
+    console.log(statusResponse);
 
     let lastMessage = structuredClone(chatState.messages[chatState.messages.length - 1]);
     if (statusResponse.type === Status.COMPLETED) {
@@ -323,11 +369,14 @@ function parseBackendResponse(response: BackendReponsePastQueriesAndAnswers): Me
   return messages;
 }
 
-async function fetchAllMessagesByID (id: string) {
+async function fetchAllMessagesByID (id: string, session: Session) {
   try {
     const completionEndpoint = "/sessions/" + id
     const response = await fetch(BACKEND_AGENT_URL + completionEndpoint, {
         method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        }
     });
 
     if (!response.ok) {
@@ -352,12 +401,13 @@ async function fetchAllMessagesByID (id: string) {
   } 
 }
 
-async function sendMessageToBackend (id: string | null, message: string) {
+async function sendMessageToBackend (id: string | null, message: string, session: Session) {
   try {
     const completionEndpoint = "/completion/v2"
     const response = await fetch(BACKEND_AGENT_URL + completionEndpoint, {
         method: 'POST',
         headers: {
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(id ?{
@@ -390,11 +440,14 @@ async function sendMessageToBackend (id: string | null, message: string) {
   }
 }
 
-async function checkStatusByRequestID(requestID: string) {
+async function checkStatusByRequestID(requestID: string, session: Session) {
   try {
     const completionEndpoint = "/completion/v2/status/" + requestID
     const response = await fetch(BACKEND_AGENT_URL + completionEndpoint, {
         method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        }
     });
 
     if (!response.ok) {

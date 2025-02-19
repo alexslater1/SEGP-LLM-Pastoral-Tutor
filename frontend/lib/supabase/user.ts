@@ -9,7 +9,7 @@ export type User = {
   email: string;
 };
 
-export const getUser = async (): Promise<User | null> => {
+export async function getUser(): Promise<User | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -39,5 +39,4 @@ async function getUserData(id: string): Promise<User | null> {
     email: data[0].email,
   };
 };
-
 
