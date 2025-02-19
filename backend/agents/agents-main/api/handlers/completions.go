@@ -136,9 +136,14 @@ func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.C
 		return ctx, fmt.Errorf("request_id not found in context")
 	}
 
+	userID, ok := context_keys.GetUserID(ctx)
+	if !ok {
+		return ctx, fmt.Errorf("user_id not found in context")
+	}
+
 	sessionID, ok := context_keys.GetSessionID(ctx)
 	if !ok {
-		session, err := storage.Store(store, storage.NewSession(requestID))
+		session, err := storage.Store(store, storage.NewSession(requestID, userID))
 		if err != nil {
 			return ctx, fmt.Errorf("error creating session %v", err.Error())
 		}

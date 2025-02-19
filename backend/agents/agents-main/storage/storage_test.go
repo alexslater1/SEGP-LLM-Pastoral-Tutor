@@ -9,7 +9,7 @@ import (
 func TestStorage_Store(t *testing.T) {
 	storage := NewMemoryStorage()
 
-	req := AgentRequest{ID: "id1", Endpoint: "endpoint1"}
+	req := AgentRequest{ID: "id1", Endpoint: "endpoint1", UserID: "user1"}
 	data, err := Store(storage, req)
 	assert.NoError(t, err)
 	assert.Equal(t, req.ID, data.ID)

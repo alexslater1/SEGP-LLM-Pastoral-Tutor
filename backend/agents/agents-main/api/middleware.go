@@ -132,7 +132,13 @@ func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler 
 			// do nothign
 		}
 
-		createdReq, err := storage.Store(store, storage.NewAgentRequest(path, extractedData, ""))
+		userID, ok := context_keys.GetUserID(r.Context())
+		if !ok {
+			http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+			return
+		}
+
+		createdReq, err := storage.Store(store, storage.NewAgentRequest(path, extractedData, userID))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
 			return

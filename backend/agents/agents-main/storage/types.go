@@ -13,16 +13,18 @@ type AgentRequest struct {
 	CreatedAt *time.Time  `json:"created_at,omitempty"`
 	Endpoint  string      `json:"endpoint"`
 	Metadata  interface{} `json:"metadata,omitempty"`
+	UserID    string      `json:"user_id"`
 }
 
 func (ar AgentRequest) TableName() StorageTableName {
 	return StorageTableNameAgentRequests
 }
 
-func NewAgentRequest(endpoint string, metadata interface{}, chatID string) AgentRequest {
+func NewAgentRequest(endpoint string, metadata interface{}, userID string) AgentRequest {
 	return AgentRequest{
 		Endpoint: endpoint,
 		Metadata: metadata,
+		UserID:   userID,
 	}
 }
 
@@ -71,15 +73,17 @@ type Session struct {
 	CreatedAt          *time.Time `json:"created_at,omitempty"`
 	CreatedByRequestId string     `json:"created_by_request_id"`
 	Name               *string    `json:"name,omitempty"`
+	UserID             string     `json:"user_id"`
 }
 
 func (s Session) TableName() StorageTableName {
 	return StorageTableNameSessions
 }
 
-func NewSession(createdByRequestId string) Session {
+func NewSession(createdByRequestId string, userID string) Session {
 	return Session{
 		CreatedByRequestId: createdByRequestId,
+		UserID:             userID,
 	}
 }
 
