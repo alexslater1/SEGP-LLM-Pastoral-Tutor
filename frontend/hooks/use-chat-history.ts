@@ -121,7 +121,7 @@ export function useChatHistory(): ChatHistoryItem {
   }
 
   return {
-    history: chatHistoryState.history,
+    history: structuredClone(chatHistoryState.history).reverse(),
     isLoading: chatHistoryState.isLoading,
     refresh: refresh,
     error: chatHistoryState.error,
