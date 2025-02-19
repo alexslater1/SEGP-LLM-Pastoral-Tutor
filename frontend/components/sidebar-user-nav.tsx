@@ -1,7 +1,7 @@
 'use client';
 import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
-import type { User } from '@supabase/supabase-js';
+import type { User } from '@/lib/supabase/user';
 import { useTheme } from 'next-themes';
 import { signOut } from '@/app/(auth)/actions';
 
@@ -17,9 +17,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useRouter } from 'next/navigation';
 
-export function SidebarUserNav({ user }: { user: User }) {
+export function SidebarUserNav({ user, adminPage=false }: { user: User, adminPage?: boolean }) {
   const { setTheme, theme } = useTheme();
+  const router = useRouter();
 
   return (
     <SidebarMenu>
@@ -34,7 +36,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 height={24}
                 className="rounded-full"
               />
-              <span className="truncate">{user?.email}</span>
+              <span className="truncate">{user?.name}</span>
               <ChevronUp className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -49,6 +51,19 @@ export function SidebarUserNav({ user }: { user: User }) {
               {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+
+            {user.role === "admin" && (
+              <>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onSelect={() => router.push(adminPage ? "/" : "/admin")}
+                >
+                  {adminPage ? "Chat With Agent" : "Admin Panel"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={async () => {

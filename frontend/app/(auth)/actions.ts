@@ -39,11 +39,12 @@ export async function signIn(formData: FormData) {
     // No user_data entry found, create one
     const { error: insertError } = await supabase
       .from("user_data")
-      .insert({ user_id: signInData.user?.id });
+      .insert({ id: signInData.user?.id, role: "student", name: email.split("@")[0] });
     if (insertError) {
-      console.error("Error creating user_data entry:", insertError);
-      // Consider how you want to handle this error
+      return { error: insertError.message };
     }
+  } else if (userDataError) {
+    return { error: userDataError.message };
   }
 
   // If sign-in is successful, redirect to dashboard
@@ -65,102 +66,6 @@ export async function signUp(formData: FormData) {
   if (!validation.success) {
     return { error: validation.error.message };
   }
-  // const existingUser = await supabase
-  //   .select()
-  //   .from('auth.users')
-  //   .where(eq(users.email, email))
-  //   .limit(1);
-
-  // if (existingUser.length > 0) {
-  //   return { error: 'User already exists.' };
-  // }
-
-  // const passwordHash = await hashPassword(password);
-
-  // const newUser: NewUser = {
-  //   email,
-  //   passwordHash,
-  //   role: 'owner', // Default role, will be overridden if there's an invitation
-  // };
-
-  // const [createdUser] = await db.insert(users).values(newUser).returning();
-
-  // if (!createdUser) {
-  //   return { error: 'Failed to create user. Please try again.' };
-  // }
-
-  // let teamId: number;
-  // let userRole: string;
-  // let createdTeam: typeof teams.$inferSelect | null = null;
-
-  // if (inviteId) {
-  //   // Check if there's a valid invitation
-  //   const [invitation] = await db
-  //     .select()
-  //     .from(invitations)
-  //     .where(
-  //       and(
-  //         eq(invitations.id, parseInt(inviteId)),
-  //         eq(invitations.email, email),
-  //         eq(invitations.status, 'pending')
-  //       )
-  //     )
-  //     .limit(1);
-
-  //   if (invitation) {
-  //     teamId = invitation.teamId;
-  //     userRole = invitation.role;
-
-  //     await db
-  //       .update(invitations)
-  //       .set({ status: 'accepted' })
-  //       .where(eq(invitations.id, invitation.id));
-
-  //     await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
-
-  //     [createdTeam] = await db
-  //       .select()
-  //       .from(teams)
-  //       .where(eq(teams.id, teamId))
-  //       .limit(1);
-  //   } else {
-  //     return { error: 'Invalid or expired invitation.' };
-  //   }
-  // } else {
-  //   // Create a new team if there's no invitation
-  //   const newTeam: NewTeam = {
-  //     name: `${email}'s Team`,
-  //   };
-
-  //   [createdTeam] = await db.insert(teams).values(newTeam).returning();
-
-  //   if (!createdTeam) {
-  //     return { error: 'Failed to create team. Please try again.' };
-  //   }
-
-  //   teamId = createdTeam.id;
-  //   userRole = 'owner';
-
-  //   await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
-  // }
-
-  // const newTeamMember: NewTeamMember = {
-  //   userId: createdUser.id,
-  //   teamId: teamId,
-  //   role: userRole,
-  // };
-
-  // await Promise.all([
-  //   db.insert(teamMembers).values(newTeamMember),
-  //   logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
-  //   setSession(createdUser),
-  // ]);
-
-  // const redirectTo = formData.get('redirect') as string | null;
-  // if (redirectTo === 'checkout') {
-  //   const priceId = formData.get('priceId') as string;
-  //   return createCheckoutSession({ team: createdTeam, priceId });
-  // }
 
   const { email, password } = validation.data;
 
@@ -169,18 +74,16 @@ export async function signUp(formData: FormData) {
     password,
   });
   if (signUpError) {
-    console.log(signUpError);
     return { error: signUpError.message };
   }
 
-  // Check if user_data entry exists and create one if not
+  // Create a new user_data entry
   const { error: insertError } = await supabase
     .from("user_data")
-    .insert({ user_id: signUpData?.user?.id });
+    .insert({ id: signUpData?.user?.id, role: "student", name: email.split("@")[0] });
 
   if (insertError) {
-    console.error("Error creating user_data entry:", insertError);
-    // Consider how you want to handle this error
+    return { error: insertError.message };
   }
 
   redirect("/");

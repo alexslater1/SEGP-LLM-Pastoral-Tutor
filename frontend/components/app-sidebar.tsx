@@ -1,6 +1,6 @@
 'use client';
 
-import type { User } from '@supabase/supabase-js';
+import type { User } from '@/lib/supabase/user';
 import { useRouter } from 'next/navigation';
 
 import { PlusIcon } from '@/components/icons';

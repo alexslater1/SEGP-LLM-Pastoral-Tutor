@@ -1,6 +1,6 @@
 "use client";
 
-import type { User } from "@supabase/supabase-js";
+import type { User } from "@/lib/supabase/user";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SidebarUserNav } from "@/components/sidebar-user-nav";
@@ -17,7 +17,7 @@ import {
 import { Home, FileUp, Library, Activity, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function AdminSidebar({ user }: { user: User | undefined }) {
+export function AdminSidebar({ user }: { user: User | null }) {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
 
@@ -184,7 +184,7 @@ export function AdminSidebar({ user }: { user: User | undefined }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
+      <SidebarFooter>{user && <SidebarUserNav user={user} adminPage/>}</SidebarFooter>
     </Sidebar>
   );
 }
