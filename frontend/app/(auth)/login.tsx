@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { signInWithMagicLink } from "./actions";
+import { signInWithMagicLink, signIn, signUp } from "./actions";
 import { useActionState, useState } from "react";
 import { ActionState } from "./middleware";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,7 @@ import config from "@/supabase.config";
 
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
   const priceId = searchParams.get("priceId");
@@ -40,6 +41,20 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
     FormData
   >(signInWithMagicLink, { error: "", success: "" });
 
+  const formSignIn = async (formData: FormData) => {
+    const { error } = await signIn(formData);
+    if (error) {
+      setError(error);
+    }
+  }
+
+  const formSignUp = async (formData: FormData) => {
+    const { error } = await signUp(formData);
+    if (error) {
+      setError(error);
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-gradient-to-b from-white to-gray-50 flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
@@ -65,13 +80,20 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
             </div>
           ) : (
             <div className="space-y-6">
-              <form action={magicLinkAction} className="space-y-4">
+              <form className="space-y-4">
                 <Input
                   name="email"
                   type="email"
                   placeholder="name@example.com"
                   required
-                  className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
+                  className="px-4 h-12 bg-white text-zinc-950 rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
+                />
+                <Input
+                  name="password"
+                  type="password"
+                  placeholder="password"
+                  required
+                  className="px-4 h-12 bg-white text-zinc-950 rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
                 />
                 <input type="hidden" name="priceId" value={priceId || ""} />
                 <input
@@ -81,6 +103,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                 />
 
                 <Button
+                  formAction={mode === "signin" ? formSignIn : formSignUp}
                   type="submit"
                   className="w-full h-12 font-medium text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
@@ -140,6 +163,12 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
           {magicLinkState?.error && (
             <div className="mt-4 text-sm text-red-600">
               {magicLinkState.error}
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 text-sm text-red-600 text-center">
+              {error}
             </div>
           )}
 

@@ -1,9 +1,9 @@
 'use client';
 import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
-import type { User } from 'next-auth';
+import type { User } from '@supabase/supabase-js';
 import { useTheme } from 'next-themes';
-import { signOutAction } from '@/app/(auth)/nextauth_actions';
+import { signOut } from '@/app/(auth)/actions';
 
 import {
   DropdownMenu,
@@ -52,7 +52,7 @@ export function SidebarUserNav({ user }: { user: User }) {
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={async () => {
-                await signOutAction();
+                await signOut();
               }}
             >
               Sign out

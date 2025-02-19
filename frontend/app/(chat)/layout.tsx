@@ -3,8 +3,8 @@ import { cookies } from 'next/headers';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-import { auth } from '../(auth)/auth';
 import Script from 'next/script';
+import { getUser } from "@/lib/supabase/user";
 
 export const experimental_ppr = true;
 
@@ -13,7 +13,7 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+  const [user, cookieStore] = await Promise.all([getUser(), cookies()]);
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
 
   return (
@@ -23,7 +23,7 @@ export default async function Layout({
         strategy="beforeInteractive"
       />
       <SidebarProvider defaultOpen={!isCollapsed}>
-        <AppSidebar user={session?.user} />
+        <AppSidebar user={user ? user : undefined} />
         <SidebarInset>{children}</SidebarInset>
       </SidebarProvider>
     </>

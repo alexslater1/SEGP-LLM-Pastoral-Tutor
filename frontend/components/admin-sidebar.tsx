@@ -1,6 +1,6 @@
 "use client";
 
-import type { User } from "next-auth";
+import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SidebarUserNav } from "@/components/sidebar-user-nav";

@@ -8,9 +8,6 @@ export const getUser = async () => {
     data: { user },
     error,
   } = await supabase.auth.getUser();
-  if (error) {
-    return null;
-  }
 
-  return user;
+  return error ? null : user;
 };

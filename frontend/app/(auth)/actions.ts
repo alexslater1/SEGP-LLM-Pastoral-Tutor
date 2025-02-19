@@ -10,18 +10,26 @@ const signInSchema = z.object({
   password: z.string().min(8).max(100),
 });
 
-export const signIn = validatedAction(signInSchema, async (data) => {
+export async function signIn(formData: FormData) {
   const supabase = await createClient();
-  const { email, password } = data;
+  const validation = signInSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  if (!validation.success) {
+    return { error: validation.error.message };
+  }
+
+  const { email, password } = validation.data;
 
   const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-
   if (error) {
     return { error: "Invalid credentials. Please try again." };
   }
+
   const { data: userData, error: userDataError } = await supabase
     .from("user_data")
     .select("*")
@@ -38,9 +46,10 @@ export const signIn = validatedAction(signInSchema, async (data) => {
       // Consider how you want to handle this error
     }
   }
+
   // If sign-in is successful, redirect to dashboard
-  redirect("/app");
-});
+  redirect("/");
+};
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -48,10 +57,15 @@ const signUpSchema = z.object({
   inviteId: z.string().optional(),
 });
 
-export const signUp = validatedAction(signUpSchema, async (data, formData) => {
+export async function signUp(formData: FormData) {
   const supabase = await createClient();
-  const { email, password } = data;
-
+  const validation = signUpSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  if (!validation.success) {
+    return { error: validation.error.message };
+  }
   // const existingUser = await supabase
   //   .select()
   //   .from('auth.users')
@@ -148,14 +162,19 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   //   const priceId = formData.get('priceId') as string;
   //   return createCheckoutSession({ team: createdTeam, priceId });
   // }
+
+  const { email, password } = validation.data;
+
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
   });
   if (signUpError) {
+    console.log(signUpError);
     return { error: signUpError.message };
   }
-  // Check if user_data entry exists and create i
+
+  // Check if user_data entry exists and create one if not
   const { error: insertError } = await supabase
     .from("user_data")
     .insert({ user_id: signUpData?.user?.id });
@@ -164,8 +183,10 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     console.error("Error creating user_data entry:", insertError);
     // Consider how you want to handle this error
   }
-  redirect("/app");
-});
+
+  redirect("/");
+}
+
 export const signInWithMagicLink = validatedAction(
   z.object({
     email: z.string().email(),
@@ -193,6 +214,7 @@ export const signInWithMagicLink = validatedAction(
     return { success: "Magic link sent to your email." };
   }
 );
+
 export const signInWithGoogle = async (
   event: React.FormEvent<HTMLFormElement>
 ) => {
