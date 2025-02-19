@@ -1,56 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { getRelativeTimeString } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
-
-interface AgentRequest {
-  id?: string;
-  created_at?: string;
-  endpoint: string;
-  metadata: {
-    query: string;
-  };
-}
-
-const ITEMS_PER_PAGE = 10;
-
-function useAgentRequests(page: number) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ["agent-requests", page],
-    queryFn: async () => {
-      const start = page * ITEMS_PER_PAGE;
-      const end = start + ITEMS_PER_PAGE - 1;
-
-      // Get total count
-      const { count } = await supabase
-        .from("agent_requests")
-        .select("*", { count: "exact", head: true });
-
-      // Get paginated data
-      const { data, error } = await supabase
-        .from("agent_requests")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(start, end);
-
-      if (error) throw error;
-
-      return {
-        requests: data.map((request: any) => ({
-          id: request.id,
-          created_at: request.created_at,
-          endpoint: request.endpoint,
-          metadata: request.metadata,
-        })) as AgentRequest[],
-        totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
-      };
-    },
-  });
-}
+import { useAgentRequests } from "@/hooks/use-agent-data";
 
 const getEndpointStyles = (endpoint: string) => {
   switch (endpoint) {

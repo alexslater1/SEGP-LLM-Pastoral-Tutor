@@ -1,9 +1,8 @@
 "use server";
+
 import { z } from "zod";
-import { validatedAction } from "./middleware";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import config from "@/supabase.config";
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -186,59 +185,6 @@ export async function signUp(formData: FormData) {
 
   redirect("/");
 }
-
-export const signInWithMagicLink = validatedAction(
-  z.object({
-    email: z.string().email(),
-    redirect: z.string().optional(),
-    priceId: z.string().optional(),
-  }),
-  async (data) => {
-    const supabase = await createClient();
-    const { email, priceId } = data;
-    const redirectTo = `${config.domainName}/api/auth/callback`;
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${redirectTo}?priceId=${encodeURIComponent(
-          priceId || ""
-        )}&redirect=${encodeURIComponent("/test")}`,
-      },
-    });
-    if (error) {
-      console.error("Error sending magic link:", error);
-      return { error: error.message };
-    }
-
-    return { success: "Magic link sent to your email." };
-  }
-);
-
-export const signInWithGoogle = async (
-  event: React.FormEvent<HTMLFormElement>
-) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const supabase = await createClient();
-  const priceId = formData.get("priceId") as string;
-  try {
-    const redirectTo = `${config.domainName}/api/auth/callback`;
-    const { error: signInError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${redirectTo}?priceId=${encodeURIComponent(
-          priceId || ""
-        )}&redirect=/test`,
-      },
-    });
-    if (signInError) {
-      return { error: "Failed to sign in with Google. Please try again." };
-    }
-  } catch (error) {
-    return { error: "Failed to sign in with Google. Please try again." };
-  }
-};
 
 export const signOut = async () => {
   const supabase = await createClient();

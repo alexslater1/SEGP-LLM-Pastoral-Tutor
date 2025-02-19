@@ -58,6 +58,8 @@ type GroupedChats = {
   older: Chat[];
 };
 
+export type VisibilityType = 'private' | 'public';
+
 const PureChatItem = ({
   chat,
   isActive,
@@ -69,10 +71,18 @@ const PureChatItem = ({
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
+  /* TODO: Use this once we can query the visibility from the backend, maybe
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId: chat.id,
     initialVisibility: chat.visibility,
   });
+  */
+
+  const [visibilityType, _setVisibilityType] = useState<VisibilityType>('private');
+  const setVisibilityType = (visibilityType: VisibilityType) => {
+    console.log(visibilityType);
+    _setVisibilityType(visibilityType);
+  };
 
   return (
     <SidebarMenuItem>

@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 
-import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
 import { VisibilityType } from '@/components/visibility-selector';
 

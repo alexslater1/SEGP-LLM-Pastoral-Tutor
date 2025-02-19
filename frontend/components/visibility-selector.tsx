@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useChatVisibility } from '@/hooks/use-chat-visibility';
 
 import {
   CheckCircleFillIcon,
@@ -16,7 +17,6 @@ import {
   GlobeIcon,
   LockIcon,
 } from './icons';
-import { useChatVisibility } from '@/hooks/use-chat-visibility';
 
 export type VisibilityType = 'private' | 'public';
 

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Login } from "../login";
+import { Login } from "@/components/login";
 import { getUser } from "@/lib/supabase/user";
 
 export default async function SignInPage() {

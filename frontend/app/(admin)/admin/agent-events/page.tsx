@@ -1,70 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { getRelativeTimeString } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
-
-interface AgentEvent {
-  id?: string;
-  created_at?: string;
-  type: string;
-  request_id?: string;
-  metadata: {
-    answer?: string;
-    reason?: string;
-    toolCallChoice?: {
-      name: string;
-      arguments: string;
-    };
-    toolCallResult?: string;
-  };
-}
-
-const ITEMS_PER_PAGE = 10;
-
-function useAgentEvents(page: number) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: ["agent-events", page],
-    queryFn: async () => {
-      // Calculate the range for pagination
-      const start = page * ITEMS_PER_PAGE;
-      const end = start + ITEMS_PER_PAGE - 1;
-
-      // First, get total count
-      const { count } = await supabase
-        .from("agent_events")
-        .select("*", { count: "exact", head: true });
-
-      // Then get paginated data
-      const { data, error } = await supabase
-        .from("agent_events")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(start, end);
-
-      if (error) throw error;
-
-      return {
-        events: data.map((event: any) => ({
-          id: event.id,
-          created_at: event.created_at,
-          type: event.type,
-          request_id: event.request_id,
-          metadata: {
-            answer: event.metadata?.answer,
-            reason: event.metadata?.reason,
-            toolCallChoice: event.metadata?.toolCallChoice,
-            toolCallResult: event.metadata?.toolCallResult,
-          },
-        })) as AgentEvent[],
-        totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
-      };
-    },
-  });
-}
+import { useAgentEvents } from "@/hooks/use-agent-data";
 
 const getEventTypeStyles = (type: string) => {
   switch (type) {

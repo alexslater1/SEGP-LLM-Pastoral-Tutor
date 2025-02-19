@@ -1,5 +1,5 @@
 import { getUser } from "@/lib/supabase/user";
-import { Login } from "../login";
+import { Login } from "@/components/login";
 import { redirect } from "next/navigation";
 
 export default async function SignUpPage() {
