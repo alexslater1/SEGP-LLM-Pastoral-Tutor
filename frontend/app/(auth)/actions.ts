@@ -32,7 +32,7 @@ export async function signIn(formData: FormData) {
   const { data: userData, error: userDataError } = await supabase
     .from("user_data")
     .select("*")
-    .eq("user_id", signInData.user?.id)
+    .eq("id", signInData.user?.id)
     .single();
 
   if (userDataError && userDataError.code === "PGRST116") {
