@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/segp/agents-main/email"
@@ -30,7 +29,9 @@ const (
 	
 	Notes:
 	-	The email should be sent from the perspective of the chatbot (called Amanda)
-	-	Do not include a subject`
+	-	Do not include a subject
+	- The response must be in html format (so structure it correctly)
+	- After signing off, you must include the exact sent from the user and the agent in a structured manner`
 )
 
 type ChatCheckerJob struct {
@@ -106,7 +107,7 @@ func (c *ChatCheckerJob) processChat(chat []string) (string, bool, error) {
 		return "", false, err
 	}
 
-	return fmt.Sprintf("%s\n\n Messages:\n%s", parsedStructuredEmailResponse.EmailBody, strings.Join(chat, "\n")), parsedStructuredEmailResponse.SendEmail, nil
+	return parsedStructuredEmailResponse.EmailBody, parsedStructuredEmailResponse.SendEmail, nil
 }
 
 func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
