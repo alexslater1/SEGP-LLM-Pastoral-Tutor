@@ -105,6 +105,19 @@ func (rs RequestSession) TableName() StorageTableName {
 	return StorageTableNameRequestSessions
 }
 
+type ChatCheck struct {
+	ID        int        `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+}
+
+func NewChatCheck() ChatCheck {
+	return ChatCheck{}
+}
+
+func (ls ChatCheck) TableName() StorageTableName {
+	return StorageTableNameChatChecks
+}
+
 type CompletionResult struct {
 	ID        int        `json:"id,omitempty"`
 	CreatedAt *time.Time `json:"created_at,omitempty"`

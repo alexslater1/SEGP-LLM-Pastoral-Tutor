@@ -138,9 +138,10 @@ func (a *FastAgent) handleOffloadTask(ctx context.Context, toolChoice *tools.Too
 	if err != nil {
 		return nil, false, err
 	}
-	a.publish(NewOffloadTaskEvent(ctx, ent.Id(), *task))
 
 	if ent == entity.UserEntity {
+		a.publish(NewAnswerSuccessEvent(ctx, *task, ""))
+
 		return &AgentResponse{
 			OffloadTask: &OffloadTask{
 				Entity: ent,
@@ -149,6 +150,7 @@ func (a *FastAgent) handleOffloadTask(ctx context.Context, toolChoice *tools.Too
 		}, false, nil
 	}
 
+	a.publish(NewOffloadTaskEvent(ctx, ent.Id(), *task))
 	agent := ent.(Agent)
 	resp, err := agent.Run(ctx, *task)
 	if err != nil {

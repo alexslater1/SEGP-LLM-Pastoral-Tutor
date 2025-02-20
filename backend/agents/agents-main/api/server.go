@@ -1,12 +1,14 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api/handlers"
 	"github.com/segp/agents-main/crew"
 	"github.com/segp/agents-main/history"
+	"github.com/segp/agents-main/jobs"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -14,13 +16,14 @@ type Server struct {
 	listenAddr string
 	router     *http.ServeMux
 
-	storage storage.Storage
-	agent   agent.Agent
-	crew    *crew.Crew
-	history history.History
+	storage    storage.Storage
+	agent      agent.Agent
+	crew       *crew.Crew
+	history    history.History
+	jobManager *jobs.JobManager
 }
 
-func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, crew *crew.Crew, history history.History) *Server {
+func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, crew *crew.Crew, history history.History, jobManager *jobs.JobManager) *Server {
 	s := &Server{
 		listenAddr: listenAddr,
 		router:     http.NewServeMux(),
@@ -28,6 +31,7 @@ func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, cr
 		agent:      agent,
 		crew:       crew,
 		history:    history,
+		jobManager: jobManager,
 	}
 
 	s.routes()
@@ -52,6 +56,13 @@ func (s *Server) Start() error {
 		requestIdMiddlewareClosure,
 		sessionIDMiddleware,
 	)
+
+	go func() {
+		errCh := s.jobManager.Start()
+		for err := range errCh {
+			log.Printf("Job manager error: %v", err)
+		}
+	}()
 
 	return http.ListenAndServe(s.listenAddr, stack(s.router))
 }

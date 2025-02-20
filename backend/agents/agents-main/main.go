@@ -1,18 +1,22 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"log"
-	"os"
-
 	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api"
 	"github.com/segp/agents-main/crew"
+	"github.com/segp/agents-main/email"
 	"github.com/segp/agents-main/entity"
 	"github.com/segp/agents-main/history"
+	"github.com/segp/agents-main/jobs"
+	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/utils"
+	"log"
+	"os"
+	"time"
 )
 
 func main() {
@@ -31,6 +35,12 @@ func main() {
 			userQueryAgent:     {personalTutorAgent, entity.UserEntity},
 			personalTutorAgent: {},
 		})
+
+		js = []jobs.Job{
+			jobs.NewChatCheckerJob(store, history, llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")), email.NewMockEmailClient(), 30*time.Minute),
+		}
+
+		jobManager = jobs.NewJobManager(js)
 	)
 
 	port := os.Getenv("PORT")
@@ -41,7 +51,7 @@ func main() {
 	listenAddr := flag.String("listen", ":"+port, "HTTP server listen address")
 	flag.Parse()
 
-	server := api.NewServer(*listenAddr, store, userQueryAgent, crew, history)
+	server := api.NewServer(*listenAddr, store, userQueryAgent, crew, history, jobManager)
 	log.Printf("Starting server on http://localhost%s", *listenAddr)
 	log.Fatal(server.Start())
 }
