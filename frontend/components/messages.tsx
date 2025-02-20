@@ -8,10 +8,6 @@ interface MessagesProps {
   chatId: string | null;
   isLoading: boolean;
   messages: Array<Message>;
-  setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
-  ) => void;
-  reload: () => void;
   isReadonly: boolean;
 }
 
@@ -19,8 +15,6 @@ function PureMessages({
   chatId,
   isLoading,
   messages,
-  setMessages,
-  reload,
   isReadonly,
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
@@ -44,8 +38,6 @@ function PureMessages({
             chatId={chatId}
             message={message}
             isLoading={isLoading && messages.length - 1 === index}
-            setMessages={setMessages}
-            reload={reload}
             isReadonly={isReadonly}
           /> :
         message.status === Status.PENDING && message.actions.length !== 0 ?

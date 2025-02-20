@@ -1,11 +1,5 @@
 'use client';
 
-import type {
-  Attachment,
-  ChatRequestOptions,
-  CreateMessage,
-} from 'ai';
-import { Message } from '@/types/message';
 import cx from 'classnames';
 import type React from 'react';
 import {
@@ -13,9 +7,6 @@ import {
   useEffect,
   useState,
   useCallback,
-  type Dispatch,
-  type SetStateAction,
-  type ChangeEvent,
   memo,
 } from 'react';
 import { toast } from 'sonner';
@@ -24,32 +15,22 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { SuggestedActions } from './suggested-actions';
 
 function PureMultimodalInput({
   chatId,
-  input,
-  setInput,
   isLoading,
   stop,
-  messages,
-  append,
   handleSubmit,
   className,
 }: {
   chatId: string | null;
-  input: string;
-  setInput: (value: string) => void;
   isLoading: boolean;
   stop: () => void;
-  messages: Array<Message>;
-  append: (
-    query: string,
-  ) => void;
-  handleSubmit: () => void;
+  handleSubmit: (input: string) => void;
   className?: string;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [input, setInput] = useState('');
   const { width } = useWindowSize();
 
   useEffect(() => {
@@ -106,7 +87,7 @@ function PureMultimodalInput({
       window.history.replaceState({}, '', `/chat/${chatId}`);
     }
 
-    handleSubmit();
+    handleSubmit(input);
 
     setLocalStorageInput('');
     resetHeight();
@@ -179,7 +160,6 @@ function PureMultimodalInput({
 export const MultimodalInput = memo(
   PureMultimodalInput,
   (prevProps, nextProps) => {
-    if (prevProps.input !== nextProps.input) return false;
     if (prevProps.isLoading !== nextProps.isLoading) return false;
 
     return true;

@@ -22,23 +22,18 @@ export function Chat({
 }) {
   const {
     messages,
-    setMessages,
     handleSubmit,
-    input,
-    setInput,
-    append,
     isLoading,
     stop,
-    reload,
     error,
-    attemptedInitialMessageLoad,
     id: current_id,
+    isInitialLoad,
   } = useChat({
     id,
   });
 
   return (
-    !attemptedInitialMessageLoad ? 
+    isInitialLoad ? 
       <FullScreenMessage messageType="loading" />
     : error ?
       <FullScreenMessage messageType="error" error={error} />
@@ -57,8 +52,6 @@ export function Chat({
             chatId={current_id}
             isLoading={isLoading}
             messages={messages}
-            setMessages={setMessages}
-            reload={reload}
             isReadonly={isReadonly}
           />
         )}
@@ -67,13 +60,9 @@ export function Chat({
           {!isReadonly && (
             <MultimodalInput
               chatId={current_id}
-              input={input}
-              setInput={setInput}
               handleSubmit={handleSubmit}
               isLoading={isLoading}
               stop={stop}
-              messages={messages}
-              append={append}
             />
           )}
         </form>
