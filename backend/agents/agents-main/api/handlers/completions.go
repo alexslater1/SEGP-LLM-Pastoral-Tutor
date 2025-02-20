@@ -72,18 +72,33 @@ func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage,
 		}
 
 		go func() {
-			answer, reason, err := crew.Run(r.Context(), req.Query, agent.Id())
+			agentResponse, err := agent.Run(r.Context(), req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
+				rr := storage.NewCompletionResult(requestId, nil, nil, err)
+				_, err = storage.Store(store, rr)
+				if err != nil {
+					slog.Error("error storing request result", "error", err.Error())
+				}
 				return
 			}
 
-			slog.Info("agent response", "answer", *answer)
-			if reason != nil {
-				slog.Info("agent response", "reason", *reason)
+			if agentResponse.OffloadTask != nil {
+				slog.Info("offloading task", "task", agentResponse.OffloadTask.Task)
+				rr := storage.NewCompletionResult(requestId, nil, &agentResponse.OffloadTask.Task, nil)
+				_, err = storage.Store(store, rr)
+				if err != nil {
+					slog.Error("error storing request result", "error", err.Error())
+				}
+				return
 			}
 
-			rr := storage.NewCompletionResult(requestId, answer, reason, err)
+			slog.Info("agent response", "answer", *agentResponse.Answer)
+			if agentResponse.Reason != nil {
+				slog.Info("agent response", "reason", *agentResponse.Reason)
+			}
+
+			rr := storage.NewCompletionResult(requestId, agentResponse.Answer, agentResponse.Reason, nil)
 			_, err = storage.Store(store, rr)
 			if err != nil {
 				slog.Error("error storing request result", "error", err.Error())

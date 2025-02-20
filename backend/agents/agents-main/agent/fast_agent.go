@@ -170,9 +170,13 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse
 	var prevToolCalls []tools.ToolCall
 
 	for i := 0; i < maxIterations; i++ {
-		knowledgeContext, err := a.Knowledge.Get(query)
-		if err != nil {
-			return nil, err
+		var knowledgeContext *string
+		if i == 0 {
+			nk, err := a.Knowledge.Get(query)
+			if err != nil {
+				return nil, err
+			}
+			knowledgeContext = nk
 		}
 
 		thoughts, toolChoice, err := a.thinkAndChooseTool(ctx, i, query, knowledgeContext, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls)
@@ -302,7 +306,7 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	if iteration == 0 {
-		prompt = fmt.Sprintf("You are a reAct agent. %s. Here are previous messages: %+v. Your goal is to solve the following: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", a.Prompt, chatHistory, query, *knowledgeContext)
+		prompt = fmt.Sprintf("You are a reAct agent. %s. Here are previous messages: %+v. Your goal is to solve the following: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`. This is the only time you will have access to RAG. Do not try to access it again.", a.Prompt, chatHistory, query, *knowledgeContext)
 	} else {
 		prompt = fmt.Sprintf("You are a reAct agent. %s. You are currently in the process of solving: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", a.Prompt, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}

@@ -50,8 +50,8 @@ func NewDefaultUserQueryAgent() Agent {
 		googleSearchClient = googleSearch.NewRodClient()
 		toolHandler        = tools.NewGoogleSearchToolHandler(googleSearchClient)
 		geminiLlm          = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
-		// knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
-		localKnowledge    = knowledge.NewLocalKnowledge()
+		knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+		// localKnowledge    = knowledge.NewLocalKnowledge()
 		realClock         = clock.NewRealClock()
 		supabaseStore     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 		agentEventHistory = history.NewAgentEventHistory(supabaseStore)
@@ -60,11 +60,11 @@ func NewDefaultUserQueryAgent() Agent {
 	return newFastAgent(
 		"user_query_agent",
 		"An agent that receives the user's query from the frontend. Has a plethora of tools to achieve general tasks.",
-		"You are a user query agent. You will be given a real user's query which comes directly from the frontend. You are the only agent who is able to actually communicate with the end user, so remember to recall any information given to you by other agents, and use this in your answer.",
+		"You are a personal tutor agent for Imperial College London students, meant to answer the queries given to you by a student. You will be given a real user's query which comes directly from the frontend. You must answer the user in a way which is extremely supportive and helpful. Be mindful of the user's thinking. ",
 
 		toolHandler,
 		geminiLlm,
-		localKnowledge,
+		knowledge,
 		realClock,
 		agentEventHistory,
 
@@ -75,8 +75,8 @@ func NewDefaultUserQueryAgent() Agent {
 func NewPersonalTutorAgent() Agent {
 	var (
 		geminiLlm = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
-		// knowledge          = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
-		localKnowledge    = knowledge.NewLocalKnowledge()
+		knowledge = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+		// localKnowledge    = knowledge.NewLocalKnowledge()
 		realClock         = clock.NewRealClock()
 		supabaseStore     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 		agentEventHistory = history.NewAgentEventHistory(supabaseStore)
@@ -88,12 +88,12 @@ func NewPersonalTutorAgent() Agent {
 
 	return newFastAgent(
 		"personal_tutor_agent",
-		"A personal tutor agent. This is an agent which is an expert at handling sensitive topics for the user, such as mental health, or anything where the user need support. If this is applicable, use this agent. It has the ability to email the student's personal tutor to alert them of any flagged concerns, and its result will be a tailored message to the user. Note that this agent will not actually send a message to the user, unless it is the last step in the chain of agents, so if not be sure to use its output in your response.",
+		"A personal tutor agent, for the student. If there is anything concerning in the message regarding the user, use this agent. It will come up with a response tailored to the user's sitution, relative to imperial college london (which is where the student attends).",
 		"You are a personal tutor agent. You are meant to provide support for a student at imperial college london. You are a layer between the students and their personal tutor. Students interact with you via a chatbot. In the case where you have flagged something concerning, you must use the email tool to send an email to the personal tutor, raising this concern and your reasons. You must also always reply to the user in a way which is supportive. Do not tell the user if you have sent an email to the personal tutor.",
 
 		toolHandler,
 		geminiLlm,
-		localKnowledge,
+		knowledge,
 		realClock,
 		agentEventHistory,
 	)
