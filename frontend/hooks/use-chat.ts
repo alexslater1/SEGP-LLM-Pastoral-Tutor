@@ -6,7 +6,7 @@ import { Session } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_QUERY_INTERVAL_SECONDS = 1;
-const IGNORED_ACTIONS = ["Thinking", "Thinking..."]
+const IGNORED_ACTIONS: string[] = []//["Thinking", "Thinking..."]
 
 export type ChatItem = {
   messages: Message[];
@@ -25,26 +25,27 @@ export type ChatItemProps = {
 export function useChat({ id }: ChatItemProps): ChatItem {
   const [messages, setMessages] = useState<Message[]>([]);
   const [requestIDPollingKey, setRequestIDPollingKey] = useState<string | null>(null);
-  const chatSessionID = useRef<string | null>(id);
+  const [chatSessionID, setChatSessionID] = useState<string | null>(id);
+  const [updatedStatus, setUpdatedStatus] = useState(true);
 
-  const updatedStatus = useRef(true);
-
-  const {data: allMessages, isPending: isAllMessagesPending, error: allMessagesError} = useQuery({
-    queryKey: ["all-messages", chatSessionID.current],
+  const {data: allMessages, isPending: isAllMessagesPending, error: allMessagesError, fetchStatus: allMessagesFetchStatus} = useQuery({
+    queryKey: ["all-messages", chatSessionID],
     queryFn: () => loadAllMessages(),
     staleTime: Infinity,
-    enabled: !!chatSessionID.current,
+    enabled: !!chatSessionID,
   });
 
   if (allMessages && messages.length === 0) {
     setMessages(allMessages);
   }
 
-  const {data: statusResponse, isPending: isStatusPending, error: statusError, fetchStatus: statusFetchStatus} = useQuery({
+  const {isPending: isStatusPending, error: statusError, fetchStatus: statusFetchStatus} = useQuery({
     queryKey: ["status", requestIDPollingKey],
-    queryFn: () => {
-      updatedStatus.current = false;
-      return checkStatus(requestIDPollingKey as string);
+    queryFn: async () => {
+      setUpdatedStatus(false);
+      let statusResponse = await checkStatus(requestIDPollingKey as string);
+      updateLastMessage(statusResponse);
+      return statusResponse;
     },
     enabled: !!requestIDPollingKey,
     refetchInterval: requestIDPollingKey ? STATUS_QUERY_INTERVAL_SECONDS * 1000 : false,
@@ -81,15 +82,9 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     }
   }
 
-  if (!isStatusPending && !statusError && statusResponse && !updatedStatus.current) {
-    updateLastMessage(statusResponse);
-    updatedStatus.current = true;
-  }
-
   const {mutate: sendMessage, isPending: isSendPending, error: sendError} = useMutation({
     mutationFn: ({query, newMessages}: {query: string, newMessages: Message[]}) => sendMessageAndGetResponse(query),
     onSuccess: (newMessage, {newMessages}) => {
-      console.log("newMessages", newMessages);
       setMessages([...newMessages, newMessage]);
       setRequestIDPollingKey(newMessage.requestID);
     }
@@ -117,8 +112,8 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     const login_session = await getUserSession();
     if (!login_session) {
       throw new Error("User not logged in");
-    } else if (chatSessionID.current) {
-      const { messages, error: loadError } = await fetchAllMessagesByID(chatSessionID.current, login_session);
+    } else if (chatSessionID) {
+      const { messages, error: loadError } = await fetchAllMessagesByID(chatSessionID, login_session);
       if (loadError) {
         throw new Error(loadError);
       } else {
@@ -136,7 +131,7 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     }
 
     const { requestID, sessionID: newSessionID, error: sendError } = 
-      await sendMessageToBackend(chatSessionID.current, query, loginSession);
+      await sendMessageToBackend(chatSessionID, query, loginSession);
 
     if (sendError) {
       let id = generateUUID();
@@ -149,7 +144,7 @@ export function useChat({ id }: ChatItemProps): ChatItem {
         status: Status.FAILED,
       }
     } else {
-      chatSessionID.current = newSessionID as string;
+      setChatSessionID(newSessionID as string);
       return {
         id: requestID as string + Role.ASSISTANT,
         requestID: requestID as string,
@@ -170,6 +165,8 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     return await checkStatusByRequestID(requestID, login_session);
   }
 
+  console.log({isSendPending, isStatusPending, statusFetchStatus, isAllMessagesPending, allMessagesFetchStatus});
+
   
 
   return { 
@@ -178,8 +175,8 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     isLoading: isSendPending || (isStatusPending && statusFetchStatus !== "idle"),
     stop,
     error: sendError?.message || statusError?.message || allMessagesError?.message || null,
-    id: chatSessionID.current,
-    isInitialLoad: isAllMessagesPending,
+    id: chatSessionID,
+    isInitialLoad: isAllMessagesPending && allMessagesFetchStatus !== "idle",
   };
 }
 
@@ -270,6 +267,7 @@ type BackendResponseCompletion = {
 async function sendMessageToBackend (id: string | null, message: string, session: Session): Promise<BackendResponseCompletion> {
   try {
     const completionEndpoint = "/completion/v2"
+    console.log({id, message, session: session.access_token});
     const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
         method: 'POST',
         headers: {
@@ -285,7 +283,7 @@ async function sendMessageToBackend (id: string | null, message: string, session
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status} ${response.statusText} ${response.body}`);
     }
 
     let backendResponse = await response.json() as RawBackendResponseCompletion;

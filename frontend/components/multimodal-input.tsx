@@ -88,6 +88,7 @@ function PureMultimodalInput({
     }
 
     handleSubmit(input);
+    setInput('');
 
     setLocalStorageInput('');
     resetHeight();
@@ -100,6 +101,7 @@ function PureMultimodalInput({
     setLocalStorageInput,
     width,
     chatId,
+    input,
   ]);
 
   return (
