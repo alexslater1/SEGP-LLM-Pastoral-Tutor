@@ -38,15 +38,15 @@ export function useChat({ id, firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE }:
     fetchStatus: allMessagesFetchStatus,
   } = useQuery({
     queryKey: ["all-messages", chatSessionID],
-    queryFn: async () => {
-      const allMessages = await loadAllMessages();
-      setMessages(allMessages);
-      return allMessages;
-    },
+    queryFn: async () => loadAllMessages(),
     staleTime: Infinity,
     // If we were given an id when first creating the chat hook, we should attempt to load all messages
     enabled: !!id
   });
+
+  if (messages.length === 0 && allMessages) {
+    setMessages(allMessages);
+  }
 
   const {
     isPending: isStatusPending,

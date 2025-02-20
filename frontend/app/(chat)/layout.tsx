@@ -17,8 +17,6 @@ export default async function Layout({
   const [user, cookieStore] = await Promise.all([getUser(), cookies()]);
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
 
-  console.log(JSON.stringify(user));
-
   return (
     <>
       <Script
