@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { getUserSession } from "@/lib/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type ChatVisibility = "public" | "private";
 
@@ -28,79 +29,21 @@ type BackendUserSession = {
 
 type BackendUserSessionsResponse = BackendUserSession[];
 
-type ChatHistoryState = {
-  history: Chat[];
-  isLoading: boolean;
-  error: string | null;
-  attemptedInitialFetch: boolean;
-}
-
 export function useChatHistory(): ChatHistoryItem {
-  const [chatHistoryState, setChatHistoryState] = useState<ChatHistoryState>({
-    history: [],
-    isLoading: false,
-    error: null,
-    attemptedInitialFetch: false,
+  const queryClient = useQueryClient();
+
+  const {isPending, data, error} = useQuery({
+    queryKey: ["chat-history"],
+    queryFn: () => fetchUIChatHistory(),
   });
 
-  let newChatHistoryState = chatHistoryState;
-
-  const setHistory = (history: Chat[]) => {
-    newChatHistoryState = {
-      ...newChatHistoryState,
-      history: history,
-    };
-  }
-
-  const setIsLoading = (isLoading: boolean) => {
-    newChatHistoryState = {
-      ...newChatHistoryState,
-      isLoading: isLoading,
-    };
-  }
-
-  const setError = (error: string | null) => {
-    newChatHistoryState = {
-      ...newChatHistoryState,
-      error: error,
-    };
-  }
-
-  const setAttemptedInitialFetch = (attemptedInitialFetch: boolean) => {
-    newChatHistoryState = {
-      ...newChatHistoryState,
-      attemptedInitialFetch: attemptedInitialFetch,
-    };
-  }
-
-  const updateChatHistoryState = () => {
-    setChatHistoryState(newChatHistoryState);
-  }
-
-  useEffect(() => {
-    if (chatHistoryState.history.length === 0 &&
-        !chatHistoryState.isLoading &&
-        !chatHistoryState.attemptedInitialFetch) {
-      setAttemptedInitialFetch(true);
-      setIsLoading(true);
-      updateChatHistoryState();
-    } else if (chatHistoryState.isLoading) {
-      fetchAndUpdateChatHistory();
-    }
-  }, [chatHistoryState]);
-
   const refresh = () => {
-    setIsLoading(true);
-    updateChatHistoryState();
+    queryClient.invalidateQueries({ queryKey: ["chat-history"] });
   }
 
-  const fetchAndUpdateChatHistory = async () => {
+  const fetchUIChatHistory = async () => {
     const login_session = await getUserSession();
     if (!login_session) {
-      setError("User not logged in");
-      setIsLoading(false);
-      setHistory([]);
-      updateChatHistoryState();
       return;
     }
 
@@ -114,17 +57,14 @@ export function useChatHistory(): ChatHistoryItem {
         visibility: "public", // TODO: Add visibility
       } as Chat;
     })
-    setHistory(history);
-    setIsLoading(false);
-    setError(null);
-    updateChatHistoryState();
+    return history.reverse();
   }
 
   return {
-    history: structuredClone(chatHistoryState.history).reverse(),
-    isLoading: chatHistoryState.isLoading,
+    history: data ?? [],
+    isLoading: isPending,
     refresh: refresh,
-    error: chatHistoryState.error,
+    error: error?.message ?? null,
   };
 }
 
