@@ -106,8 +106,8 @@ func (rs RequestSession) TableName() StorageTableName {
 }
 
 type ChatCheck struct {
-	ID string     `json:"id,omitempty"`
-	CreatedAt *time.Time `json:"checked_at,omitempty"`
+	ID        int        `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 }
 
 func NewChatCheck() ChatCheck {
@@ -116,6 +116,7 @@ func NewChatCheck() ChatCheck {
 
 func (ls ChatCheck) TableName() StorageTableName {
 	return StorageTableNameChatChecks
+}
 
 type CompletionResult struct {
 	ID        int        `json:"id,omitempty"`

@@ -72,7 +72,12 @@ func (s *SupabaseStorage) getAll(table StorageTableName, matchingFields map[stri
 			filterQuery = filterQuery.Filter(k, "eq", v)
 		}
 	}
-	err := filterQuery.Execute(&results)
 
+	if filterQuery != nil {
+		err := filterQuery.Execute(&results)
+		return results, err
+	}
+
+	err := query.Execute(&results)
 	return results, err
 }

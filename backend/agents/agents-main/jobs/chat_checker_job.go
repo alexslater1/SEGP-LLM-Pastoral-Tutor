@@ -15,7 +15,12 @@ import (
 )
 
 const (
-	flagging_prompt = `You are analyzing chat interactions between university students and an AI chatbot. The following chat you are reviewing recently went inactive, meaning the student has stopped responding. Your task is to assess whether the chat contains potential concerns that require follow-up from the pastoral care team.
+	flagging_prompt = `You are analyzing chat interactions between university students and an AI chatbot. The following chat you are reviewing recently went inactive, meaning the student has stopped responding. Your task is to assess whether the chat contains potential concerns that require follow-up from the pastoral care team. This should only happen in the case where the student is showing signs of distress or is in need of support. Examples include:
+	-	Showing signs of distress
+	-	Showing signs of being overwhelmed
+	-	Showing signs of being stressed
+	-	Showing signs of being anxious
+	-	Showing signs of being depressed
 
 	Here is the chat history:
 	%+v
@@ -27,15 +32,13 @@ const (
 	-	Do not include a subject`
 )
 
-
 type ChatCheckerJob struct {
-	store              	storage.Storage
-	history				history.History
-	llm					llm.LLM
-	emailClient			email.EmailClient
-	staleWindow		   	time.Duration
+	store       storage.Storage
+	history     history.History
+	llm         llm.LLM
+	emailClient email.EmailClient
+	staleWindow time.Duration
 }
-
 
 func NewChatCheckerJob(store storage.Storage, history history.History, llm llm.LLM, emailClient email.EmailClient, staleWindow time.Duration) *ChatCheckerJob {
 	return &ChatCheckerJob{
@@ -46,7 +49,6 @@ func NewChatCheckerJob(store storage.Storage, history history.History, llm llm.L
 		staleWindow,
 	}
 }
-
 
 func (c *ChatCheckerJob) Run() {
 	staleSessionIDs, err := c.getStaleSessions()
@@ -86,8 +88,8 @@ func (c *ChatCheckerJob) Run() {
 func (c *ChatCheckerJob) processChat(chat []string) (string, bool, error) {
 
 	type EmailStructuredOutput struct {
-		SendEmail bool `json:"send_email"`
-		EmailBody  string `json:"email_body"`
+		SendEmail bool   `json:"send_email"`
+		EmailBody string `json:"email_body"`
 	}
 
 	structuredEmailResponse, err := c.llm.StructuredOutputCompletion(context.Background(), fmt.Sprintf(flagging_prompt, chat), EmailStructuredOutput{})
@@ -102,7 +104,6 @@ func (c *ChatCheckerJob) processChat(chat []string) (string, bool, error) {
 
 	return parsedStructuredEmailResponse.EmailBody, parsedStructuredEmailResponse.SendEmail, nil
 }
-
 
 func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 	staleThreshold := time.Now().Add(-c.staleWindow)
@@ -127,15 +128,19 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 		return chatCheckData[i].CreatedAt.After(*chatCheckData[j].CreatedAt)
 	})
 
-	if len(chatCheckData) <= 0 {
+	if len(chatCheckData) == 0 {
 		var sessionIDs []string
 		for sessionID := range latestRequestSessions {
 			sessionIDs = append(sessionIDs, sessionID)
 		}
 		return sessionIDs, nil
 	}
-		
+
+	log.Println(chatCheckData)
+
 	lastChecked := chatCheckData[0].CreatedAt
+
+	log.Println(lastChecked)
 
 	var staleSessionIDs []string
 	for _, requestSession := range latestRequestSessions {

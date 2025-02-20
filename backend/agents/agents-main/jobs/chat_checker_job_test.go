@@ -32,8 +32,8 @@ func TestGetStaleSessions(t *testing.T) {
 	// Create a new MemoryStorage instance
 	memStorage := storage.NewMemoryStorage()
 	chatCheckerJob := &ChatCheckerJob{
-		store:          memStorage,
-		staleWindow:    5 * time.Minute,
+		store:       memStorage,
+		staleWindow: 5 * time.Minute,
 	}
 
 	now := time.Now()
@@ -87,14 +87,14 @@ func TestGetStaleSessions(t *testing.T) {
 	fmt.Printf("stale %+v", staleSessions)
 
 	// Assertions
-	assert.Len(t, staleSessions, 1) // Expecting 1 stale session
+	assert.Len(t, staleSessions, 1)               // Expecting 1 stale session
 	assert.Contains(t, staleSessions, "session1") // Check that the stale session ID is correct
 
 	// Test case 1: No sessions
 	memStorage2 := storage.NewMemoryStorage()
 	chatCheckerJob2 := &ChatCheckerJob{
-		store:          memStorage2,
-		staleWindow:    5 * time.Minute,
+		store:       memStorage2,
+		staleWindow: 5 * time.Minute,
 	}
 	staleSessions, err = chatCheckerJob2.getStaleSessions()
 	assert.NoError(t, err)
@@ -130,23 +130,23 @@ func TestGetStaleSessions(t *testing.T) {
 		RequestID: "request10",
 		CreatedAt: &reqBoundaryTime1,
 	},
-	storage.RequestSession{
-		SessionID: "session7",
-		RequestID: "request11",
-		CreatedAt: &reqBoundaryTime2,
-	})
+		storage.RequestSession{
+			SessionID: "session7",
+			RequestID: "request11",
+			CreatedAt: &reqBoundaryTime2,
+		})
 	storage.Store(memStorage2, storage.ChatCheck{
-		ID: "session6",
+		ID:        1,
 		CreatedAt: &nowChecked, // Set last checked time
 	})
 	storage.Store(memStorage2, storage.ChatCheck{
-		ID: "session7",
+		ID:        2,
 		CreatedAt: &nowChecked, // Set last checked time
 	})
 	staleSessions, err = chatCheckerJob2.getStaleSessions()
 	assert.NoError(t, err)
 	// Expect 3 stale sessions, as session6 is exactly on the last window boundary and session7 has just gone stale
-	assert.Len(t, staleSessions, 3) 
+	assert.Len(t, staleSessions, 3)
 	assert.Contains(t, staleSessions, "session4")
 	assert.Contains(t, staleSessions, "session5")
 	assert.Contains(t, staleSessions, "session7")
@@ -154,15 +154,15 @@ func TestGetStaleSessions(t *testing.T) {
 
 func TestProcessChat(t *testing.T) {
 	chatCheckerJob := &ChatCheckerJob{
-		llm: 			llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set")),
+		llm: llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set")),
 	}
 
 	messages1 := []string{
-    `Query: I have three assignments due next week, and I don't know how I'm going to finish them all.
+		`Query: I have three assignments due next week, and I don't know how I'm going to finish them all.
 	Response: That sounds overwhelming. Have you spoken to your professors about extensions or support options?`,
-    `Query: No, I don't think they'd care. Everyone else seems to be managing just fine, but I'm falling apart.
+		`Query: No, I don't think they'd care. Everyone else seems to be managing just fine, but I'm falling apart.
 	Response: It's okay to ask for help! The university has academic support services - would you like me to connect you?`,
-    `Query: Maybe... I just feel like such a failure.
+		`Query: Maybe... I just feel like such a failure.
 	Response: You're not a failure! Many students struggle with workload. Let me provide some resources that might help.`,
 	}
 
@@ -174,9 +174,9 @@ func TestProcessChat(t *testing.T) {
 	log.Printf("Sending Email: %t\nEmail: %s\n", sendEmail1, email1)
 
 	messages2 := []string{
-    `Query: Hi!
+		`Query: Hi!
 	Response: Hello there! How are you?`,
-    `Query: Not great to be honest.
+		`Query: Not great to be honest.
 	Response: Oh, that's not good. Anything I can do to help?`,
 	}
 
@@ -189,13 +189,20 @@ func TestProcessChat(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	chatCheckerJob := &ChatCheckerJob{
-		store:       storage.NewMemoryStorage(),
-		staleWindow: 5 * time.Minute,
-		history:     history.NewLocalHistory(),
-		llm:        llm.NewMockLLM(),
-		emailClient: email.NewMockEmailClient(),
-	}
+	var (
+		history     = history.NewLocalHistory()
+		llm         = llm.NewMockLLM()
+		emailClient = email.NewMockEmailClient()
+		store       = storage.NewMemoryStorage()
+
+		chatCheckerJob = &ChatCheckerJob{
+			store:       store,
+			staleWindow: 5 * time.Minute,
+			history:     history,
+			llm:         llm,
+			emailClient: emailClient,
+		}
+	)
 
 	now := time.Now()
 	req1Time := now.Add(-6 * time.Minute)
@@ -225,10 +232,10 @@ func TestRun(t *testing.T) {
 		"Query: Not great to be honest.",
 		"Response: Oh, that's not good. Anything I can do to help?",
 	}
-	chatCheckerJob.history.(*history.LocalHistory).AddMessageHistory(chatHistory)
+	history.AddMessageHistory(chatHistory)
 
-    // Add mock LLM response
-	chatCheckerJob.llm.(*llm.MockLLM).NewCallChain().ThenStructured(`{"send_email": true, "email_body": "Dear Pastoral Care Team,\n\nI am writing to you regarding a recent interaction with a student who expressed feelings of being overwhelmed and like a failure due to upcoming assignment deadlines. The student stated they have three assignments due next week and feel unable to complete them. They also indicated a reluctance to seek help from professors, believing they wouldn't care and that everyone else is managing. While I offered resources and support information, the student's feelings of inadequacy raise concerns about their wellbeing. I recommend reaching out to this student to offer support and guidance.\n\nStudent Context:\n\n*   Expressing feelings of being overwhelmed and like a failure.\n*   Three assignments due next week.\n*   Reluctance to seek help from professors.\n\nPlease let me know if you require any further information.\n\nSincerely,\nAI Chatbot"}`).Set()
+	// Add mock LLM response
+	llm.NewCallChain().ThenStructured(`{"send_email": true, "email_body": "Dear Pastoral Care Team,\n\nI am writing to you regarding a recent interaction with a student who expressed feelings of being overwhelmed and like a failure due to upcoming assignment deadlines. The student stated they have three assignments due next week and feel unable to complete them. They also indicated a reluctance to seek help from professors, believing they wouldn't care and that everyone else is managing. While I offered resources and support information, the student's feelings of inadequacy raise concerns about their wellbeing. I recommend reaching out to this student to offer support and guidance.\n\nStudent Context:\n\n*   Expressing feelings of being overwhelmed and like a failure.\n*   Three assignments due next week.\n*   Reluctance to seek help from professors.\n\nPlease let me know if you require any further information.\n\nSincerely,\nAI Chatbot"}`).Set()
 
 	oldChatCheckData, err := storage.GetAll[storage.ChatCheck](chatCheckerJob.store, nil)
 	if err != nil {
@@ -239,7 +246,7 @@ func TestRun(t *testing.T) {
 	chatCheckerJob.Run()
 
 	// Verify the logged output
-	emails := chatCheckerJob.emailClient.(*email.MockEmailClient).GetSentEmails()
+	emails := emailClient.GetSentEmails()
 	assert.NotNil(t, emails)
 	log.Printf("Email:\n%s", emails[0].HtmlBody)
 
@@ -253,11 +260,11 @@ func TestRun(t *testing.T) {
 
 func TestRun2(t *testing.T) {
 	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
-	
+
 	job := &ChatCheckerJob{
 		store:       store,
 		history:     history.NewAgentEventHistory(store),
-		llm:        llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")),
+		llm:         llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")),
 		emailClient: email.NewResendClient(os.Getenv("RESEND_API_KEY")),
 		staleWindow: 5 * time.Minute,
 	}
