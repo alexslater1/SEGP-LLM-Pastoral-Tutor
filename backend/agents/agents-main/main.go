@@ -37,7 +37,7 @@ func main() {
 		})
 
 		js = []jobs.Job{
-			jobs.NewChatCheckerJob(store, history, llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")), email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 30*time.Second),
+			jobs.NewChatCheckerJob(store, history, llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")), email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),
 		}
 
 		jobManager = jobs.NewJobManager(js)

@@ -117,12 +117,16 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 		return nil, err
 	}
 
+	log.Printf("requestSessions: %+v\n", requestSessions)
+
 	latestRequestSessions := make(map[string]storage.RequestSession)
 	for _, requestSession := range requestSessions {
 		if existing, found := latestRequestSessions[requestSession.SessionID]; !found || requestSession.CreatedAt.After(*existing.CreatedAt) {
 			latestRequestSessions[requestSession.SessionID] = requestSession
 		}
 	}
+
+	log.Printf("latestRequestSessions: %+v\n", latestRequestSessions)
 
 	chatCheckData, err := storage.GetAll[storage.ChatCheck](c.store, nil)
 	if err != nil {
@@ -131,6 +135,8 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 	sort.Slice(chatCheckData, func(i, j int) bool {
 		return chatCheckData[i].CreatedAt.After(*chatCheckData[j].CreatedAt)
 	})
+
+	log.Printf("chatCheckData: %+v\n", chatCheckData)
 
 	if len(chatCheckData) == 0 {
 		var sessionIDs []string
@@ -142,12 +148,16 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 
 	lastChecked := chatCheckData[0].CreatedAt
 
+	log.Printf("lastChecked: %+v\n", lastChecked)
+
 	var staleSessionIDs []string
 	for _, requestSession := range latestRequestSessions {
-		if requestSession.CreatedAt.Before(staleThreshold) && requestSession.CreatedAt.After(*lastChecked) {
+		if requestSession.CreatedAt.Before(staleThreshold) && requestSession.CreatedAt.After(lastChecked.Add(-c.staleWindow)) {
 			staleSessionIDs = append(staleSessionIDs, requestSession.SessionID)
 		}
 	}
+
+	log.Printf("staleSessionIDs: %+v\n", staleSessionIDs)
 
 	return staleSessionIDs, nil
 }
