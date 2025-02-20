@@ -101,18 +101,15 @@ func (rs RequestSession) TableName() StorageTableName {
 	return StorageTableNameRequestSessions
 }
 
-type LastCheck struct {
-	ID string     `json:"id"`
-	CheckedAt *time.Time `json:"checked_at"`
+type ChatCheck struct {
+	ID string     `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"checked_at,omitempty"`
 }
 
-func NewLastCheck(sessionID string, checkedAt *time.Time) LastCheck {
-	return LastCheck{
-		ID: sessionID,
-		CheckedAt: checkedAt,
-	}
+func NewChatCheck() ChatCheck {
+	return ChatCheck{}
 }
 
-func (ls LastCheck) TableName() StorageTableName {
-	return StorageTableNameLastChecks
+func (ls ChatCheck) TableName() StorageTableName {
+	return StorageTableNameChatChecks
 }

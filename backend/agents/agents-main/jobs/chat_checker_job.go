@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
+	"github.com/segp/agents-main/email"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
@@ -18,35 +20,29 @@ const (
 	Here is the chat history:
 	%+v
 
-	For the given interaction, analyze the messages and the context of the conversation. Flag cases where the student may have disengaged during a sensitive or concerning discussion.
-
-	Possible flags are:
-	- Mental health concerns
-	- Academic difficulties
-	- Personal crises
-	- Urgent matters
-	- None (If the chat appears to have ended for a neutral or trivial reason)`
+	For the given interaction, analyze the messages and the context of the conversation to decide whether an email should be sent to the pastoral care team. If so, in said email, give them relevant details and some context on the situation. 
+	
+	Notes:
+	-	The email should be sent from the perspective of the chatbot (called Amanda)
+	-	Do not include a subject`
 )
-
-type flag struct {
-		Flag string `json:"flag"`
-		Reason string `json:"reason"`
-}
 
 
 type ChatCheckerJob struct {
 	store              	storage.Storage
 	history				history.History
 	llm					llm.LLM
+	emailClient			email.EmailClient
 	staleWindow		   	time.Duration
 }
 
 
-func NewChatCheckerJob(store storage.Storage, history history.History, llm llm.LLM, staleWindow time.Duration) *ChatCheckerJob {
+func NewChatCheckerJob(store storage.Storage, history history.History, llm llm.LLM, emailClient email.EmailClient, staleWindow time.Duration) *ChatCheckerJob {
 	return &ChatCheckerJob{
 		store,
 		history,
 		llm,
+		emailClient,
 		staleWindow,
 	}
 }
@@ -69,34 +65,42 @@ func (c *ChatCheckerJob) Run() {
 		staleChats[sessionID] = chats
 	}
 
-	for id, chat := range staleChats {
-		res, err := c.processChat(chat)
+	for _, chat := range staleChats {
+		emailBody, sendEmail, err := c.processChat(chat)
 		if err != nil {
 			log.Printf("Error processing chat: %v", err)
 		}
 
-		now := time.Now()
-		_, err = storage.Store(c.store, storage.NewLastCheck(id, &now))
-		if err != nil {
-			log.Printf("Error updating last check time for session %s: %v", id, err)
+		if sendEmail {
+			log.Print("Sending email")
+			c.emailClient.SendEmail(email.PersonalTutorEmail, "URGENT: Student requires you attention", emailBody)
 		}
+	}
 
-		log.Printf("ID: %s\nFlags: %+v", id, res)
+	_, err = storage.Store(c.store, storage.NewChatCheck())
+	if err != nil {
+		log.Print("Error updating last check time")
 	}
 }
 
-func (c *ChatCheckerJob) processChat(chat []string) ([]flag, error) {
-	flags, err := c.llm.StructuredOutputCompletion(context.Background(), fmt.Sprintf(flagging_prompt, chat), []flag{})
+func (c *ChatCheckerJob) processChat(chat []string) (string, bool, error) {
+
+	type EmailStructuredOutput struct {
+		SendEmail bool `json:"send_email"`
+		EmailBody  string `json:"email_body"`
+	}
+
+	structuredEmailResponse, err := c.llm.StructuredOutputCompletion(context.Background(), fmt.Sprintf(flagging_prompt, chat), EmailStructuredOutput{})
 	if err != nil {
-		return nil, err
+		return "", false, err
 	}
 
-	var parsedFlags []flag
-	if err := json.Unmarshal([]byte(*flags), &parsedFlags); err != nil {
-		return nil, err
+	var parsedStructuredEmailResponse EmailStructuredOutput
+	if err := json.Unmarshal([]byte(*structuredEmailResponse), &parsedStructuredEmailResponse); err != nil {
+		return "", false, err
 	}
 
-	return parsedFlags, nil
+	return parsedStructuredEmailResponse.EmailBody, parsedStructuredEmailResponse.SendEmail, nil
 }
 
 
@@ -114,21 +118,28 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 			latestRequestSessions[requestSession.SessionID] = requestSession
 		}
 	}
-	// log.Printf("latest: %+v", latestRequestSessions)
+
+	chatCheckData, err := storage.GetAll[storage.ChatCheck](c.store, nil)
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(chatCheckData, func(i, j int) bool {
+		return chatCheckData[i].CreatedAt.After(*chatCheckData[j].CreatedAt)
+	})
+
+	if len(chatCheckData) <= 0 {
+		var sessionIDs []string
+		for sessionID := range latestRequestSessions {
+			sessionIDs = append(sessionIDs, sessionID)
+		}
+		return sessionIDs, nil
+	}
+		
+	lastChecked := chatCheckData[0].CreatedAt
 
 	var staleSessionIDs []string
 	for _, requestSession := range latestRequestSessions {
-		var lastChecked time.Time
-
-		lastCheckData, err := storage.Get[storage.LastCheck](c.store, requestSession.SessionID)
-		if err == nil && lastCheckData != nil {
-			lastChecked = *lastCheckData.CheckedAt
-		} else {
-			lastChecked = time.Now().Add(-48 * time.Hour)
-		}
-		// log.Printf("ID: %s lastChecked: %s", requestSession.SessionID, lastChecked)
-
-		if requestSession.CreatedAt.Before(staleThreshold) && requestSession.CreatedAt.After(lastChecked) {
+		if requestSession.CreatedAt.Before(staleThreshold) && requestSession.CreatedAt.After(*lastChecked) {
 			staleSessionIDs = append(staleSessionIDs, requestSession.SessionID)
 		}
 	}

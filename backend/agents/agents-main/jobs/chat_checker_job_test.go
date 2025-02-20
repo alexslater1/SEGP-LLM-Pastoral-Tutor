@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/segp/agents-main/email"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
@@ -75,13 +76,8 @@ func TestGetStaleSessions(t *testing.T) {
 
 	// Store last checked times for sessions
 	nowChecked := now.Add(-10 * time.Minute)
-	storage.Store(memStorage, storage.LastCheck{
-		ID: "session1",
-		CheckedAt: &nowChecked,
-	})
-	storage.Store(memStorage, storage.LastCheck{
-		ID: "session2",
-		CheckedAt: &nowChecked,
+	storage.Store(memStorage, storage.ChatCheck{
+		CreatedAt: &nowChecked,
 	})
 
 	// Call the method
@@ -104,22 +100,7 @@ func TestGetStaleSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, staleSessions, 0) // Expecting no stale sessions
 
-	// Test case 2: All sessions are fresh
-	reqFreshTime := now.Add(-1 * time.Minute)
-	storage.Store(memStorage2, storage.RequestSession{
-		SessionID: "session3",
-		RequestID: "request7",
-		CreatedAt: &reqFreshTime,
-	})
-	storage.Store(memStorage2, storage.LastCheck{
-		ID: "session3",
-		CheckedAt: &now, // Last checked time is now
-	})
-	staleSessions, err = chatCheckerJob2.getStaleSessions()
-	assert.NoError(t, err)
-	assert.Len(t, staleSessions, 0) // Expecting no stale sessions
-
-	// Test case 3: Multiple stale sessions
+	// Test case 2: Multiple stale sessions
 	reqStaleTime1 := now.Add(-9 * time.Minute)
 	reqStaleTime2 := now.Add(-6 * time.Minute)
 	storage.StoreAll(memStorage2, storage.RequestSession{
@@ -131,21 +112,17 @@ func TestGetStaleSessions(t *testing.T) {
 		RequestID: "request9",
 		CreatedAt: &reqStaleTime2,
 	})
-	storage.Store(memStorage2, storage.LastCheck{
-		ID: "session4",
-		CheckedAt: &nowChecked, // Set last checked time
+	storage.Store(memStorage2, storage.ChatCheck{
+		CreatedAt: &nowChecked, // Set last checked time
 	})
-	storage.Store(memStorage2, storage.LastCheck{
-		ID: "session5",
-		CheckedAt: &nowChecked, // Set last checked time
-	})
+
 	staleSessions, err = chatCheckerJob2.getStaleSessions()
 	assert.NoError(t, err)
 	assert.Len(t, staleSessions, 2) // Expecting 2 stale sessions
 	assert.Contains(t, staleSessions, "session4")
 	assert.Contains(t, staleSessions, "session5")
 
-	// Test case 4: Edge case with boundary conditions
+	// Test case 3: Edge case with boundary conditions
 	reqBoundaryTime1 := now.Add(-10 * time.Minute)
 	reqBoundaryTime2 := now.Add(-5 * time.Minute)
 	storage.StoreAll(memStorage2, storage.RequestSession{
@@ -158,13 +135,13 @@ func TestGetStaleSessions(t *testing.T) {
 		RequestID: "request11",
 		CreatedAt: &reqBoundaryTime2,
 	})
-	storage.Store(memStorage2, storage.LastCheck{
+	storage.Store(memStorage2, storage.ChatCheck{
 		ID: "session6",
-		CheckedAt: &nowChecked, // Set last checked time
+		CreatedAt: &nowChecked, // Set last checked time
 	})
-	storage.Store(memStorage2, storage.LastCheck{
+	storage.Store(memStorage2, storage.ChatCheck{
 		ID: "session7",
-		CheckedAt: &nowChecked, // Set last checked time
+		CreatedAt: &nowChecked, // Set last checked time
 	})
 	staleSessions, err = chatCheckerJob2.getStaleSessions()
 	assert.NoError(t, err)
@@ -189,12 +166,12 @@ func TestProcessChat(t *testing.T) {
 	Response: You're not a failure! Many students struggle with workload. Let me provide some resources that might help.`,
 	}
 
-	res1, err1 := chatCheckerJob.processChat(messages1)
+	email1, sendEmail1, err1 := chatCheckerJob.processChat(messages1)
 	if err1 != nil {
 		log.Printf("Error processing chat: %v", err1)
 	}
 
-	log.Printf("CHAT1 Flags: %+v", res1)
+	log.Printf("Sending Email: %t\nEmail: %s\n", sendEmail1, email1)
 
 	messages2 := []string{
     `Query: Hi!
@@ -203,12 +180,12 @@ func TestProcessChat(t *testing.T) {
 	Response: Oh, that's not good. Anything I can do to help?`,
 	}
 
-	res2, err2 := chatCheckerJob.processChat(messages2)
+	email2, sendEmail2, err2 := chatCheckerJob.processChat(messages2)
 	if err2 != nil {
 		log.Printf("Error processing chat: %v", err2)
 	}
 
-	log.Printf("CHAT2 Flags: %+v", res2)
+	log.Printf("Sending Email: %t\nEmail %s", sendEmail2, email2)
 }
 
 func TestRun(t *testing.T) {
@@ -217,6 +194,7 @@ func TestRun(t *testing.T) {
 		staleWindow: 5 * time.Minute,
 		history:     history.NewLocalHistory(),
 		llm:        llm.NewMockLLM(),
+		emailClient: email.NewMockEmailClient(),
 	}
 
 	now := time.Now()
@@ -236,9 +214,8 @@ func TestRun(t *testing.T) {
 
 	// Store last checked times for sessions
 	nowChecked := now.Add(-10 * time.Minute)
-	storage.Store(chatCheckerJob.store, storage.LastCheck{
-		ID:        "session1",
-		CheckedAt: &nowChecked,
+	storage.Store(chatCheckerJob.store, storage.ChatCheck{
+		CreatedAt: &nowChecked,
 	})
 
 	// Mock the message history for the session using LocalHistory
@@ -251,15 +228,39 @@ func TestRun(t *testing.T) {
 	chatCheckerJob.history.(*history.LocalHistory).AddMessageHistory(chatHistory)
 
     // Add mock LLM response
-	chatCheckerJob.llm.(*llm.MockLLM).NewCallChain().ThenStructured(`[{"Flag": "Mental health concerns", "Reason": "The student stated they were 'Not great to be honest', indicating potential emotional distress. The conversation ended abruptly after the AI offered help, suggesting the student may have disengaged due to these concerns."}]`).Set()
+	chatCheckerJob.llm.(*llm.MockLLM).NewCallChain().ThenStructured(`{"send_email": true, "email_body": "Dear Pastoral Care Team,\n\nI am writing to you regarding a recent interaction with a student who expressed feelings of being overwhelmed and like a failure due to upcoming assignment deadlines. The student stated they have three assignments due next week and feel unable to complete them. They also indicated a reluctance to seek help from professors, believing they wouldn't care and that everyone else is managing. While I offered resources and support information, the student's feelings of inadequacy raise concerns about their wellbeing. I recommend reaching out to this student to offer support and guidance.\n\nStudent Context:\n\n*   Expressing feelings of being overwhelmed and like a failure.\n*   Three assignments due next week.\n*   Reluctance to seek help from professors.\n\nPlease let me know if you require any further information.\n\nSincerely,\nAI Chatbot"}`).Set()
+
+	oldChatCheckData, err := storage.GetAll[storage.ChatCheck](chatCheckerJob.store, nil)
+	if err != nil {
+		log.Printf("Couldn't get chat check data: %s", err)
+	}
 
 	// Run the job
 	chatCheckerJob.Run()
 
-	// Verify the expected output
-	// Check if the last check was updated
-	lastCheckData, err := storage.Get[storage.LastCheck](chatCheckerJob.store, "session1")
-	assert.NoError(t, err)
-	assert.NotNil(t, lastCheckData)
-	assert.True(t, lastCheckData.CheckedAt.After(nowChecked), "Last check time should be updated")
+	// Verify the logged output
+	emails := chatCheckerJob.emailClient.(*email.MockEmailClient).GetSentEmails()
+	assert.NotNil(t, emails)
+	log.Printf("Email:\n%s", emails[0].HtmlBody)
+
+	// Check if new chat check was added
+	chatCheckData, err := storage.GetAll[storage.ChatCheck](chatCheckerJob.store, nil)
+	if err != nil {
+		log.Printf("Couldn't get chat check data: %s", err)
+	}
+	assert.True(t, len(oldChatCheckData) < len(chatCheckData), "Last check time should be updated")
+}
+
+func TestRun2(t *testing.T) {
+	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+	
+	job := &ChatCheckerJob{
+		store:       store,
+		history:     history.NewAgentEventHistory(store),
+		llm:        llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")),
+		emailClient: email.NewResendClient(os.Getenv("RESEND_API_KEY")),
+		staleWindow: 5 * time.Minute,
+	}
+
+	job.Run()
 }
