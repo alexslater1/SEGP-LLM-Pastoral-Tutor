@@ -101,7 +101,7 @@ function FullScreenMessage({messageType, error}: {messageType: MessageType, erro
       return (
         <FadeInWrapper>
           <div className="flex flex-col items-center justify-center p-16">
-            <div className="text-center text-white">
+            <div className="text-center text-foreground">
               <p className="text-5xl font-bold">
                 Hi, I&apos;m the Imperial College tutor agent
               </p>
@@ -116,7 +116,7 @@ function FullScreenMessage({messageType, error}: {messageType: MessageType, erro
       return (
         <FadeInWrapper>
           <div className="flex flex-col items-center justify-center h-dvh p-16">
-            <div className="text-center text-white">
+            <div className="text-center text-foreground">
               <p className="text-5xl font-bold">
                 Loading...
               </p>

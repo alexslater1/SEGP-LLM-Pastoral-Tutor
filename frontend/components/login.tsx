@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { signIn, signUp } from "../app/(auth)/actions";
 import { useState } from "react";
 import { getUserSession } from "@/lib/supabase/client";
+import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const [error, setError] = useState("");
@@ -30,64 +32,70 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   }
 
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-white to-gray-50 flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <h1 className="mt-10 text-2xl font-semibold tracking-tight text-center text-gray-900">
-          {mode === "signin" ? "Welcome back" : "Create your account"}
-        </h1>
-        <p className="mt-2 text-sm text-center text-gray-600">
-          {mode === "signin"
-            ? "Sign in to continue to your account"
-            : "Get started with your new account"}
-        </p>
-
-        <div className="mt-10">
-          <div className="space-y-6">
-            <form className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold tracking-tight text-center">
+            {mode === "signin" ? "Welcome back" : "Create account"}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {mode === "signin"
+              ? "Sign in to continue to your account"
+              : "Enter your details to create your account"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
+                id="email"
                 name="email"
                 type="email"
                 placeholder="name@example.com"
                 required
-                className="px-4 h-12 bg-white text-zinc-950 rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
+                className="w-full bg-muted"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <Input
+                id="password"
                 name="password"
                 type="password"
-                placeholder="password"
+                placeholder="Enter your password"
                 required
-                className="px-4 h-12 bg-white text-zinc-950 rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
+                className="w-full bg-muted"
               />
-
-              <Button
-                formAction={mode === "signin" ? formSignIn : formSignUp}
-                type="submit"
-                className="w-full h-12 font-medium text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Continue with Email
-              </Button>
-            </form>
-          </div>
-
-          {error && (
-            <div className="mt-4 text-sm text-red-600 text-center">
-              {error}
             </div>
-          )}
 
-          <p className="mt-8 text-sm text-center text-gray-600">
-            {mode === "signin"
-              ? "New to our platform? "
-              : "Already have an account? "}
+            {error && (
+              <div className="text-sm text-destructive text-center">
+                {error}
+              </div>
+            )}
+
+            <Button
+              formAction={mode === "signin" ? formSignIn : formSignUp}
+              type="submit"
+              className="w-full"
+            >
+              {mode === "signin" ? "Sign In" : "Create Account"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-sm text-muted-foreground text-center">
+            {mode === "signin" ? "New to our platform? " : "Already have an account? "}
             <Link
               href={mode === "signin" ? "/sign-up" : "/sign-in"}
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-primary hover:underline"
             >
               {mode === "signin" ? "Create an account" : "Sign in"}
             </Link>
-          </p>
-        </div>
-      </div>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
