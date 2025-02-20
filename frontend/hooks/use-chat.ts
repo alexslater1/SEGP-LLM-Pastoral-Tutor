@@ -302,7 +302,7 @@ async function fetchAllMessagesByID(
   session: Session
 ): Promise<AllBackendMessages> {
   try {
-    const completionEndpoint = "/sessions/" + id;
+    const completionEndpoint = "/sessions/" + id + "/history";
     const response = await fetch(
       process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
       {

@@ -11,35 +11,86 @@ export type Chat = {
   createdAt: Date;
   userId: string;
   visibility: ChatVisibility;
-}
+};
 
 export type ChatHistoryItem = {
   history: Chat[];
   isLoading: boolean;
   refresh: () => void;
   error: string | null;
-}
+};
 
 type BackendUserSession = {
-    id: string,
-    created_at: string,
-    created_by_request_id: string,
-    user_id: string,
-}
+  id: string;
+  created_at: string;
+  created_by_request_id: string;
+  user_id: string;
+  name?: string;
+};
 
 type BackendUserSessionsResponse = BackendUserSession[];
+
+export function useSessionName(id?: string) {
+  console.log("useSessionName called with id", id);
+
+  const queryClient = useQueryClient();
+  const { isPending, data, error } = useQuery({
+    queryKey: ["session-name", id],
+    queryFn: () => fetchSessionNameLoop(id!),
+    enabled: !!id,
+  });
+
+  const mutate = () => {
+    queryClient.invalidateQueries({ queryKey: ["session-name", id] });
+  };
+
+  const fetchSessionNameLoop = async (id: string) => {
+    do {
+      console.log("Fetching session name for", id);
+      const session = await fetchSessionName(id);
+      if (session?.name) {
+        console.log("Session name found for", id);
+        queryClient.invalidateQueries({ queryKey: ["chat-history"] });
+        return session.name;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } while (true);
+  };
+
+  const fetchSessionName = async (id: string) => {
+    const login_session = await getUserSession();
+    if (!login_session) {
+      return;
+    }
+
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + "/sessions/" + id,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${login_session.access_token}`,
+        },
+      }
+    );
+
+    return (await response.json()) as BackendUserSession;
+  };
+
+  return {
+    isPending,
+    data,
+    error,
+    mutate,
+  };
+}
 
 export function useChatHistory(): ChatHistoryItem {
   const queryClient = useQueryClient();
 
-  const {isPending, data, error} = useQuery({
+  const { isPending, data, error } = useQuery({
     queryKey: ["chat-history"],
     queryFn: () => fetchUIChatHistory(),
   });
-
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["chat-history"] });
-  }
 
   const fetchUIChatHistory = async () => {
     const login_session = await getUserSession();
@@ -51,14 +102,18 @@ export function useChatHistory(): ChatHistoryItem {
     const history = chatHistory.map((session) => {
       return {
         id: session.id,
-        title: "Chat " + session.id.slice(0, 8), // TODO: Add title
+        title: session.name ?? "Loading...",
         createdAt: new Date(session.created_at),
         userId: session.user_id,
         visibility: "public", // TODO: Add visibility
       } as Chat;
-    })
+    });
     return history.reverse();
-  }
+  };
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["chat-history"] });
+  };
 
   return {
     history: data ?? [],
@@ -70,21 +125,24 @@ export function useChatHistory(): ChatHistoryItem {
 
 async function fetchChatHistory(session: Session) {
   try {
-    const completionEndpoint = "/sessions"
-    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
-        method: 'GET',
+    const completionEndpoint = "/sessions";
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
+      {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        }
-    });
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json() as BackendUserSessionsResponse;
+    return (await response.json()) as BackendUserSessionsResponse;
   } catch (currentError) {
-    console.error('Error:', currentError);
+    console.error("Error:", currentError);
     return [];
   }
 }
