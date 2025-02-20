@@ -1,13 +1,14 @@
 import { Message, Status, Role } from "@/types/message";
 import { generateUUID } from "@/lib/utils";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { getUserSession } from "@/lib/supabase/client";
 import { Session } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_QUERY_INTERVAL_SECONDS = 1;
 const IGNORED_ACTIONS: string[] = []; //["Thinking", "Thinking..."]
-const DEFAULT_FIRST_AGENT_MESSAGE = "Hi, I'm the Imperial College tutor agent. Ask me anything!"
+const DEFAULT_FIRST_AGENT_MESSAGE =
+  "Hi, I'm the Imperial College tutor agent. Ask me anything!";
 
 export type ChatItem = {
   messages: Message[];
@@ -24,7 +25,10 @@ export type ChatItemProps = {
   firstAgentMessage?: string;
 };
 
-export function useChat({ id, firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE }: ChatItemProps): ChatItem {
+export function useChat({
+  id,
+  firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE,
+}: ChatItemProps): ChatItem {
   const [messages, setMessages] = useState<Message[]>([]);
   const [requestIDPollingKey, setRequestIDPollingKey] = useState<string | null>(
     null
@@ -41,7 +45,7 @@ export function useChat({ id, firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE }:
     queryFn: async () => loadAllMessages(),
     staleTime: Infinity,
     // If we were given an id when first creating the chat hook, we should attempt to load all messages
-    enabled: !!id
+    enabled: !!id,
   });
 
   if (messages.length === 0 && allMessages) {
@@ -214,7 +218,7 @@ export function useChat({ id, firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE }:
     return await checkStatusByRequestID(requestID, login_session);
   };
 
-  const makeFirstAgentMessage = () => {
+  const firstMessage = useMemo(() => {
     const id = generateUUID();
     return {
       id: id + Role.ASSISTANT,
@@ -223,11 +227,11 @@ export function useChat({ id, firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE }:
       role: Role.ASSISTANT,
       actions: [],
       status: Status.COMPLETED,
-    }
-  }
+    };
+  }, [id]);
 
   return {
-    messages: [makeFirstAgentMessage(), ...messages],
+    messages: [firstMessage, ...messages],
     handleSubmit,
     isLoading:
       isSendPending || (isStatusPending && statusFetchStatus !== "idle"),
