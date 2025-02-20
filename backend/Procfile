@@ -1,2 +1,0 @@
-web: wget -q -O - https://git.io/vQhTU | bash -s -- --version 1.23.5 && source /app/.bashrc && ./run-agents-server.sh
-rag: python rag/main.py

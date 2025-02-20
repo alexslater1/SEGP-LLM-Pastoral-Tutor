@@ -16,7 +16,7 @@ const (
 	AgentEventTypeToolCallResult AgentEventType = "tool_call_result"
 	AgentEventTypeAnswerSuccess  AgentEventType = "answer_success"
 	AgentEventTypeAnswerError    AgentEventType = "answer_error"
-	AgentEventTypeObservation    AgentEventType = "observation"
+	AgentEventTypeOffloadTask    AgentEventType = "offload_task"
 )
 
 type AgentEvent struct {
@@ -28,7 +28,7 @@ type AgentEvent struct {
 func NewQueryEvent(ctx context.Context, query string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeQuery,
@@ -40,7 +40,7 @@ func NewQueryEvent(ctx context.Context, query string) AgentEvent {
 func NewThinkEvent(ctx context.Context, thoughts string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeThink,
@@ -54,7 +54,7 @@ func NewThinkEvent(ctx context.Context, thoughts string) AgentEvent {
 func NewToolCallResultEvent(ctx context.Context, toolCallResult *string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallResult,
@@ -65,22 +65,10 @@ func NewToolCallResultEvent(ctx context.Context, toolCallResult *string) AgentEv
 	}
 }
 
-func NewAnswerErrorEvent(ctx context.Context, error string) AgentEvent {
-	requestId, ok := context_keys.GetRequestID(ctx)
-	if !ok {
-		requestId = "none"
-	}
-	return AgentEvent{
-		Type:      AgentEventTypeAnswerError,
-		RequestID: requestId,
-		Data:      map[string]interface{}{"error": error},
-	}
-}
-
 func NewAnswerSuccessEvent(ctx context.Context, answer string, reason string) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeAnswerSuccess,
@@ -92,24 +80,10 @@ func NewAnswerSuccessEvent(ctx context.Context, answer string, reason string) Ag
 	}
 }
 
-func NewObservationEvent(ctx context.Context, observation string) AgentEvent {
-	requestId, ok := context_keys.GetRequestID(ctx)
-	if !ok {
-		requestId = "none"
-	}
-	return AgentEvent{
-		Type:      AgentEventTypeObservation,
-		RequestID: requestId,
-		Data: map[string]interface{}{
-			"observation": observation,
-		},
-	}
-}
-
 func NewToolCallChoiceEvent(ctx context.Context, toolCall tools.ToolCall) AgentEvent {
 	requestId, ok := context_keys.GetRequestID(ctx)
 	if !ok {
-		requestId = "none"
+		requestId = ""
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallChoice,
@@ -117,5 +91,29 @@ func NewToolCallChoiceEvent(ctx context.Context, toolCall tools.ToolCall) AgentE
 		Data: map[string]interface{}{
 			"toolCallChoice": toolCall,
 		},
+	}
+}
+
+func NewOffloadTaskEvent(ctx context.Context, entityId string, task string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = ""
+	}
+	return AgentEvent{
+		Type:      AgentEventTypeOffloadTask,
+		RequestID: requestId,
+		Data:      map[string]interface{}{"entityId": entityId, "task": task},
+	}
+}
+
+func NewAnswerErrorEvent(ctx context.Context, error string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = ""
+	}
+	return AgentEvent{
+		Type:      AgentEventTypeAnswerError,
+		RequestID: requestId,
+		Data:      map[string]interface{}{"error": error},
 	}
 }

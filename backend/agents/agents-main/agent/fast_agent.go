@@ -9,10 +9,12 @@ import (
 
 	"github.com/segp/agents-main/clock"
 	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/entity"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/tools"
+	"github.com/segp/agents-main/utils"
 )
 
 const (
@@ -20,19 +22,27 @@ const (
 )
 
 type FastAgent struct {
-	Background  string
+	ID     string
+	Desc   string
+	Prompt string
+
 	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
 	Knowledge   knowledge.Knowledge
 	Clock       clock.Clock
 	History     history.History
 
-	subscribers []chan AgentEvent
+	subscribers           []chan AgentEvent
+	entityIdsCanOffloadTo []entity.Entity
 }
 
-func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
+func newFastAgent(id string, description string, prompt string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History, defaultEntityIdsCanOffloadTo ...entity.Entity) *FastAgent {
 	return &FastAgent{
-		Background:  background,
+		ID:                    id,
+		Desc:                  description,
+		Prompt:                prompt,
+		entityIdsCanOffloadTo: defaultEntityIdsCanOffloadTo,
+
 		ToolHandler: toolHandler,
 		LLM:         llm,
 		Knowledge:   knowledge,
@@ -43,13 +53,21 @@ func NewFastAgent(background string, toolHandler *tools.ToolHandler, llm llm.LLM
 	}
 }
 
-func (a *FastAgent) Run(ctx context.Context, query string) (*string, *string, error) {
+func (a *FastAgent) Id() string {
+	return a.ID
+}
+
+func (a *FastAgent) Description() string {
+	return a.Desc
+}
+
+func (a *FastAgent) Run(ctx context.Context, query string) (*AgentResponse, error) {
 	a.publish(NewQueryEvent(ctx, query))
-	answer, reasoning, err := a.logicLoop(ctx, query)
+	response, err := a.logicLoop(ctx, query)
 	if err != nil {
 		a.publish(NewAnswerErrorEvent(ctx, err.Error()))
 	}
-	return answer, reasoning, err
+	return response, err
 }
 
 func (a *FastAgent) Subscribe() <-chan AgentEvent {
@@ -68,6 +86,31 @@ func (a *FastAgent) Unsubscribe(ch <-chan AgentEvent) {
 	}
 }
 
+func (a *FastAgent) clone() Agent {
+	return &FastAgent{
+		ID:     a.ID,
+		Desc:   a.Desc,
+		Prompt: a.Prompt,
+
+		ToolHandler: a.ToolHandler,
+		LLM:         a.LLM,
+		Knowledge:   a.Knowledge,
+		Clock:       a.Clock,
+		History:     a.History,
+
+		subscribers:           a.subscribers,
+		entityIdsCanOffloadTo: a.entityIdsCanOffloadTo,
+	}
+}
+
+func (a *FastAgent) canOffloadToEntities() []entity.Entity {
+	return utils.Sorted(a.entityIdsCanOffloadTo, func(e entity.Entity) string { return e.Id() })
+}
+
+func (a *FastAgent) addCanOffloadToEntity(entities ...entity.Entity) {
+	a.entityIdsCanOffloadTo = utils.RemoveDuplicates(append(a.entityIdsCanOffloadTo, entities...))
+}
+
 func (a *FastAgent) publish(event AgentEvent) {
 	for _, subscriber := range a.subscribers {
 		select {
@@ -78,16 +121,44 @@ func (a *FastAgent) publish(event AgentEvent) {
 	}
 }
 
-func (a *FastAgent) handleNoTool(ctx context.Context, toolChoice *tools.ToolCall) (*string, *string, error) {
+func (a *FastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, error) {
 	answer, reason, err := a.extractAnswerAndReason(toolChoice)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	a.publish(NewAnswerSuccessEvent(ctx, *answer, *reason))
-	return answer, reason, nil
+	return &AgentResponse{
+		Answer: answer,
+		Reason: reason,
+	}, nil
 }
 
-func (a *FastAgent) logicLoop(ctx context.Context, query string) (*string, *string, error) {
+func (a *FastAgent) handleOffloadTask(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, bool, error) {
+	ent, task, somethingElseShouldBeDone, err := a.extractEntityAndTask(toolChoice)
+	if err != nil {
+		return nil, false, err
+	}
+	a.publish(NewOffloadTaskEvent(ctx, ent.Id(), *task))
+
+	if ent == entity.UserEntity {
+		return &AgentResponse{
+			OffloadTask: &OffloadTask{
+				Entity: ent,
+				Task:   *task,
+			},
+		}, false, nil
+	}
+
+	agent := ent.(Agent)
+	resp, err := agent.Run(ctx, *task)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return resp, somethingElseShouldBeDone, nil
+}
+
+func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse, error) {
 	slog.Info("Starting FAST AGENT logic loop for query", "query", query)
 
 	var prevThoughts *string
@@ -99,31 +170,44 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*string, *stri
 	for i := 0; i < maxIterations; i++ {
 		knowledgeContext, err := a.Knowledge.Get(query)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		thoughts, toolChoice, err := a.thinkAndChooseTool(ctx, i, query, knowledgeContext, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		if toolChoice.Name == "no_tool" {
-			return a.handleNoTool(ctx, toolChoice)
+		if toolChoice.Name == "give_answer" {
+			return a.handleGiveAnswer(ctx, toolChoice)
 		}
 
-		result, err := a.ToolHandler.Call(*toolChoice)
-		if err != nil {
-			return nil, nil, err
+		if toolChoice.Name == "offload_task" {
+			resp, somethingElseShouldBeDone, err := a.handleOffloadTask(ctx, toolChoice)
+			if err != nil {
+				return nil, err
+			}
+			if !somethingElseShouldBeDone {
+				return resp, nil
+			}
+			p := fmt.Sprintf("The result of the task was: %s. The agent's reasoning for this answer was: %s", *resp.Answer, *resp.Reason)
+			prevToolCallResult = &p
+		} else {
+
+			result, err := a.ToolHandler.Call(*toolChoice)
+			if err != nil {
+				return nil, err
+			}
+			a.publish(NewToolCallResultEvent(ctx, result))
+			prevToolCallResult = result
 		}
-		a.publish(NewToolCallResultEvent(ctx, result))
 
 		prevThoughts = thoughts
-		prevToolCallResult = result
 		prevToolCall = toolChoice
 		prevToolCalls = append(prevToolCalls, *toolChoice)
 	}
 
-	return nil, nil, fmt.Errorf("failed to find answer after 10 iterations")
+	return nil, fmt.Errorf("failed to find answer after 10 iterations")
 }
 
 type StructuredOutput struct {
@@ -173,6 +257,8 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 		return nil, nil, err
 	}
 
+	// slog.Info("Thinking and acting prompt", "prompt", *prompt)
+
 	structuredCompletion, err := a.LLM.StructuredOutputCompletion(context.TODO(), *prompt, StructuredOutput{})
 	if err != nil {
 		return nil, nil, err
@@ -183,7 +269,7 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 		return nil, nil, fmt.Errorf("failed to parse tool call from structured output")
 	}
 
-	if toolCall.Name != "no_tool" {
+	if toolCall.Name != "give_answer" {
 		a.publish(NewToolCallChoiceEvent(ctx, *toolCall))
 	}
 
@@ -214,9 +300,9 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	if iteration == 0 {
-		prompt = fmt.Sprintf("You are a reAct agent. Here are previous messages: %+v. Your goal is to solve the following query: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", chatHistory, query, *knowledgeContext)
+		prompt = fmt.Sprintf("You are a reAct agent. %s. Here are previous messages: %+v. Your goal is to solve the following: `%s`. Here is some (potentially relevant) knowledge from a rag source: `%s`.  ", a.Prompt, chatHistory, query, *knowledgeContext)
 	} else {
-		prompt = fmt.Sprintf("You are a reAct agent, currently in the process of solving the query: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", query, *prevThoughts, *prevToolCall, *prevToolCallResult)
+		prompt = fmt.Sprintf("You are a reAct agent. %s. You are currently in the process of solving: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", a.Prompt, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
 
 	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem."
@@ -226,7 +312,13 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 		return nil, err
 	}
 
-	prompt += ` You have these tools at your disposal: ` + toolChoiceString + ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the no_tool tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
+	prompt += ` You have these tools at your disposal: ` + toolChoiceString
+
+	if len(a.canOffloadToEntities()) > 0 {
+		prompt += ` You have these entities at your disposal to (possibly) offload the task to. It is your priority to only pass the task on once you have done everything that you are able to do. Do not pass on task x and then do task y yourself. Instead always do task y first, no matter the severity of either task. Treat any task with uniform priority: ` + a.entitiesString()
+	}
+
+	prompt += ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
 
 	prompt += ` Ensure to also provide a "description_of_action" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator.`
 
@@ -235,6 +327,15 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	return &prompt, nil
+}
+
+func (a *FastAgent) entitiesString() string {
+	entities := a.canOffloadToEntities()
+	entitiesString := ""
+	for _, entity := range entities {
+		entitiesString += fmt.Sprintf("{entity_id: %s, Info: %s}\n", entity.Id(), entity.Description())
+	}
+	return entitiesString
 }
 
 func (a *FastAgent) chatHistory(ctx context.Context) ([]string, error) {
@@ -256,8 +357,15 @@ func (a *FastAgent) iterationBasedPrompt(iteration int) string {
 	}
 }
 
+func (a *FastAgent) getToolDefinitions() []tools.ToolDefinition {
+	if len(a.entityIdsCanOffloadTo) > 0 {
+		return a.ToolHandler.ToolDefinitionsWithOffloadingTool()
+	}
+	return a.ToolHandler.ToolDefinitions()
+}
+
 func (a *FastAgent) toolChoicesString() (string, error) {
-	availableTools := a.ToolHandler.ToolDefinitions()
+	availableTools := a.getToolDefinitions()
 
 	toolChoiceString, err := json.Marshal(availableTools)
 	if err != nil {
@@ -280,6 +388,33 @@ func (a *FastAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *
 	// a.publish(NewAnswerSuccessEvent(requestId, answer, reason))
 
 	return &answer, &reason, nil
+}
+
+func (a *FastAgent) extractEntityAndTask(toolCall *tools.ToolCall) (entity.Entity, *string, bool, error) {
+	var arguments map[string]string
+	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
+		return nil, nil, false, err
+	}
+
+	task := arguments["task"]
+	entityId := arguments["entity_id"]
+	somethingElseShouldBeDone := arguments["something_else_should_be_done"]
+
+	entity, err := a.matchEntityIdToEntity(entityId)
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	return entity, &task, somethingElseShouldBeDone == "true", nil
+}
+
+func (a *FastAgent) matchEntityIdToEntity(entityId string) (entity.Entity, error) {
+	for _, entity := range a.canOffloadToEntities() {
+		if entity.Id() == entityId {
+			return entity, nil
+		}
+	}
+	return nil, fmt.Errorf("entity not found")
 }
 
 func (a *FastAgent) formattedToolsStringFrom(prevToolCalls []tools.ToolCall) string {

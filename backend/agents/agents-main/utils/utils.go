@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -105,4 +106,23 @@ func CleanText(text string) string {
 	text = strings.TrimSuffix(text, "\\")
 
 	return text
+}
+
+func RemoveDuplicates[T comparable](slice []T) []T {
+	seen := make(map[T]bool)
+	result := []T{}
+	for _, item := range slice {
+		if !seen[item] {
+			seen[item] = true
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+func Sorted[T any](slice []T, fn func(T) string) []T {
+	sort.Slice(slice, func(i, j int) bool {
+		return fn(slice[i]) < fn(slice[j])
+	})
+	return slice
 }

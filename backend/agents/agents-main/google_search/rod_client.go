@@ -11,6 +11,10 @@ import (
 	"github.com/go-rod/rod/lib/proto"
 )
 
+const (
+	timeoutDuration = 15 * time.Second
+)
+
 var (
 	// Exclude non-text resources like images, videos, etc.
 	excludeTypes = []proto.NetworkResourceType{
@@ -70,75 +74,106 @@ func (r *RodClient) HtmlFromURL(url string, actions ...Action) (*string, error) 
 }
 
 func (r *RodClient) htmlFromURL(url string, actions ...Action) (*string, error) {
-	html := ""
-	var error error
-	err := rod.Try(func() {
-		page := r.browser.MustPage(url)
-		defer page.Close()
-
-		// Add initial wait for page load
-		page.MustWaitLoad()
-
-		for _, action := range actions {
-			switch action.Type() {
-			case ActionTypeClick:
-				clickAction := action.(*ClickAction)
-
-				if clickAction.Eq == nil {
-					page.MustElement(clickAction.Element).MustClick()
-					continue
-				}
-
-				elems := page.MustElements(clickAction.Element)
-				if *clickAction.Eq >= len(elems) {
-					error = fmt.Errorf("element not found, len == %d", len(elems))
-					return
-				}
-				elems[*clickAction.Eq].MustClick()
-
-			case ActionTypeWait:
-				waitAction := action.(*WaitAction)
-				if waitAction.Element != nil {
-					err := rod.Try(func() {
-						if waitAction.Timeout == nil {
-							page.MustElement(*waitAction.Element).MustWaitVisible()
-						} else {
-							page.MustElement(*waitAction.Element).Timeout(*waitAction.Timeout).MustWaitVisible()
-						}
-					})
-					if err != nil {
-						log.Println("Warning: timeout waiting for element")
-						continue
-					}
-				}
-				if waitAction.Duration != nil {
-					time.Sleep(*waitAction.Duration)
-				}
-
-			case ActionTypeNavigate:
-				navigateAction := action.(*NavigateAction)
-				page.MustNavigate(navigateAction.URL)
-				page.MustWaitNavigation()
-			}
-			page.MustWaitLoad()
-		}
-
-		// Increase timeout for request idle
-		page.WaitRequestIdle(5*time.Second, []string{""}, []string{}, excludeTypes)
-
-		h, err := page.HTML()
-		if err != nil {
-			error = err
-			return
-		}
-
-		html = h
-	})
-	if err != nil {
-		log.Println("Warning: there was an error in rod client. Returning error html but continuing.")
-		h := fmt.Sprintf(`<html><body><h1>Error accessing page %s</h1></body></html>`, url)
-		return &h, nil
+	type result struct {
+		html string
+		err  error
 	}
 
-	return &html, error
+	resultChan := make(chan result, 1)
+
+	go func() {
+		html := ""
+		var customErr error
+		err := rod.Try(func() {
+			page := r.browser.MustPage(url)
+			defer page.Close()
+
+			// Add initial wait for page load
+			page.MustWaitLoad()
+
+			for _, action := range actions {
+				switch action.Type() {
+				case ActionTypeClick:
+					clickAction := action.(*ClickAction)
+
+					if clickAction.Eq == nil {
+						page.MustElement(clickAction.Element).MustClick()
+						continue
+					}
+
+					elems := page.MustElements(clickAction.Element)
+					if *clickAction.Eq >= len(elems) {
+						customErr = fmt.Errorf("element not found, len == %d", len(elems))
+						return
+					}
+					elems[*clickAction.Eq].MustClick()
+
+				case ActionTypeWait:
+					waitAction := action.(*WaitAction)
+					if waitAction.Element != nil {
+						err := rod.Try(func() {
+							if waitAction.Timeout == nil {
+								page.MustElement(*waitAction.Element).MustWaitVisible()
+							} else {
+								page.MustElement(*waitAction.Element).Timeout(*waitAction.Timeout).MustWaitVisible()
+							}
+						})
+						if err != nil {
+							log.Println("Warning: timeout waiting for element")
+							continue
+						}
+					}
+					if waitAction.Duration != nil {
+						time.Sleep(*waitAction.Duration)
+					}
+
+				case ActionTypeNavigate:
+					navigateAction := action.(*NavigateAction)
+					page.MustNavigate(navigateAction.URL)
+					page.MustWaitNavigation()
+				}
+				page.MustWaitLoad()
+			}
+
+			// Increase timeout for request idle
+			page.WaitRequestIdle(5*time.Second, []string{""}, []string{}, excludeTypes)
+
+			h, err := page.HTML()
+			if err != nil {
+				customErr = err
+				return
+			}
+			html = h
+		})
+
+		// If rod.Try returned an error, return a safe error HTML.
+		if err != nil {
+			log.Println("Warning: there was an error in rod client. Returning error html but continuing.")
+			resultChan <- result{
+				html: fmt.Sprintf(`<html><body><h1>Error accessing page %s</h1></body></html>`, url),
+				err:  nil,
+			}
+			return
+		}
+		if customErr != nil {
+			resultChan <- result{
+				html: fmt.Sprintf(`<html><body><h1>Error accessing page %s: %s</h1></body></html>`, url, customErr.Error()),
+				err:  nil,
+			}
+			return
+		}
+		resultChan <- result{
+			html: html,
+			err:  nil,
+		}
+	}()
+
+	// Wait for the result or timeout after 15 seconds.
+	select {
+	case res := <-resultChan:
+		return &res.html, res.err
+	case <-time.After(timeoutDuration):
+		timeoutHTML := `<html><body><h1>Timeout accessing page</h1></body></html>`
+		return &timeoutHTML, nil
+	}
 }

@@ -8,6 +8,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api"
+	"github.com/segp/agents-main/crew"
+	"github.com/segp/agents-main/entity"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/utils"
@@ -20,8 +22,15 @@ func main() {
 
 	var (
 		store   = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE_KEY"))
-		agent   = agent.NewDefaultEventStoringLoggingFastAgent()
 		history = history.NewAgentEventHistory(store)
+
+		userQueryAgent     = agent.NewDefaultEventStoringLoggingUserQueryAgent()
+		personalTutorAgent = agent.NewDefaultEventStoringLoggingPersonalTutorAgent()
+
+		crew = crew.NewCrew(map[entity.Entity][]entity.Entity{
+			userQueryAgent:     {personalTutorAgent, entity.UserEntity},
+			personalTutorAgent: {},
+		})
 	)
 
 	port := os.Getenv("PORT")
@@ -32,7 +41,7 @@ func main() {
 	listenAddr := flag.String("listen", ":"+port, "HTTP server listen address")
 	flag.Parse()
 
-	server := api.NewServer(*listenAddr, store, agent, history)
+	server := api.NewServer(*listenAddr, store, userQueryAgent, crew, history)
 	log.Printf("Starting server on http://localhost%s", *listenAddr)
 	log.Fatal(server.Start())
 }

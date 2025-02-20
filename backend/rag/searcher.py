@@ -1,6 +1,8 @@
+import asyncio
 from embedder import embed
 import numpy as np
 from config import supabase, RAG_CHUNKS_TABLE_NAME
+import time
 
 
 #string, (text, embedding)
@@ -19,11 +21,11 @@ def search(query, tokenizer, model, chunks, k=5):
 
     return chunk_scores[:k]
 
-def get_supabase_rag_chunks(query, tokenizer, model, k=5, similarity_threshold=0.5):
-    embedded_query = embed(query, tokenizer, model)
-    
-    try:
-        chunks = supabase.rpc(
+async def match_rag_chunks(embedded_query, k, similarity_threshold):
+    start_time = time.time()
+    # Create a coroutine by wrapping the synchronous call in asyncio.to_thread
+    chunks = await asyncio.to_thread(
+        lambda: supabase.rpc(
             'match_rag_chunks',
             {
                 'query_embedding': embedded_query.tolist(),
@@ -31,8 +33,16 @@ def get_supabase_rag_chunks(query, tokenizer, model, k=5, similarity_threshold=0
                 'match_threshold': similarity_threshold
             }
         ).execute()
+    )
+    end_time = time.time()
+    print(f"Time taken to match chunks: {end_time - start_time} seconds")
+    return chunks
 
-        contacts = supabase.rpc(
+async def match_rag_contacts(embedded_query, k, similarity_threshold):
+    start_time = time.time()
+    # Create a coroutine by wrapping the synchronous call in asyncio.to_thread
+    contacts = await asyncio.to_thread(
+        lambda: supabase.rpc(
             'match_rag_contacts',
             {
                 'query_embedding': embedded_query.tolist(),
@@ -40,7 +50,27 @@ def get_supabase_rag_chunks(query, tokenizer, model, k=5, similarity_threshold=0
                 'match_threshold': similarity_threshold
             }
         ).execute()
+    )
+    end_time = time.time()
+    print(f"Time taken to match contacts: {end_time - start_time} seconds")
+    return contacts
+
+async def get_supabase_rag_chunks(query, tokenizer, model, k=5, similarity_threshold=0.5):
+    embedded_query = embed(query, tokenizer, model)
+    
+    try:
+        # Measure total time including embedding
+        total_start_time = time.time()
         
+        # Create tasks but don't await them yet
+        chunks_task = match_rag_chunks(embedded_query, k, similarity_threshold)
+        contacts_task = match_rag_contacts(embedded_query, k, similarity_threshold)
+        
+        # Run both tasks concurrently
+        chunks, contacts = await asyncio.gather(chunks_task, contacts_task)
+        
+        total_time = time.time() - total_start_time
+        print(f"Total time including parallel operations: {total_time} seconds")
         return {"chunks": chunks, "contacts": contacts}
     except Exception as e:
         print(f"Error in search_database: {e}")

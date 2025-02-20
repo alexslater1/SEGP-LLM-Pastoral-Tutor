@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/crew"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/storage"
 )
@@ -43,7 +45,7 @@ type ChatCompletionV2Response struct {
 	SessionID string `json:"session_id"`
 }
 
-func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.History) http.HandlerFunc {
+func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage, history history.History) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -70,13 +72,22 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 		}
 
 		go func() {
-			response, reasoning, err := agent.Run(r.Context(), req.Query)
+			answer, reason, err := crew.Run(r.Context(), req.Query, agent.Id())
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				return
 			}
 
-			slog.Info("agent response", "response", *response, "reason", *reasoning)
+			slog.Info("agent response", "answer", *answer)
+			if reason != nil {
+				slog.Info("agent response", "reason", *reason)
+			}
+
+			rr := storage.NewCompletionResult(requestId, answer, reason, err)
+			_, err = storage.Store(store, rr)
+			if err != nil {
+				slog.Error("error storing request result", "error", err.Error())
+			}
 		}()
 
 		sessionId, ok := context_keys.GetSessionID(ctx)
@@ -97,34 +108,92 @@ func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
+		rr, err := storage.GetAll[storage.CompletionResult](store, map[string]string{"request_id": requestId})
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error getting request result %v", err.Error()), http.StatusInternalServerError)
+			return
+		}
+
+		if len(rr) == 1 {
+			response := handleCompletedRequestResult(rr[0])
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		if len(rr) > 1 {
+			http.Error(w, "multiple request results found", http.StatusInternalServerError)
+			return
+		}
+
 		events, err := storage.GetAll[storage.AgentEvent](store, map[string]string{"request_id": requestId})
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error getting events %v", err.Error()), http.StatusInternalServerError)
 			return
 		}
 
-		response := chatCompletionV2StatusResponseFromEventsFastAgent(events)
-
-		json.NewEncoder(w).Encode(response)
+		json.NewEncoder(w).Encode(latestThinkingEventStatusResponse(events))
 	}
 }
 
-func chatCompletionV2StatusResponseFromEventsFastAgent(events []storage.AgentEvent) *ChatCompletionV2StatusResponse {
-	if len(events) == 0 {
+func handleCompletedRequestResult(rr storage.CompletionResult) *ChatCompletionV2StatusResponse {
+	if rr.Error != nil {
 		return &ChatCompletionV2StatusResponse{
-			Type: ChatCompletionV2StatusResponseTypePending,
+			Type:  ChatCompletionV2StatusResponseTypeError,
+			Error: *rr.Error,
 		}
 	}
 
-	newestEvent := events[0]
-	for _, event := range events {
-		if event.CreatedAt.After(*newestEvent.CreatedAt) {
-			newestEvent = event
+	if rr.Result != nil {
+		return &ChatCompletionV2StatusResponse{
+			Type:   ChatCompletionV2StatusResponseTypeCompleted,
+			Answer: *rr.Result,
 		}
 	}
 
-	return createStatusFromEvent(newestEvent)
+	panic("impossible state???")
 }
+
+func latestThinkingEventStatusResponse(events []storage.AgentEvent) *ChatCompletionV2StatusResponse {
+	slices.SortFunc(events, func(a, b storage.AgentEvent) int {
+		return b.CreatedAt.Compare(*a.CreatedAt)
+	})
+
+	for _, event := range events {
+		if event.Type == "tool_call_choice" {
+			metadata := event.Metadata.(map[string]interface{})
+			toolCallArgsStr := metadata["toolCallChoice"].(map[string]interface{})["arguments"].(string)
+			toolCallArgs := map[string]string{}
+			json.Unmarshal([]byte(toolCallArgsStr), &toolCallArgs)
+
+			return &ChatCompletionV2StatusResponse{
+				Type:          ChatCompletionV2StatusResponseTypePending,
+				CurrentAction: toolCallArgs["description_of_action"],
+			}
+		}
+	}
+
+	return &ChatCompletionV2StatusResponse{
+		Type:          ChatCompletionV2StatusResponseTypePending,
+		CurrentAction: "Thinking",
+	}
+}
+
+// func chatCompletionV2StatusResponseFromEventsFastAgent(events []storage.AgentEvent) *ChatCompletionV2StatusResponse{
+// 	if len(events) == 0 {
+// 		return &ChatCompletionV2StatusResponse{
+// 			Type: ChatCompletionV2StatusResponseTypePending,
+// 		}
+// 	}
+
+// 	newestEvent := events[0]
+// 	for _, event := range events {
+// 		if event.CreatedAt.After(*newestEvent.CreatedAt) {
+// 			newestEvent = event
+// 		}
+// 	}
+
+// 	return createStatusFromEvent(newestEvent)
+// }
 
 func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.Context, error) {
 	requestID, ok := context_keys.GetRequestID(ctx)
@@ -132,9 +201,14 @@ func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.C
 		return ctx, fmt.Errorf("request_id not found in context")
 	}
 
+	userID, ok := context_keys.GetUserID(ctx)
+	if !ok {
+		return ctx, fmt.Errorf("user_id not found in context")
+	}
+
 	sessionID, ok := context_keys.GetSessionID(ctx)
 	if !ok {
-		session, err := storage.Store(store, storage.NewSession(requestID))
+		session, err := storage.Store(store, storage.NewSession(requestID, userID))
 		if err != nil {
 			return ctx, fmt.Errorf("error creating session %v", err.Error())
 		}

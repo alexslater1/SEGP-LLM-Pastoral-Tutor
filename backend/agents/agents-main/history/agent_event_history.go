@@ -28,7 +28,7 @@ func (h *AgentEventHistory) GetMessageHistory(sessionId string) ([]string, error
 	messages := []string{}
 	for _, messageAndAction := range messagesAndActions {
 		message, response := messageAndResponseFrom(messageAndAction)
-		messages = append(messages, fmt.Sprintf("Query: %s\nResponse: %s\n", message, response))
+		messages = append(messages, fmt.Sprintf("User Message: %s\nAgent Response: %s\n", message, response))
 	}
 
 	return messages, nil

@@ -13,23 +13,25 @@ type AgentRequest struct {
 	CreatedAt *time.Time  `json:"created_at,omitempty"`
 	Endpoint  string      `json:"endpoint"`
 	Metadata  interface{} `json:"metadata,omitempty"`
+	UserID    string      `json:"user_id"`
 }
 
 func (ar AgentRequest) TableName() StorageTableName {
 	return StorageTableNameAgentRequests
 }
 
-func NewAgentRequest(endpoint string, metadata interface{}, chatID string) AgentRequest {
+func NewAgentRequest(endpoint string, metadata interface{}, userID string) AgentRequest {
 	return AgentRequest{
 		Endpoint: endpoint,
 		Metadata: metadata,
+		UserID:   userID,
 	}
 }
 
 type AgentEvent struct {
 	ID        int         `json:"id,omitempty"`
 	CreatedAt *time.Time  `json:"created_at,omitempty"`
-	RequestID string      `json:"request_id"`
+	RequestID string      `json:"request_id,omitempty"`
 	Type      string      `json:"type"`
 	Metadata  interface{} `json:"metadata,omitempty"`
 }
@@ -71,15 +73,17 @@ type Session struct {
 	CreatedAt          *time.Time `json:"created_at,omitempty"`
 	CreatedByRequestId string     `json:"created_by_request_id"`
 	Name               *string    `json:"name,omitempty"`
+	UserID             string     `json:"user_id"`
 }
 
 func (s Session) TableName() StorageTableName {
 	return StorageTableNameSessions
 }
 
-func NewSession(createdByRequestId string) Session {
+func NewSession(createdByRequestId string, userID string) Session {
 	return Session{
 		CreatedByRequestId: createdByRequestId,
+		UserID:             userID,
 	}
 }
 
@@ -112,4 +116,35 @@ func NewChatCheck() ChatCheck {
 
 func (ls ChatCheck) TableName() StorageTableName {
 	return StorageTableNameChatChecks
+
+type CompletionResult struct {
+	ID        int        `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	RequestID string     `json:"request_id"`
+	Result    *string    `json:"result,omitempty"`
+	Reason    *string    `json:"reason,omitempty"`
+	Error     *string    `json:"error,omitempty"`
+}
+
+func (cr CompletionResult) TableName() StorageTableName {
+	return StorageTableNameCompletionResults
+}
+
+func NewCompletionResult(requestID string, result *string, reason *string, err error) CompletionResult {
+	if err != nil {
+		errStr := err.Error()
+		return CompletionResult{
+			RequestID: requestID,
+			Result:    result,
+			Reason:    reason,
+			Error:     &errStr,
+		}
+	}
+
+	return CompletionResult{
+		RequestID: requestID,
+		Result:    result,
+		Reason:    reason,
+		Error:     nil,
+	}
 }

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/history"
+	"github.com/segp/agents-main/storage"
 )
 
 type MessageRole string
@@ -28,6 +30,24 @@ type QueryAndResponse struct {
 
 type ChatHistoryResponse struct {
 	Messages []QueryAndResponse `json:"query_and_responses"`
+}
+
+func SessionIdsForUser(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID, ok := context_keys.GetUserID(r.Context())
+		if !ok {
+			http.Error(w, "user_id not found in context", http.StatusInternalServerError)
+			return
+		}
+
+		sessions, err := storage.GetAll[storage.Session](store, map[string]string{"user_id": userID})
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to get sessions: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(sessions)
+	}
 }
 
 func ChatHistory(history history.History) http.HandlerFunc {

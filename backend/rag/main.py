@@ -61,7 +61,7 @@ async def get_rag_response(query: str, num_chunks: int = 5, similarity_threshold
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         
         # Search chunks based on query
-        retrieved = get_supabase_rag_chunks(query, tokenizer, model, num_chunks, similarity_threshold)
+        retrieved = await get_supabase_rag_chunks(query, tokenizer, model, num_chunks, similarity_threshold)
        
         return {"chunks": retrieved["chunks"], "contacts": retrieved["contacts"]}
     

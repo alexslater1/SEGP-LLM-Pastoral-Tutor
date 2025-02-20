@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"strings"
+
+	"github.com/segp/agents-main/entity"
 )
 
 type LoggingAgent struct {
@@ -14,7 +16,7 @@ func NewLoggingAgent(agent Agent) *LoggingAgent {
 	return &LoggingAgent{Agent: agent}
 }
 
-func (a *LoggingAgent) Run(ctx context.Context, input string) (*string, *string, error) {
+func (a *LoggingAgent) Run(ctx context.Context, input string) (*AgentResponse, error) {
 	ch := a.Subscribe()
 	defer a.Unsubscribe(ch)
 
@@ -23,12 +25,32 @@ func (a *LoggingAgent) Run(ctx context.Context, input string) (*string, *string,
 	return a.Agent.Run(ctx, input)
 }
 
+func (a *LoggingAgent) Id() string {
+	return a.Agent.Id()
+}
+
+func (a *LoggingAgent) Description() string {
+	return a.Agent.Description()
+}
+
 func (a *LoggingAgent) Subscribe() <-chan AgentEvent {
 	return a.Agent.Subscribe()
 }
 
 func (a *LoggingAgent) Unsubscribe(ch <-chan AgentEvent) {
 	a.Agent.Unsubscribe(ch)
+}
+
+func (a *LoggingAgent) clone() Agent {
+	return NewLoggingAgent(a.Agent.clone())
+}
+
+func (a *LoggingAgent) addCanOffloadToEntity(entities ...entity.Entity) {
+	a.Agent.addCanOffloadToEntity(entities...)
+}
+
+func (a *LoggingAgent) canOffloadToEntities() []entity.Entity {
+	return a.Agent.canOffloadToEntities()
 }
 
 func (a *LoggingAgent) loggingLoop(ch <-chan AgentEvent) {

@@ -127,8 +127,8 @@ func TestAgentEventGetMessageHistory(t *testing.T) {
 	}
 
 	assert.Equal(t, h, []string{
-		"Query: What is imperials policy on late coursework submissions?\nResponse: The current exchange rate is 1 USD = 0.814 GBP.\n",
-		"Query: What is the current exchange rate of USD to GBP?\nResponse: [PENDING]\n",
+		"User Message: What is imperials policy on late coursework submissions?\nAgent Response: The current exchange rate is 1 USD = 0.814 GBP.\n",
+		"User Message: What is the current exchange rate of USD to GBP?\nAgent Response: [PENDING]\n",
 	})
 }
 

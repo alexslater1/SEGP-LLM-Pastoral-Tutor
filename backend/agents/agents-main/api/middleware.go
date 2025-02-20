@@ -3,14 +3,19 @@ package api
 import (
 	"bytes"
 	"fmt"
+	"log"
+	"os"
+	"strings"
 
 	"encoding/json"
 	"io"
 
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/storage"
+	"github.com/segp/agents-main/utils"
 )
 
 type Middleware func(http.Handler) http.Handler
@@ -44,47 +49,43 @@ func (w *wrappedWriter) Write(data []byte) (int, error) {
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// var jwtSecret = os.Getenv("SUPABASE_JWT_SECRET")
+		var jwtSecret = utils.Required(os.Getenv("JWT_SECRET"), "JWT_SECRET is required")
 
-		// authHeader := r.Header.Get("Authorization")
-		// if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-		// 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-		// tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-		// 		return nil, jwt.ErrSignatureInvalid
-		// 	}
-		// 	return []byte(jwtSecret), nil
-		// })
+		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return []byte(jwtSecret), nil
+		})
 
-		// if err != nil || !token.Valid {
-		// 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
+		if err != nil || !token.Valid {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-		// // Extract user ID from token claims
-		// claims, ok := token.Claims.(jwt.MapClaims)
-		// if !ok || !token.Valid {
-		// 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
+		// Extract user ID from token claims
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-		// userID, ok := claims["sub"].(string)
-		// log.Println("id: ", userID)
-		// if !ok {
-		// 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
+		userID, ok := claims["sub"].(string)
+		log.Println("id: ", userID)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-		// // Add user ID to context
-		// ctx := context.WithValue(r.Context(), "USER_ID", userID)
-		// next.ServeHTTP(w, r.WithContext(ctx))
-
-		userID := "2fc9c0d0-833d-462b-9cd5-670c5d075bf6"
+		// Add user ID to context
 		ctx := context_keys.SetUserID(r.Context(), userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -132,7 +133,13 @@ func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler 
 			// do nothign
 		}
 
-		createdReq, err := storage.Store(store, storage.NewAgentRequest(path, extractedData, ""))
+		userID, ok := context_keys.GetUserID(r.Context())
+		if !ok {
+			http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+			return
+		}
+
+		createdReq, err := storage.Store(store, storage.NewAgentRequest(path, extractedData, userID))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error storing request %v", err.Error()), http.StatusInternalServerError)
 			return
@@ -145,8 +152,6 @@ func requestIdMiddleware(next http.Handler, store storage.Storage) http.Handler 
 
 func sessionIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("sessionIDMiddleware")
-
 		// Check if the request has a body to read
 		if r.Body != nil {
 			// Read the request body
@@ -162,7 +167,6 @@ func sessionIDMiddleware(next http.Handler) http.Handler {
 			if len(bodyBytes) > 0 {
 				var payload map[string]interface{}
 				if err := json.Unmarshal(bodyBytes, &payload); err == nil {
-					fmt.Println("payload: ", payload)
 					if sessionID, ok := payload["session_id"].(string); ok {
 						// If session_id is found, add it to the context
 						r = r.WithContext(context_keys.SetSessionID(r.Context(), sessionID))
