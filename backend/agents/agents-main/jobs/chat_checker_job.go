@@ -57,6 +57,8 @@ func (c *ChatCheckerJob) Run() error {
 		return fmt.Errorf("error getting stale sessions: %v", err)
 	}
 
+	fmt.Printf("Processing session ids: %+v\n", staleSessionIDs)
+
 	staleChats := make(map[string][]string)
 	for _, sessionID := range staleSessionIDs {
 		chats, err := c.history.GetMessageHistory(sessionID)
