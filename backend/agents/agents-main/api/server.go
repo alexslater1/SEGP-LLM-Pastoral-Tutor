@@ -41,8 +41,10 @@ func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, cr
 func (s *Server) routes() {
 	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.crew, s.agent, s.storage, s.history))
 	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(s.storage))
-	s.router.HandleFunc("GET /sessions/{session_id}", handlers.ChatHistory(s.history))
+
+	s.router.HandleFunc("GET /sessions/{session_id}/history", handlers.ChatHistory(s.history))
 	s.router.HandleFunc("GET /sessions", handlers.SessionIdsForUser(s.storage))
+	s.router.HandleFunc("GET /sessions/{session_id}", handlers.SessionFromId(s.storage))
 }
 
 func (s *Server) Start() error {

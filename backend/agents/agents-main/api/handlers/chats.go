@@ -50,6 +50,19 @@ func SessionIdsForUser(store storage.Storage) http.HandlerFunc {
 	}
 }
 
+func SessionFromId(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionId := r.PathValue("session_id")
+		session, err := storage.Get[storage.Session](store, sessionId)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to get session: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(session)
+	}
+}
+
 func ChatHistory(history history.History) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		chatId := r.PathValue("session_id")
