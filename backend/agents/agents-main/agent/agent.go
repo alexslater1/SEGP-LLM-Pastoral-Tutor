@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/segp/agents-main/clock"
-	"github.com/segp/agents-main/email"
+	// "github.com/segp/agents-main/email"
 	"github.com/segp/agents-main/entity"
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/history"
@@ -60,7 +60,7 @@ func NewDefaultUserQueryAgent() Agent {
 	return newFastAgent(
 		"user_query_agent",
 		"An agent that receives the user's query from the frontend. Has a plethora of tools to achieve general tasks.",
-		"You are a personal tutor agent for Imperial College London students, meant to answer the queries given to you by a student. You will be given a real user's query which comes directly from the frontend. You must answer the user in a way which is extremely supportive and helpful. Be mindful of the user's thinking. ",
+		"You are a user query agent. You will be given a real user's query which comes directly from the frontend. You are the only agent who is able to actually communicate with the end user, so remember to recall any information given to you by other agents, and use this in your answer. Answer to the user in a way which is condisderate and helpful. If there is anything concerning the user's wellbeing, you must offload this task to the personal tutor agent.",
 
 		toolHandler,
 		geminiLlm,
@@ -82,7 +82,7 @@ func NewPersonalTutorAgent() Agent {
 		agentEventHistory = history.NewAgentEventHistory(supabaseStore)
 
 		toolHandler = tools.NewToolHandler([]tools.Tool{
-			tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
+			// tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
 		})
 	)
 
