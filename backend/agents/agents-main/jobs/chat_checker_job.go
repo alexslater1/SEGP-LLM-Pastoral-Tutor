@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/segp/agents-main/email"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	flagging_prompt = `You are analyzing chat interactions between university students and an AI chatbot. The following chat you are reviewing recently went inactive, meaning the student has stopped responding. Your task is to assess whether the chat contains potential concerns that require follow-up from the pastoral care team. This should only happen in the case where the student is showing signs of distress or is in need of support. Examples include:
+	flagging_prompt = `You are analyzing chat interactions between university students and an AI chatbot. The following chat you are reviewing recently went inactive, meaning the student has stopped responding. Your task is to assess whether the chat contains potential concerns that require follow-up from the pastoral care team. This should only happen in the case where the student is explicitly showing signs of distress or is in need of support. Examples include:
 	-	Showing signs of distress
 	-	Showing signs of being overwhelmed
 	-	Showing signs of being stressed
@@ -50,18 +51,17 @@ func NewChatCheckerJob(store storage.Storage, history history.History, llm llm.L
 	}
 }
 
-func (c *ChatCheckerJob) Run() {
+func (c *ChatCheckerJob) Run() error {
 	staleSessionIDs, err := c.getStaleSessions()
 	if err != nil {
-		log.Printf("Error getting stale sessions: %v", err)
-		return
+		return fmt.Errorf("error getting stale sessions: %v", err)
 	}
 
 	staleChats := make(map[string][]string)
 	for _, sessionID := range staleSessionIDs {
 		chats, err := c.history.GetMessageHistory(sessionID)
 		if err != nil {
-			log.Printf("Error getting stale chats: %v", err)
+			return fmt.Errorf("error getting stale chats: %v", err)
 		}
 
 		staleChats[sessionID] = chats
@@ -70,7 +70,7 @@ func (c *ChatCheckerJob) Run() {
 	for _, chat := range staleChats {
 		emailBody, sendEmail, err := c.processChat(chat)
 		if err != nil {
-			log.Printf("Error processing chat: %v", err)
+			return fmt.Errorf("error processing chat: %v", err)
 		}
 
 		if sendEmail {
@@ -81,8 +81,10 @@ func (c *ChatCheckerJob) Run() {
 
 	_, err = storage.Store(c.store, storage.NewChatCheck())
 	if err != nil {
-		log.Print("Error updating last check time")
+		return fmt.Errorf("error updating last check time: %v", err)
 	}
+
+	return nil
 }
 
 func (c *ChatCheckerJob) processChat(chat []string) (string, bool, error) {
@@ -102,7 +104,7 @@ func (c *ChatCheckerJob) processChat(chat []string) (string, bool, error) {
 		return "", false, err
 	}
 
-	return parsedStructuredEmailResponse.EmailBody, parsedStructuredEmailResponse.SendEmail, nil
+	return fmt.Sprintf("%s\n\n Messages:\n%s", parsedStructuredEmailResponse.EmailBody, strings.Join(chat, "\n")), parsedStructuredEmailResponse.SendEmail, nil
 }
 
 func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
@@ -136,11 +138,7 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 		return sessionIDs, nil
 	}
 
-	log.Println(chatCheckData)
-
 	lastChecked := chatCheckData[0].CreatedAt
-
-	log.Println(lastChecked)
 
 	var staleSessionIDs []string
 	for _, requestSession := range latestRequestSessions {
@@ -150,4 +148,12 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 	}
 
 	return staleSessionIDs, nil
+}
+
+func (c *ChatCheckerJob) Interval() time.Duration {
+	return c.staleWindow
+}
+
+func (c *ChatCheckerJob) Name() string {
+	return "ChatCheckerJob"
 }
