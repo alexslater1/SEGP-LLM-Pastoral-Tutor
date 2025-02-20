@@ -105,8 +105,8 @@ func (rs RequestSession) TableName() StorageTableName {
 	return StorageTableNameRequestSessions
 }
 
-type RequestResult struct {
-	ID        string     `json:"id,omitempty"`
+type CompletionResult struct {
+	ID        int        `json:"id,omitempty"`
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	RequestID string     `json:"request_id"`
 	Result    *string    `json:"result,omitempty"`
@@ -114,15 +114,25 @@ type RequestResult struct {
 	Error     *string    `json:"error,omitempty"`
 }
 
-func (rr RequestResult) TableName() StorageTableName {
-	return StorageTableNameRequestResults
+func (cr CompletionResult) TableName() StorageTableName {
+	return StorageTableNameCompletionResults
 }
 
-func NewRequestResult(requestID string, result *string, reason *string, err *string) RequestResult {
-	return RequestResult{
+func NewCompletionResult(requestID string, result *string, reason *string, err error) CompletionResult {
+	if err != nil {
+		errStr := err.Error()
+		return CompletionResult{
+			RequestID: requestID,
+			Result:    result,
+			Reason:    reason,
+			Error:     &errStr,
+		}
+	}
+
+	return CompletionResult{
 		RequestID: requestID,
 		Result:    result,
 		Reason:    reason,
-		Error:     err,
+		Error:     nil,
 	}
 }
