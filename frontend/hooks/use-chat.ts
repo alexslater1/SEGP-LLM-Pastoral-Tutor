@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_QUERY_INTERVAL_SECONDS = 1;
 const IGNORED_ACTIONS: string[] = []; //["Thinking", "Thinking..."]
+const DEFAULT_FIRST_AGENT_MESSAGE = "Hi, I'm the Imperial College tutor agent. Ask me anything!"
 
 export type ChatItem = {
   messages: Message[];
@@ -20,9 +21,10 @@ export type ChatItem = {
 
 export type ChatItemProps = {
   id: string | null;
+  firstAgentMessage?: string;
 };
 
-export function useChat({ id }: ChatItemProps): ChatItem {
+export function useChat({ id, firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE }: ChatItemProps): ChatItem {
   const [messages, setMessages] = useState<Message[]>([]);
   const [requestIDPollingKey, setRequestIDPollingKey] = useState<string | null>(
     null
@@ -212,8 +214,20 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     return await checkStatusByRequestID(requestID, login_session);
   };
 
+  const makeFirstAgentMessage = () => {
+    const id = generateUUID();
+    return {
+      id: id + Role.ASSISTANT,
+      requestID: id,
+      content: firstAgentMessage,
+      role: Role.ASSISTANT,
+      actions: [],
+      status: Status.COMPLETED,
+    }
+  }
+
   return {
-    messages,
+    messages: [makeFirstAgentMessage(), ...messages],
     handleSubmit,
     isLoading:
       isSendPending || (isStatusPending && statusFetchStatus !== "idle"),

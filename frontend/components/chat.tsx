@@ -8,7 +8,8 @@ import { ChatHeader } from "@/components/chat-header";
 import { MultimodalInput } from "./multimodal-input";
 import { Messages } from "./messages";
 import { VisibilityType } from "./visibility-selector";
-import { useEffect } from "react";
+import { UserContext } from "@/lib/userContext";
+import { useContext } from "react";
 
 type MessageType = "initial" | "loading" | "error";
 
@@ -21,6 +22,10 @@ export function Chat({
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
+  const user = useContext(UserContext);
+  const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
+  const firstAgentMessage = `Hi ${capitalize(user?.name ?? "")}, I'm the Imperial College tutor agent. Ask me anything!`;
+
   const {
     messages,
     handleSubmit,
@@ -31,7 +36,9 @@ export function Chat({
     isInitialLoad,
   } = useChat({
     id,
+    firstAgentMessage: firstAgentMessage
   });
+
 
   return isInitialLoad ? (
     <FullScreenMessage messageType="loading" />

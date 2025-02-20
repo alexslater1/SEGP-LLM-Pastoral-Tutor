@@ -17,10 +17,14 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { UserContext } from '@/lib/userContext';
+import { useContext } from 'react';
 
-export function AppSidebar({ user }: { user: User | undefined }) {
+
+export function AppSidebar() {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
+  const user = useContext(UserContext);
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
