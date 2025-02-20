@@ -36,9 +36,11 @@ func main() {
 			personalTutorAgent: {},
 		})
 
+		llm = llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+
 		js = []jobs.Job{
 			// jobs.NewChatCheckerJob(store, history, llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")), email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),
-			jobs.NewChatCheckerJob(store, history, llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")), email.NewMockEmailClient(), 30*time.Minute),
+			jobs.NewChatCheckerJob(store, history, llm, email.NewMockEmailClient(), 30*time.Minute),
 		}
 
 		jobManager = jobs.NewJobManager(js)
@@ -52,7 +54,7 @@ func main() {
 	listenAddr := flag.String("listen", ":"+port, "HTTP server listen address")
 	flag.Parse()
 
-	server := api.NewServer(*listenAddr, store, userQueryAgent, crew, history, jobManager)
+	server := api.NewServer(*listenAddr, store, userQueryAgent, crew, history, jobManager, llm)
 	log.Printf("Starting server on http://localhost%s", *listenAddr)
 	log.Fatal(server.Start())
 }

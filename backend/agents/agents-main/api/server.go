@@ -9,6 +9,7 @@ import (
 	"github.com/segp/agents-main/crew"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/jobs"
+	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -21,9 +22,10 @@ type Server struct {
 	crew       *crew.Crew
 	history    history.History
 	jobManager *jobs.JobManager
+	llm        llm.LLM
 }
 
-func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, crew *crew.Crew, history history.History, jobManager *jobs.JobManager) *Server {
+func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, crew *crew.Crew, history history.History, jobManager *jobs.JobManager, llm llm.LLM) *Server {
 	s := &Server{
 		listenAddr: listenAddr,
 		router:     http.NewServeMux(),
@@ -32,6 +34,7 @@ func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, cr
 		crew:       crew,
 		history:    history,
 		jobManager: jobManager,
+		llm:        llm,
 	}
 
 	s.routes()
@@ -39,7 +42,7 @@ func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, cr
 }
 
 func (s *Server) routes() {
-	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.crew, s.agent, s.storage, s.history))
+	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.crew, s.agent, s.storage, s.history, s.llm))
 	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(s.storage))
 
 	s.router.HandleFunc("GET /sessions/{session_id}/history", handlers.ChatHistory(s.history))

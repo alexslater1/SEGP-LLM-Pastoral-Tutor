@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -12,6 +13,7 @@ import (
 	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/crew"
 	"github.com/segp/agents-main/history"
+	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 )
 
@@ -45,7 +47,7 @@ type ChatCompletionV2Response struct {
 	SessionID string `json:"session_id"`
 }
 
-func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage, history history.History) http.HandlerFunc {
+func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage, history history.History, llm llm.LLM) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -65,7 +67,7 @@ func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage,
 		}
 
 		// TODO: put this in different thread maybe? Idk might break some stuff
-		ctx, err := linkSessionToRequest(r.Context(), store)
+		ctx, err := linkSessionToRequest(r.Context(), store, req.Query, llm)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error linking session to request %v", err.Error()), http.StatusInternalServerError)
 			return
@@ -195,7 +197,7 @@ func latestThinkingEventStatusResponse(events []storage.AgentEvent) *ChatComplet
 // 	return createStatusFromEvent(newestEvent)
 // }
 
-func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.Context, error) {
+func linkSessionToRequest(ctx context.Context, store storage.Storage, query string, llm llm.LLM) (context.Context, error) {
 	requestID, ok := context_keys.GetRequestID(ctx)
 	if !ok {
 		return ctx, fmt.Errorf("request_id not found in context")
@@ -213,6 +215,8 @@ func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.C
 			return ctx, fmt.Errorf("error creating session %v", err.Error())
 		}
 
+		go handleSetSessionName(llm, store, session.ID, query)
+
 		ctx = context_keys.SetSessionID(ctx, session.ID)
 		sessionID = session.ID
 	}
@@ -223,4 +227,24 @@ func linkSessionToRequest(ctx context.Context, store storage.Storage) (context.C
 	}
 
 	return ctx, nil
+}
+
+func handleSetSessionName(llm llm.LLM, store storage.Storage, sessionId string, query string) (string, error) {
+
+	const prompt = `Given the following query "%s", generate a name for the session. The name should be a single sentence that captures the essence of the query. Your response should be just the name and nothing else`
+
+	resp, err := llm.ChatCompletion(context.TODO(), fmt.Sprintf(prompt, query))
+	if err != nil {
+		log.Printf("error generating session name %v", err.Error())
+		return "", fmt.Errorf("error generating session name %v", err.Error())
+	}
+
+	session, err := storage.Update[storage.Session](store, sessionId, map[string]interface{}{"name": *resp})
+	if err != nil {
+		log.Printf("error updating session name %v", err.Error())
+		return "", fmt.Errorf("error updating session name %v", err.Error())
+	}
+
+	log.Printf("session name set to %v", *session.Name)
+	return *session.Name, nil
 }
