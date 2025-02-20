@@ -13,6 +13,8 @@ type SupabaseStorage struct {
 }
 
 func NewSupabaseStorage(supabaseUrl, supabaseServiceKey string) *SupabaseStorage {
+	utils.Required(supabaseUrl, "supabaseUrl")
+	utils.Required(supabaseServiceKey, "supabaseServiceKey")
 
 	return &SupabaseStorage{
 		client: supa.CreateClient(utils.Required(supabaseUrl, "supabaseUrl"), utils.Required(supabaseServiceKey, "supabaseServiceKey")),

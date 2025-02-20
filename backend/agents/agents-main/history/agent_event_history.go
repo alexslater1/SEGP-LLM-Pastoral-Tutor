@@ -113,7 +113,11 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 
 		if event.Type == "query" {
 			q := event.Metadata.(map[string]interface{})["query"].(string)
-			query = &q
+			if query == nil {
+				// we only care about the first agent's query
+				// is a quick fix, realistically would like to get the query from the request table metadata itself
+				query = &q
+			}
 		}
 	}
 

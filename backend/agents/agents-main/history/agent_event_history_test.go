@@ -1,9 +1,13 @@
 package history
 
 import (
+	"fmt"
+	"log"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/storage"
 	"github.com/stretchr/testify/assert"
 )
@@ -115,6 +119,13 @@ var (
 	store = storage.NewMemoryStorage()
 )
 
+func TestMain(m *testing.M) {
+	if err := godotenv.Load("../../../.env"); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	os.Exit(m.Run())
+}
+
 func TestAgentEventGetMessageHistory(t *testing.T) {
 	storage.StoreAll(store, requestSession1, requestSession2)
 	storage.StoreAll(store, eventQuery1, eventQuery2, event1, event2, event3, event4, event5)
@@ -166,4 +177,20 @@ func TestAgentEventGetMessagesAndActions(t *testing.T) {
 func timeAdd(t time.Time, d time.Duration) *time.Time {
 	t = t.Add(d)
 	return &t
+}
+
+func TestGetMessagesAndActions(t *testing.T) {
+	var (
+		sessionID = "979c9168-29b4-46f9-9128-8e7e13829f3f"
+		store     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+	)
+
+	history := NewAgentEventHistory(store)
+
+	messagesAndActions, err := history.GetMessagesAndActions(sessionID)
+	if err != nil {
+		t.Fatalf("failed to get message history: %v", err)
+	}
+
+	fmt.Printf("messagesAndActions: %+v\n", messagesAndActions)
 }
