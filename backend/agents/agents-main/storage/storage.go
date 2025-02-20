@@ -14,6 +14,7 @@ const (
 	StorageTableNameChats           StorageTableName = "Chat"
 	StorageTableNameSessions        StorageTableName = "sessions"
 	StorageTableNameRequestSessions StorageTableName = "request_sessions"
+	StorageTableNameRequestResults  StorageTableName = "request_results"
 )
 
 type Storage interface {

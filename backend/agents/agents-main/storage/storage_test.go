@@ -78,3 +78,33 @@ func TestStorage_GetAll(t *testing.T) {
 	assert.Equal(t, reqs[0].ID, res[0].ID)
 	assert.Equal(t, reqs[2].ID, res[1].ID)
 }
+
+func TestStorage_NewRequestResult(t *testing.T) {
+	var (
+		result = "result1"
+		reason = "reason1"
+		errorr = "error1"
+
+		store = NewMemoryStorage()
+	)
+
+	rr := NewRequestResult("request1", &result, &reason, &errorr)
+	assert.Equal(t, "request1", rr.RequestID)
+	assert.Equal(t, "result1", *rr.Result)
+	assert.Equal(t, "reason1", *rr.Reason)
+	assert.Equal(t, "error1", *rr.Error)
+
+	res, err := Store(store, rr)
+	assert.NoError(t, err)
+	assert.Equal(t, rr.RequestID, res.RequestID)
+	assert.Equal(t, rr.Result, res.Result)
+	assert.Equal(t, rr.Reason, res.Reason)
+	assert.Equal(t, rr.Error, res.Error)
+
+	res, err = Get[RequestResult](store, res.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, rr.RequestID, res.RequestID)
+	assert.Equal(t, rr.Result, res.Result)
+	assert.Equal(t, rr.Reason, res.Reason)
+	assert.Equal(t, rr.Error, res.Error)
+}

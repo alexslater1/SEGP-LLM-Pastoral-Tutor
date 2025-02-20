@@ -104,3 +104,25 @@ func NewRequestSession(sessionID string, requestID string) RequestSession {
 func (rs RequestSession) TableName() StorageTableName {
 	return StorageTableNameRequestSessions
 }
+
+type RequestResult struct {
+	ID        string     `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	RequestID string     `json:"request_id"`
+	Result    *string    `json:"result,omitempty"`
+	Reason    *string    `json:"reason,omitempty"`
+	Error     *string    `json:"error,omitempty"`
+}
+
+func (rr RequestResult) TableName() StorageTableName {
+	return StorageTableNameRequestResults
+}
+
+func NewRequestResult(requestID string, result *string, reason *string, err *string) RequestResult {
+	return RequestResult{
+		RequestID: requestID,
+		Result:    result,
+		Reason:    reason,
+		Error:     err,
+	}
+}
