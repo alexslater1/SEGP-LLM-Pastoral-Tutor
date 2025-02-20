@@ -6,7 +6,7 @@ import { Session } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_QUERY_INTERVAL_SECONDS = 1;
-const IGNORED_ACTIONS: string[] = []//["Thinking", "Thinking..."]
+const IGNORED_ACTIONS: string[] = []; //["Thinking", "Thinking..."]
 
 export type ChatItem = {
   messages: Message[];
@@ -16,30 +16,41 @@ export type ChatItem = {
   error: string | null;
   id: string | null;
   isInitialLoad: boolean;
-}
+};
 
 export type ChatItemProps = {
   id: string | null;
-}
+};
 
 export function useChat({ id }: ChatItemProps): ChatItem {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [requestIDPollingKey, setRequestIDPollingKey] = useState<string | null>(null);
+  const [requestIDPollingKey, setRequestIDPollingKey] = useState<string | null>(
+    null
+  );
   const [chatSessionID, setChatSessionID] = useState<string | null>(id);
   const [updatedStatus, setUpdatedStatus] = useState(true);
 
-  const {data: allMessages, isPending: isAllMessagesPending, error: allMessagesError, fetchStatus: allMessagesFetchStatus} = useQuery({
+  const {
+    data: allMessages,
+    isPending: isAllMessagesPending,
+    error: allMessagesError,
+    fetchStatus: allMessagesFetchStatus,
+  } = useQuery({
     queryKey: ["all-messages", chatSessionID],
-    queryFn: () => loadAllMessages(),
+    queryFn: async () => {
+      const allMessages = await loadAllMessages();
+      setMessages(allMessages);
+      return allMessages;
+    },
     staleTime: Infinity,
     enabled: !!chatSessionID,
   });
 
-  if (allMessages && messages.length === 0) {
-    setMessages(allMessages);
-  }
-
-  const {isPending: isStatusPending, error: statusError, fetchStatus: statusFetchStatus} = useQuery({
+  const {
+    isPending: isStatusPending,
+    error: statusError,
+    fetchStatus: statusFetchStatus,
+  } = useQuery({
     queryKey: ["status", requestIDPollingKey],
     queryFn: async () => {
       setUpdatedStatus(false);
@@ -48,72 +59,109 @@ export function useChat({ id }: ChatItemProps): ChatItem {
       return statusResponse;
     },
     enabled: !!requestIDPollingKey,
-    refetchInterval: requestIDPollingKey ? STATUS_QUERY_INTERVAL_SECONDS * 1000 : false,
-    refetchIntervalInBackground: false
+    refetchInterval: requestIDPollingKey
+      ? STATUS_QUERY_INTERVAL_SECONDS * 1000
+      : false,
+    refetchIntervalInBackground: false,
   });
 
-  const updateLastMessage = (statusResponse: BackendStatusResponse) => {
-    if (messages.length > 0 &&
-        messages[messages.length - 1].role === Role.ASSISTANT
+  const newLastMessageFrom = (statusResponse: BackendStatusResponse) => {
+    const currentLastMessage = messages[messages.length - 1];
+
+    if (statusResponse.type === Status.COMPLETED) {
+      console.log("COMPLETED");
+      currentLastMessage.status = Status.COMPLETED;
+      currentLastMessage.content = statusResponse.answer as string;
+      stop();
+      return currentLastMessage;
+    }
+
+    if (statusResponse.type === Status.FAILED) {
+      console.log("FAILED");
+      currentLastMessage.status = Status.FAILED;
+      currentLastMessage.content = statusResponse.error as string;
+      stop();
+      return currentLastMessage;
+    }
+
+    console.log("PENDING");
+    currentLastMessage.status = Status.PENDING;
+    const newCurrentAction = statusResponse.current_action as string;
+    if (
+      currentLastMessage.actions.length > 0 &&
+      newCurrentAction ==
+        currentLastMessage.actions[currentLastMessage.actions.length - 1]
     ) {
-      let lastMessage = structuredClone(messages[messages.length - 1]);
-      if (statusResponse.type === Status.COMPLETED) {
-        lastMessage.status = Status.COMPLETED;
-        lastMessage.content = statusResponse.answer as string;
-        setRequestIDPollingKey(null);
-      } else if (
-          statusResponse.type === Status.PENDING && 
-          statusResponse.current_action !== lastMessage.actions[lastMessage.actions.length - 1] &&
-          !IGNORED_ACTIONS.includes(statusResponse.current_action as string)
-      ) {
-        lastMessage.status = Status.PENDING;
-        lastMessage.actions.push(statusResponse.current_action as string)
-      } else if (statusResponse.type === Status.FAILED) {
-        lastMessage.status = Status.FAILED;
-        lastMessage.content = statusResponse.error as string;
-        setRequestIDPollingKey(null);
-      }
+      return currentLastMessage;
+    }
+    currentLastMessage.actions.push(statusResponse.current_action as string);
+    return currentLastMessage;
+  };
+
+  const updateLastMessage = (statusResponse: BackendStatusResponse) => {
+    if (
+      messages.length > 0 &&
+      messages[messages.length - 1].role === Role.ASSISTANT
+    ) {
+      const lastMessage = newLastMessageFrom(statusResponse);
 
       setMessages((messages) => {
-        let newMessages = [...messages];
-        newMessages[newMessages.length - 1] = lastMessage;
+        let newMessages = [...messages.slice(0, -1), lastMessage];
         return newMessages;
       });
     }
-  }
+  };
 
-  const {mutate: sendMessage, isPending: isSendPending, error: sendError} = useMutation({
-    mutationFn: ({query, newMessages}: {query: string, newMessages: Message[]}) => sendMessageAndGetResponse(query),
-    onSuccess: (newMessage, {newMessages}) => {
+  const {
+    mutate: sendMessage,
+    isPending: isSendPending,
+    error: sendError,
+  } = useMutation({
+    mutationFn: ({
+      query,
+      newMessages,
+    }: {
+      query: string;
+      newMessages: Message[];
+    }) => sendMessageAndGetResponse(query),
+    onSuccess: (newMessage, { newMessages }) => {
       setMessages([...newMessages, newMessage]);
       setRequestIDPollingKey(newMessage.requestID);
-    }
+    },
   });
 
   const handleSubmit = (query: string) => {
     const id = generateUUID();
-    const newMessages = [...messages, {
-      id: id + Role.USER,
-      requestID: id,
-      content: query,
-      role: Role.USER,
-      actions: [],
-      status: Status.COMPLETED
-    }];
+    const newMessages = [
+      ...messages,
+      {
+        id: id + Role.USER,
+        requestID: id,
+        content: query,
+        role: Role.USER,
+        actions: [],
+        status: Status.COMPLETED,
+      },
+    ];
+
+    // add user's message to the messages array
     setMessages(newMessages);
-    sendMessage({query, newMessages});
-  }
+    sendMessage({ query, newMessages });
+  };
 
   const stop = () => {
     setRequestIDPollingKey(null);
-  }
+  };
 
   const loadAllMessages = async (): Promise<Message[]> => {
     const login_session = await getUserSession();
     if (!login_session) {
       throw new Error("User not logged in");
     } else if (chatSessionID) {
-      const { messages, error: loadError } = await fetchAllMessagesByID(chatSessionID, login_session);
+      const { messages, error: loadError } = await fetchAllMessagesByID(
+        chatSessionID,
+        login_session
+      );
       if (loadError) {
         throw new Error(loadError);
       } else {
@@ -122,7 +170,7 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     } else {
       return [];
     }
-  }
+  };
 
   const sendMessageAndGetResponse = async (query: string): Promise<Message> => {
     const loginSession = await getUserSession();
@@ -130,8 +178,11 @@ export function useChat({ id }: ChatItemProps): ChatItem {
       throw new Error("User not logged in");
     }
 
-    const { requestID, sessionID: newSessionID, error: sendError } = 
-      await sendMessageToBackend(chatSessionID, query, loginSession);
+    const {
+      requestID,
+      sessionID: newSessionID,
+      error: sendError,
+    } = await sendMessageToBackend(chatSessionID, query, loginSession);
 
     if (sendError) {
       let id = generateUUID();
@@ -142,19 +193,19 @@ export function useChat({ id }: ChatItemProps): ChatItem {
         role: Role.ASSISTANT,
         actions: [],
         status: Status.FAILED,
-      }
+      };
     } else {
       setChatSessionID(newSessionID as string);
       return {
-        id: requestID as string + Role.ASSISTANT,
+        id: (requestID as string) + Role.ASSISTANT,
         requestID: requestID as string,
         content: "Thinking..",
         role: Role.ASSISTANT,
         actions: [],
         status: Status.PENDING,
-      }
+      };
     }
-  }
+  };
 
   const checkStatus = async (requestID: string) => {
     const login_session = await getUserSession();
@@ -163,41 +214,52 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     }
 
     return await checkStatusByRequestID(requestID, login_session);
-  }
+  };
 
-  console.log({isSendPending, isStatusPending, statusFetchStatus, isAllMessagesPending, allMessagesFetchStatus});
+  console.log({
+    isSendPending,
+    isStatusPending,
+    statusFetchStatus,
+    isAllMessagesPending,
+    allMessagesFetchStatus,
+  });
 
-  
-
-  return { 
+  return {
     messages,
     handleSubmit,
-    isLoading: isSendPending || (isStatusPending && statusFetchStatus !== "idle"),
+    isLoading:
+      isSendPending || (isStatusPending && statusFetchStatus !== "idle"),
     stop,
-    error: sendError?.message || statusError?.message || allMessagesError?.message || null,
+    error:
+      sendError?.message ||
+      statusError?.message ||
+      allMessagesError?.message ||
+      null,
     id: chatSessionID,
     isInitialLoad: isAllMessagesPending && allMessagesFetchStatus !== "idle",
   };
 }
 
 type BackendResponsePastQueryAndAnswer = {
-  type: Status,
-  answer?: string,
-  current_action?: string,
-  error?: string,
-  query: string,
-  request_id: string,
-  actions: string[],
-}
+  type: Status;
+  answer?: string;
+  current_action?: string;
+  error?: string;
+  query: string;
+  request_id: string;
+  actions: string[];
+};
 
 type BackendReponsePastQueriesAndAnswers = BackendResponsePastQueryAndAnswer[];
 
 type AllBackendMessages = {
-  messages: Message[],
-  error: string | null,
-}
+  messages: Message[];
+  error: string | null;
+};
 
-function parseBackendResponse(response: BackendReponsePastQueriesAndAnswers): Message[] {
+function parseBackendResponse(
+  response: BackendReponsePastQueriesAndAnswers
+): Message[] {
   let messages: Message[] = [];
   response.forEach((item) => {
     messages.push({
@@ -211,123 +273,158 @@ function parseBackendResponse(response: BackendReponsePastQueriesAndAnswers): Me
     messages.push({
       id: item.request_id + Role.ASSISTANT,
       requestID: item.request_id,
-      content: item.type === Status.COMPLETED ? item.answer as string : 
-               item.type === Status.PENDING ? "Thinking..." :
-               item.error as string,
+      content:
+        item.type === Status.COMPLETED
+          ? (item.answer as string)
+          : item.type === Status.PENDING
+          ? "Thinking..."
+          : (item.error as string),
       role: Role.ASSISTANT,
-      actions: item.actions.filter((action) => !IGNORED_ACTIONS.includes(action))
-        .concat(item.type === Status.PENDING ? [item.current_action as string] : []),
+      actions: item.actions
+        .filter((action) => !IGNORED_ACTIONS.includes(action))
+        .concat(
+          item.type === Status.PENDING ? [item.current_action as string] : []
+        ),
       status: item.type,
     });
   });
   return messages;
 }
 
-async function fetchAllMessagesByID (id: string, session: Session): Promise<AllBackendMessages> {
+async function fetchAllMessagesByID(
+  id: string,
+  session: Session
+): Promise<AllBackendMessages> {
   try {
-    const completionEndpoint = "/sessions/" + id
-    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
-        method: 'GET',
+    const completionEndpoint = "/sessions/" + id;
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
+      {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        }
-    });
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    );
 
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    let backendResponse = await response.json() as BackendReponsePastQueriesAndAnswers;
+    let backendResponse =
+      (await response.json()) as BackendReponsePastQueriesAndAnswers;
     let messages = parseBackendResponse(backendResponse);
 
     return {
       messages,
       error: null,
-    }
+    };
   } catch (currentError) {
-    console.error('Error:', (currentError as Error).message);
+    console.error("Error:", (currentError as Error).message);
     return {
       messages: [],
       error: (currentError as Error).message,
-    }
-  } 
+    };
+  }
 }
 
 type RawBackendResponseCompletion = {
-  request_id: string,
-  session_id: string,
-}
+  request_id: string;
+  session_id: string;
+};
 
 type BackendResponseCompletion = {
-  requestID?: string,
-  sessionID?: string,
-  error: string | null,
-}
+  requestID?: string;
+  sessionID?: string;
+  error: string | null;
+};
 
-async function sendMessageToBackend (id: string | null, message: string, session: Session): Promise<BackendResponseCompletion> {
+async function sendMessageToBackend(
+  id: string | null,
+  message: string,
+  session: Session
+): Promise<BackendResponseCompletion> {
   try {
-    const completionEndpoint = "/completion/v2"
-    console.log({id, message, session: session.access_token});
-    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
-        method: 'POST',
+    const completionEndpoint = "/completion/v2";
+    console.log({ id, message, session: session.access_token });
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
+      {
+        method: "POST",
         headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(id ?{
-          query: message,
-          session_id: id,
-        } : {
-          query: message,
-        }),
-    });
+        body: JSON.stringify(
+          id
+            ? {
+                query: message,
+                session_id: id,
+              }
+            : {
+                query: message,
+              }
+        ),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status} ${response.statusText} ${response.body}`);
+      throw new Error(
+        `HTTP error! status: ${response.status} ${response.statusText} ${response.body}`
+      );
     }
 
-    let backendResponse = await response.json() as RawBackendResponseCompletion;
+    let backendResponse =
+      (await response.json()) as RawBackendResponseCompletion;
     return {
       requestID: backendResponse.request_id,
       sessionID: backendResponse.session_id,
       error: null,
-    }
+    };
   } catch (currentError) {
-    console.error('Error:', (currentError as Error).message);
+    console.error("Error:", (currentError as Error).message);
     return {
       error: (currentError as Error).message,
-    }
+    };
   }
 }
 
 type BackendStatusResponse = {
-    type: Status,
-    error?: string,
-    answer?: string,
-    current_action?: string,
-}
+  type: Status;
+  error?: string;
+  answer?: string;
+  current_action?: string;
+};
 
-async function checkStatusByRequestID(requestID: string, session: Session): Promise<BackendStatusResponse> {
+async function checkStatusByRequestID(
+  requestID: string,
+  session: Session
+): Promise<BackendStatusResponse> {
   try {
-    const completionEndpoint = "/completion/v2/status/" + requestID
-    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint, {
-        method: 'GET',
+    const completionEndpoint = "/completion/v2/status/" + requestID;
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
+      {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        }
-    });
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `HTTP error! status: ${response.status} ${response.statusText}`
+      );
     }
 
-    let backendResponse = await response.json() as BackendStatusResponse;
-    return backendResponse
+    let backendResponse = (await response.json()) as BackendStatusResponse;
+    return backendResponse;
   } catch (currentError) {
-    console.error('Error:', currentError);
+    console.error("Error:", currentError);
     return {
       type: Status.FAILED,
       error: (currentError as Error).message,
-    }
+    };
   }
 }

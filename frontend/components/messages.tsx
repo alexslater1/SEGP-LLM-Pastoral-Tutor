@@ -1,8 +1,8 @@
-import { Message, Status } from '@/types/message';
-import { ErrorMessage, PreviewMessage, ThinkingMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import { memo, useEffect } from 'react';
-import equal from 'fast-deep-equal/es6/react';
+import { Message, Status } from "@/types/message";
+import { ErrorMessage, PreviewMessage, ThinkingMessage } from "./message";
+import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { memo, useEffect } from "react";
+import equal from "fast-deep-equal/es6/react";
 
 interface MessagesProps {
   chatId: string | null;
@@ -22,7 +22,7 @@ function PureMessages({
 
   useEffect(() => {
     if (chatId) {
-      window.history.replaceState({}, '', `/chat/${chatId}`);
+      window.history.replaceState({}, "", `/chat/${chatId}`);
     }
   }, [chatId]);
 
@@ -30,32 +30,33 @@ function PureMessages({
     <div
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
-
     >
-      {messages.map((message, index) => (
-        message.status === Status.COMPLETED ?
+      {messages.map((message, index) =>
+        message.status === Status.COMPLETED ? (
           <PreviewMessage
             key={message.id}
             chatId={chatId}
             message={message}
             isLoading={isLoading && messages.length - 1 === index}
             isReadonly={isReadonly}
-          /> :
-        message.status === Status.PENDING && message.actions.length !== 0 ?
-          <ThinkingMessage 
-            key={message.id} 
-            message={message.actions[message.actions.length - 1]} 
-          /> :
-        message.status === Status.PENDING && message.actions.length === 0 ?
-          <ThinkingMessage 
-            key={message.id} 
-          /> :
+          />
+        ) : message.status === Status.PENDING &&
+          message.actions.length !== 0 ? (
+          <ThinkingMessage
+            key={message.id}
+            message={message.actions[message.actions.length - 1]}
+          />
+        ) : message.status === Status.PENDING &&
+          message.actions.length === 0 ? (
+          <ThinkingMessage key={message.id} />
+        ) : (
           <ErrorMessage error={message.content} />
-      ))}
+        )
+      )}
 
       {isLoading &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === "user" && <ThinkingMessage />}
 
       <div
         ref={messagesEndRef}
@@ -65,11 +66,4 @@ function PureMessages({
   );
 }
 
-export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
-  if (prevProps.isLoading && nextProps.isLoading) return false;
-  if (prevProps.messages.length !== nextProps.messages.length) return false;
-  if (!equal(prevProps.messages, nextProps.messages)) return false;
-
-  return true;
-});
+export const Messages = PureMessages;
