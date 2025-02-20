@@ -231,7 +231,7 @@ func linkSessionToRequest(ctx context.Context, store storage.Storage, query stri
 
 func handleSetSessionName(llm llm.LLM, store storage.Storage, sessionId string, query string) (string, error) {
 
-	const prompt = `Given the following query "%s", generate a name for the session. The name should be a single sentence that captures the essence of the query. Your response should be just the name and nothing else`
+	const prompt = `Given the following query "%s", generate a name for the session. The name should be a single sentence that captures the essence of the query. Your response should be just the name and nothing else, with no punctuation at the end`
 
 	resp, err := llm.ChatCompletion(context.TODO(), fmt.Sprintf(prompt, query))
 	if err != nil {
