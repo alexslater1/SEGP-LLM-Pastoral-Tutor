@@ -9,12 +9,12 @@ import (
 type StorageTableName string
 
 const (
-	StorageTableNameAgentRequests   StorageTableName = "agent_requests"
-	StorageTableNameAgentEvents     StorageTableName = "agent_events"
-	StorageTableNameChats           StorageTableName = "Chat"
-	StorageTableNameSessions        StorageTableName = "sessions"
-	StorageTableNameRequestSessions StorageTableName = "request_sessions"
-	StorageTableNameChatChecks		StorageTableName = "chat_checks"
+	StorageTableNameAgentRequests     StorageTableName = "agent_requests"
+	StorageTableNameAgentEvents       StorageTableName = "agent_events"
+	StorageTableNameChats             StorageTableName = "Chat"
+	StorageTableNameSessions          StorageTableName = "sessions"
+	StorageTableNameRequestSessions   StorageTableName = "request_sessions"
+	StorageTableNameChatChecks        StorageTableName = "chat_checks"
 	StorageTableNameCompletionResults StorageTableName = "completion_results"
 )
 
@@ -24,6 +24,8 @@ type Storage interface {
 
 	get(table StorageTableName, id string) (interface{}, error)
 	getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error)
+
+	update(table StorageTableName, id string, updateFields map[string]interface{}) (interface{}, error)
 }
 
 func Get[T StorageType](storage Storage, id string) (*T, error) {
@@ -120,6 +122,28 @@ func StoreAll[T StorageType](storage Storage, data ...T) ([]T, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
 		}
+	}
+
+	return ret, nil
+}
+
+func Update[T StorageType](storage Storage, id string, updateFields map[string]interface{}) (*T, error) {
+	var t T
+
+	d, err := storage.update(t.TableName(), id, updateFields)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData, err := json.Marshal(d)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal data to JSON: %v", err)
+	}
+
+	ret := new(T)
+	err = json.Unmarshal(jsonData, ret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
 	}
 
 	return ret, nil

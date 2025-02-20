@@ -76,3 +76,18 @@ func TestStoreSupabaseStorageStoreAgentEvent(t *testing.T) {
 
 	fmt.Printf("Data: %+v\n", data)
 }
+
+func TestSupabaseStorageUpdate(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	updated, err := Update[Session](storage, "0a54185d-64c3-4a4b-8e98-ccb6cec6c248", map[string]interface{}{"name": "such a good name"})
+	if err != nil {
+		t.Error("Error updating item in storage", err)
+	}
+
+	fmt.Printf("Updated: %+v\n", updated)
+}

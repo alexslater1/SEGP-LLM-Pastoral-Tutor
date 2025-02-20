@@ -244,3 +244,27 @@ func TestMemoryStorage_GetAll(t *testing.T) {
 		assert.Empty(t, results)
 	})
 }
+
+func TestMemoryStorage_Update(t *testing.T) {
+	storage := NewMemoryStorage()
+
+	t.Run("updates existing item", func(t *testing.T) {
+		req := AgentRequest{
+			ID:       "test-id",
+			Endpoint: "test-endpoint",
+		}
+
+		_, err := storage.store(req.TableName(), req)
+		assert.NoError(t, err)
+
+		_, err = storage.update(req.TableName(), req.ID, map[string]interface{}{"endpoint": "updated-endpoint"})
+		assert.NoError(t, err)
+
+		result, err := storage.get(req.TableName(), req.ID)
+		assert.NoError(t, err)
+
+		res, err := parseResult[AgentRequest](result)
+		assert.NoError(t, err)
+		assert.Equal(t, "updated-endpoint", res.Endpoint)
+	})
+}

@@ -83,3 +83,18 @@ func (s *SupabaseStorage) getAll(table StorageTableName, matchingFields map[stri
 	err := query.Execute(&results)
 	return results, err
 }
+
+func (s *SupabaseStorage) update(table StorageTableName, id string, updateFields map[string]interface{}) (interface{}, error) {
+	var results []interface{}
+	err := s.client.DB.From(string(table)).Update(updateFields).Eq("id", id).Execute(&results)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return nil, errors.New("no result returned from supabase")
+	}
+
+	return results[0], nil
+}

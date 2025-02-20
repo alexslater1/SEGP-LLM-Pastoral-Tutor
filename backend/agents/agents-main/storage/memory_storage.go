@@ -178,3 +178,25 @@ func isNumberType(v interface{}) bool {
 	}
 	return false
 }
+
+func (s *MemoryStorage) update(table StorageTableName, id string, updateFields map[string]interface{}) (interface{}, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	current, ok := s.data[table][id]
+	if !ok {
+		return nil, fmt.Errorf("item not found")
+	}
+
+	currentMap, ok := current.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("item is not a map")
+	}
+
+	for k, v := range updateFields {
+		currentMap[k] = v
+	}
+
+	s.data[table][id] = currentMap
+	return currentMap, nil
+}
