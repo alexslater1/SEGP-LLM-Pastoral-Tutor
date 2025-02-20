@@ -28,7 +28,6 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     null
   );
   const [chatSessionID, setChatSessionID] = useState<string | null>(id);
-  const [updatedStatus, setUpdatedStatus] = useState(true);
 
   const {
     data: allMessages,
@@ -43,7 +42,8 @@ export function useChat({ id }: ChatItemProps): ChatItem {
       return allMessages;
     },
     staleTime: Infinity,
-    enabled: !!chatSessionID,
+    // If we were given an id when first creating the chat hook, we should attempt to load all messages
+    enabled: !!id
   });
 
   const {
@@ -53,7 +53,6 @@ export function useChat({ id }: ChatItemProps): ChatItem {
   } = useQuery({
     queryKey: ["status", requestIDPollingKey],
     queryFn: async () => {
-      setUpdatedStatus(false);
       let statusResponse = await checkStatus(requestIDPollingKey as string);
       updateLastMessage(statusResponse);
       return statusResponse;
@@ -69,7 +68,6 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     const currentLastMessage = messages[messages.length - 1];
 
     if (statusResponse.type === Status.COMPLETED) {
-      console.log("COMPLETED");
       currentLastMessage.status = Status.COMPLETED;
       currentLastMessage.content = statusResponse.answer as string;
       stop();
@@ -77,14 +75,12 @@ export function useChat({ id }: ChatItemProps): ChatItem {
     }
 
     if (statusResponse.type === Status.FAILED) {
-      console.log("FAILED");
       currentLastMessage.status = Status.FAILED;
       currentLastMessage.content = statusResponse.error as string;
       stop();
       return currentLastMessage;
     }
 
-    console.log("PENDING");
     currentLastMessage.status = Status.PENDING;
     const newCurrentAction = statusResponse.current_action as string;
     if (
@@ -215,14 +211,6 @@ export function useChat({ id }: ChatItemProps): ChatItem {
 
     return await checkStatusByRequestID(requestID, login_session);
   };
-
-  console.log({
-    isSendPending,
-    isStatusPending,
-    statusFetchStatus,
-    isAllMessagesPending,
-    allMessagesFetchStatus,
-  });
 
   return {
     messages,
