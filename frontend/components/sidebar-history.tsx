@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import type { User } from "@/lib/supabase/user";
 import { memo, useCallback, useEffect, useState } from "react";
-import { useChatHistory, useSessionName } from "@/hooks/use-chat-history";
+import { useChatSessionHistory } from "@/hooks/use-chat-history";
 import { toast } from "sonner";
 
 import {
@@ -155,13 +155,14 @@ const PureChatItem = ({
 
 export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   if (prevProps.isActive !== nextProps.isActive) return false;
+  if (prevProps.chat.title !== nextProps.chat.title) return false;
   return true;
 });
 
 export function SidebarHistory({ user }: { user: User | null }) {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const { history, isLoading, refresh: mutate, error } = useChatHistory();
+  const { history, isLoading, refresh: mutate, error } = useChatSessionHistory();
 
   const parseId = useCallback(
     (pathname: string) => {
@@ -171,18 +172,8 @@ export function SidebarHistory({ user }: { user: User | null }) {
     [pathname]
   );
 
-  const {
-    mutate: mutateSessionName,
-    data: sessionName,
-    isPending: isSessionNamePending,
-    error: sessionNameError,
-  } = useSessionName(parseId(pathname));
-
   useEffect(() => {
-    if (!pathname) return;
-
     mutate();
-    mutateSessionName();
   }, [pathname]);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);

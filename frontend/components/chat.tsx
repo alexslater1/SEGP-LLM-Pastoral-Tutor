@@ -67,6 +67,7 @@ export function Chat({
         {!isReadonly && (
           <MultimodalInput
             chatId={current_id}
+            messages={messages}
             handleSubmit={handleSubmit}
             isLoading={isLoading}
             stop={stop}

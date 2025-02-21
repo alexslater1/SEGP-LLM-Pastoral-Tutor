@@ -15,11 +15,13 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import { Message } from '@/types/message';
 
 function PureMultimodalInput({
   chatId,
   isLoading,
   stop,
+  messages,
   handleSubmit,
   className,
 }: {
@@ -28,6 +30,7 @@ function PureMultimodalInput({
   stop: () => void;
   handleSubmit: (input: string) => void;
   className?: string;
+  messages: Message[];
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState('');
@@ -150,6 +153,7 @@ function PureMultimodalInput({
         ) : (
           <SendButton
             input={input}
+            messages={messages}
             submitForm={submitForm}
             uploadQueue={uploadQueue}
           />
@@ -215,10 +219,12 @@ const StopButton = memo(PureStopButton);
 function PureSendButton({
   submitForm,
   input,
+  messages,
   uploadQueue,
 }: {
   submitForm: () => void;
   input: string;
+  messages: Message[];
   uploadQueue: Array<string>;
 }) {
   return (
@@ -226,7 +232,9 @@ function PureSendButton({
       className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
       onClick={(event) => {
         event.preventDefault();
+        console.log("messages before submit", messages);
         submitForm();
+        console.log("messages after submit", messages);
       }}
       disabled={input.length === 0 || uploadQueue.length > 0}
     >

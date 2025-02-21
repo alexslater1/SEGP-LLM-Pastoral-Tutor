@@ -29,6 +29,7 @@ export function useChat({
   id,
   firstAgentMessage = DEFAULT_FIRST_AGENT_MESSAGE,
 }: ChatItemProps): ChatItem {
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([]);
   const [requestIDPollingKey, setRequestIDPollingKey] = useState<string | null>(
     null
@@ -42,15 +43,26 @@ export function useChat({
     fetchStatus: allMessagesFetchStatus,
   } = useQuery({
     queryKey: ["all-messages", chatSessionID],
-    queryFn: async () => loadAllMessages(),
+    queryFn: async () => {
+      //console.log("Fetching all-messages", chatSessionID);
+      const allMessages = await loadAllMessages();
+      //console.log("allMessages", allMessages);
+      setMessages(allMessages);
+      return allMessages;
+    },
     staleTime: Infinity,
     // If we were given an id when first creating the chat hook, we should attempt to load all messages
     enabled: !!id,
   });
 
-  if (messages.length === 0 && allMessages) {
-    setMessages(allMessages);
-  }
+  // When the chat hook is unmounted, we should invalidate the all-messages so it 
+  // can be refetched when a chat url is navigated to again
+  useEffect(() => {
+    return () => {
+      queryClient.invalidateQueries({ queryKey: ["all-messages", chatSessionID] });
+      //console.log("Invalidating all-messages", chatSessionID);
+    };
+  }, []);
 
   const {
     isPending: isStatusPending,
@@ -121,19 +133,19 @@ export function useChat({
   } = useMutation({
     mutationFn: ({
       query,
-      newMessages,
     }: {
       query: string;
-      newMessages: Message[];
+      oldMessagesAndNewUserMessage: Message[];
     }) => sendMessageAndGetResponse(query),
-    onSuccess: (newMessage, { newMessages }) => {
-      setMessages([...newMessages, newMessage]);
-      setRequestIDPollingKey(newMessage.requestID);
+    onSuccess: (newAssistantMessage, { oldMessagesAndNewUserMessage }) => {
+      setMessages([...oldMessagesAndNewUserMessage, newAssistantMessage]);
+      setRequestIDPollingKey(newAssistantMessage.requestID);
     },
   });
 
   const handleSubmit = (query: string) => {
     const id = generateUUID();
+    console.log("messages", messages);
     const newMessages = [
       ...messages,
       {
@@ -146,9 +158,11 @@ export function useChat({
       },
     ];
 
+    console.log("newMessages", newMessages);
+
     // add user's message to the messages array
     setMessages(newMessages);
-    sendMessage({ query, newMessages });
+    sendMessage({ query, oldMessagesAndNewUserMessage: newMessages });
   };
 
   const stop = () => {

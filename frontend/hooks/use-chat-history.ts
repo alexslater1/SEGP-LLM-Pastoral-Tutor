@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { getUserSession } from "@/lib/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type ChatVisibility = "public" | "private";
+
+const STATUS_QUERY_INTERVAL_SECONDS = 0.5;
 
 export type Chat = {
   id: string;
@@ -28,74 +30,71 @@ type BackendUserSession = {
   name?: string;
 };
 
-type BackendUserSessionsResponse = BackendUserSession[];
+type BackendUserSessions = BackendUserSession[];
 
-export function useSessionName(id?: string) {
-  console.log("useSessionName called with id", id);
-
+export function useChatSessionHistory(): ChatHistoryItem {
   const queryClient = useQueryClient();
-  const { isPending, data, error } = useQuery({
-    queryKey: ["session-name", id],
-    queryFn: () => fetchSessionNameLoop(id!),
-    enabled: !!id,
-  });
+  const [history, setHistory] = useState<Chat[]>([]);
+  const chatIDPollingKeys = useRef<string[]>([]);
 
-  const mutate = () => {
-    queryClient.invalidateQueries({ queryKey: ["session-name", id] });
-  };
-
-  const fetchSessionNameLoop = async (id: string) => {
-    do {
-      console.log("Fetching session name for", id);
-      const session = await fetchSessionName(id);
-      if (session?.name) {
-        console.log("Session name found for", id);
-        queryClient.invalidateQueries({ queryKey: ["chat-history"] });
-        return session.name;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    } while (true);
-  };
-
-  const fetchSessionName = async (id: string) => {
-    const login_session = await getUserSession();
-    if (!login_session) {
-      return;
-    }
-
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + "/sessions/" + id,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${login_session.access_token}`,
-        },
-      }
-    );
-
-    return (await response.json()) as BackendUserSession;
-  };
-
-  return {
-    isPending,
-    data,
-    error,
-    mutate,
-  };
-}
-
-export function useChatHistory(): ChatHistoryItem {
-  const queryClient = useQueryClient();
-
-  const { isPending, data, error } = useQuery({
+  const { isPending, error, fetchStatus } = useQuery({
     queryKey: ["chat-history"],
-    queryFn: () => fetchUIChatHistory(),
+    queryFn: async () => {
+      const history = await fetchUIChatHistory();
+      setHistory(history);
+      chatIDPollingKeys.current = getSessionsWithNoNames(history);
+      return history;
+    },
+    staleTime: Infinity,
   });
+
+  useEffect(() => {
+    return () => {
+      queryClient.invalidateQueries({ queryKey: ["chat-history"] });
+    };
+  }, []);
+
+  const {
+    isPending: isSessionStatusPending,
+    error: sessionStatusError,
+  } = useQuery({
+    queryKey: ["session-status", chatIDPollingKeys],
+    queryFn: async () => {
+      let newSessionNames = []
+      for (let chatIDPollingKey of chatIDPollingKeys.current) {
+        let sessionName = await fetchUIChatName(chatIDPollingKey);
+        if (sessionName) {
+          newSessionNames.push({id: chatIDPollingKey, name: sessionName});
+          chatIDPollingKeys.current = chatIDPollingKeys.current.filter(key => key !== chatIDPollingKey);
+        }
+      }
+      setSessionIDNames(newSessionNames);
+
+      // Return something so TanStack doesn't complain
+      return newSessionNames;
+    },
+    enabled: !!chatIDPollingKeys,
+    refetchInterval: chatIDPollingKeys
+      ? STATUS_QUERY_INTERVAL_SECONDS * 1000
+      : false,
+    refetchIntervalInBackground: false,
+  });
+
+  const setSessionIDNames = (sessionNames: {id: string, name: string}[]) => {
+    setHistory(prev => prev.map(chat => {
+      const session = sessionNames.find(sessionName => sessionName.id === chat.id)
+      return session ? {...chat, title: session.name} : chat;
+    }));
+  }
+
+  const getSessionsWithNoNames = (history: Chat[]) => {
+    return history.filter(chat => chat.title === "Loading...").map(chat => chat.id);
+  }
 
   const fetchUIChatHistory = async () => {
     const login_session = await getUserSession();
     if (!login_session) {
-      return;
+      return [];
     }
 
     const chatHistory = await fetchChatHistory(login_session);
@@ -111,15 +110,25 @@ export function useChatHistory(): ChatHistoryItem {
     return history.reverse();
   };
 
+  const fetchUIChatName = async (chatSessionID: string) => {
+    const login_session = await getUserSession();
+    if (!login_session) {
+      throw new Error("No login session found");
+    }
+
+    const sessionStatus = await fetchSessionName(login_session, chatSessionID);
+    return sessionStatus?.name ?? null;
+  };
+
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["chat-history"] });
   };
 
   return {
-    history: data ?? [],
-    isLoading: isPending,
+    history: history,
+    isLoading: isPending || (isSessionStatusPending && fetchStatus !== "idle"),
     refresh: refresh,
-    error: error?.message ?? null,
+    error: error?.message ?? sessionStatusError?.message ?? null,
   };
 }
 
@@ -140,9 +149,28 @@ async function fetchChatHistory(session: Session) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return (await response.json()) as BackendUserSessionsResponse;
+    return (await response.json()) as BackendUserSessions;
   } catch (currentError) {
-    console.error("Error:", currentError);
+    console.error("Fetch Chat History Error:", currentError);
     return [];
   }
 }
+
+const fetchSessionName = async (loginSession: Session, chatSessionID: string) => {
+  try {
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + "/sessions/" + chatSessionID,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${loginSession.access_token}`,
+        },
+      }
+    );
+
+    return (await response.json()) as BackendUserSession;
+  } catch (currentError) {
+    console.error("Fetch Session Name Error:", currentError);
+    return null;
+  }
+};
