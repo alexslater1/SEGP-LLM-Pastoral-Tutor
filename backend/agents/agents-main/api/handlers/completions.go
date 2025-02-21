@@ -77,6 +77,11 @@ func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage,
 			answer, reason, err := crew.Run(r.Context(), req.Query, agent.Id())
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
+				rr := storage.NewCompletionResult(requestId, nil, nil, err)
+				_, err = storage.Store(store, rr)
+				if err != nil {
+					slog.Error("error storing request result", "error", err.Error())
+				}
 				return
 			}
 
