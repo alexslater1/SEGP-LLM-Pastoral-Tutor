@@ -85,7 +85,7 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
-  const submitForm = useCallback(() => {
+  const submitForm = () => {
     if (chatId) {
       window.history.replaceState({}, '', `/chat/${chatId}`);
     }
@@ -99,13 +99,7 @@ function PureMultimodalInput({
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [
-    handleSubmit,
-    setLocalStorageInput,
-    width,
-    chatId,
-    input,
-  ]);
+  };
 
   return (
     <div className="relative w-full flex flex-col gap-4">
@@ -153,7 +147,6 @@ function PureMultimodalInput({
         ) : (
           <SendButton
             input={input}
-            messages={messages}
             submitForm={submitForm}
             uploadQueue={uploadQueue}
           />
@@ -167,6 +160,7 @@ export const MultimodalInput = memo(
   PureMultimodalInput,
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (prevProps.messages !== nextProps.messages) return false;
 
     return true;
   },
@@ -219,12 +213,10 @@ const StopButton = memo(PureStopButton);
 function PureSendButton({
   submitForm,
   input,
-  messages,
   uploadQueue,
 }: {
   submitForm: () => void;
   input: string;
-  messages: Message[];
   uploadQueue: Array<string>;
 }) {
   return (
@@ -232,9 +224,7 @@ function PureSendButton({
       className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
       onClick={(event) => {
         event.preventDefault();
-        console.log("messages before submit", messages);
         submitForm();
-        console.log("messages after submit", messages);
       }}
       disabled={input.length === 0 || uploadQueue.length > 0}
     >

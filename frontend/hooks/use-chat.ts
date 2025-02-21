@@ -44,9 +44,7 @@ export function useChat({
   } = useQuery({
     queryKey: ["all-messages", chatSessionID],
     queryFn: async () => {
-      //console.log("Fetching all-messages", chatSessionID);
       const allMessages = await loadAllMessages();
-      //console.log("allMessages", allMessages);
       setMessages(allMessages);
       return allMessages;
     },
@@ -60,7 +58,6 @@ export function useChat({
   useEffect(() => {
     return () => {
       queryClient.invalidateQueries({ queryKey: ["all-messages", chatSessionID] });
-      //console.log("Invalidating all-messages", chatSessionID);
     };
   }, []);
 
@@ -158,8 +155,6 @@ export function useChat({
       },
     ];
 
-    console.log("newMessages", newMessages);
-
     // add user's message to the messages array
     setMessages(newMessages);
     sendMessage({ query, oldMessagesAndNewUserMessage: newMessages });
@@ -256,7 +251,7 @@ export function useChat({
       allMessagesError?.message ||
       null,
     id: chatSessionID,
-    isInitialLoad: isAllMessagesPending && allMessagesFetchStatus !== "idle",
+    isInitialLoad: allMessagesFetchStatus !== "idle",
   };
 }
 
