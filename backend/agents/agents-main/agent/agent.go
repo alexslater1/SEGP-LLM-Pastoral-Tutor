@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/segp/agents-main/clock"
-	// "github.com/segp/agents-main/email"
 	"github.com/segp/agents-main/entity"
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/history"
@@ -13,6 +12,7 @@ import (
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
+	"github.com/segp/agents-main/utils"
 )
 
 const (
@@ -44,6 +44,7 @@ type Agent interface {
 	clone() Agent
 }
 
+// IGNORE THIS
 func NewDefaultUserQueryAgent() Agent {
 
 	var (
@@ -81,7 +82,7 @@ func NewPersonalTutorAgent() Agent {
 		supabaseStore     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 		agentEventHistory = history.NewAgentEventHistory(supabaseStore)
 
-		toolHandler = tools.NewToolHandler([]tools.Tool{
+		toolHandler = tools.NewGiveAnswerToolHandler([]tools.Tool{
 			// tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
 		})
 	)
@@ -115,4 +116,70 @@ func NewDefaultEventStoringLoggingUserQueryAgent() Agent {
 func NewDefaultEventStoringLoggingPersonalTutorAgent() Agent {
 	var supabaseStore = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 	return NewLoggingAgent(NewEventStoringAgent(NewPersonalTutorAgent(), supabaseStore))
+}
+
+// ^ FINISH IGNORING
+
+func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *SimpleFastAgent {
+	var (
+		basePrompt = ""
+
+		description        = "TODO"
+		geminiLlm          = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		ragKnowledge       = knowledge.NewRAGKnowledge(utils.Required(os.Getenv("RAG_BASE_URL"), "RAG_BASE_URL"))
+		extraKnowledge     = knowledge.NewExtraKnowledge(apiFuncs...)
+		conjoinedKnowledge = knowledge.NewConjoinedKnowledge(ragKnowledge, extraKnowledge)
+		realClock          = clock.NewRealClock()
+
+		googleSearchClient = googleSearch.NewRodClient()
+		supabaseStore      = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE"))
+		agentEventHistory  = history.NewAgentEventHistory(supabaseStore)
+
+		toolHandler = tools.NewNoToolGoogleSearchToolHandler(googleSearchClient)
+	)
+
+	finalPrompt := basePrompt + prompt
+
+	return newSimpleFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
+}
+
+// 1: Angelo
+func NewAcadmemicSupportStudyAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("academic_support_study_agent", prompt, apiFuncs...))
+}
+
+// 2: Angelo
+func NewAdminUniServicesAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("admin_uni_services_agent", prompt, apiFuncs...))
+}
+
+// 3: Anshul
+func NewCareerProfessionalDevelopmentAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("career_professional_development_agent", prompt, apiFuncs...))
+}
+
+// 4: Anshul
+func NewWellbeingMentalHealthPersonalDevelopmentAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("wellbeing_mental_health_personal_development_agent", prompt, apiFuncs...))
+}
+
+// 5: Alex
+func NewFinancialAccomodationResourceAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("financial_accomodation_resource_agent", prompt, apiFuncs...))
+}
+
+// 6: Alex
+func NewCampusLifeSocialAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("campus_life_social_agent", prompt, apiFuncs...))
+}
+
+// 7: Teo
+func NewAccessibilityDisabilityAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("accessibility_disability_agent", prompt, apiFuncs...))
+}
+
+// 8: Teo
+func NewTransitionDiversityMiscAgent(prompt string, apiFuncs ...interface{}) Agent {
+	a := newSpecializedAgent("transition_diversity_misc_agent", prompt, apiFuncs...)
+	return NewLoggingAgent(a)
 }

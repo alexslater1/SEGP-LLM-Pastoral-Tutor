@@ -14,7 +14,7 @@ type ToolHandler struct {
 }
 
 func NewDefaultToolHandler(googleSearch googleSearch.GoogleSearchClient, knowledge knowledge.Knowledge) *ToolHandler {
-	return NewToolHandler(
+	return NewGiveAnswerToolHandler(
 		[]Tool{
 			NewGoogleSearchFirstResultsPageContentsTool(googleSearch, 3),
 			NewRagTool(knowledge),
@@ -25,14 +25,37 @@ func NewDefaultToolHandler(googleSearch googleSearch.GoogleSearchClient, knowled
 }
 
 func NewGoogleSearchToolHandler(googleSearch googleSearch.GoogleSearchClient) *ToolHandler {
-	return NewToolHandler(
+	return NewGiveAnswerToolHandler(
 		[]Tool{
 			NewGoogleSearchFirstResultsPageContentsTool(googleSearch, 3),
 		},
 	)
 }
 
-func NewToolHandler(tools []Tool) *ToolHandler {
+func NewNoToolGoogleSearchToolHandler(googleSearch googleSearch.GoogleSearchClient) *ToolHandler {
+	return NewNoToolToolHandler(
+		[]Tool{
+			NewGoogleSearchFirstResultsPageContentsTool(googleSearch, 3),
+		},
+	)
+}
+
+func NewNoToolToolHandler(tools []Tool) *ToolHandler {
+	toolMap := make(map[string]Tool)
+	for _, tool := range tools {
+		toolMap[tool.Definition().Name] = tool
+	}
+
+	if _, ok := toolMap["no_tool"]; !ok {
+		toolMap["no_tool"] = NewNoToolTool()
+	}
+
+	return &ToolHandler{
+		Tools: toolMap,
+	}
+}
+
+func NewGiveAnswerToolHandler(tools []Tool) *ToolHandler {
 	toolMap := make(map[string]Tool)
 	for _, tool := range tools {
 		toolMap[tool.Definition().Name] = tool
