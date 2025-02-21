@@ -172,7 +172,7 @@ func NewWellbeingMentalHealthPersonalDevelopmentAgent(prompt string, apiFuncs ..
 }
 
 // 5: TODO
-func NewFinanicalAccomodationResourceAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
+func NewFinancialAccomodationResourceAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
 	return newSpecializedAgent("financial_accomodation_resource_agent", prompt, apiFuncs...)
 }
 
@@ -182,8 +182,8 @@ func NewCampusLifeSocialAgent(prompt string, apiFuncs ...interface{}) *FastAgent
 }
 
 // 7: Teo
-func NewDisabilityAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("disability_accessibility_agent", prompt, apiFuncs...)
+func NewAccessibilityDisabilityAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
+	return newSpecializedAgent("accessibility_disability_agent", prompt, apiFuncs...)
 }
 
 // 8: Teo
