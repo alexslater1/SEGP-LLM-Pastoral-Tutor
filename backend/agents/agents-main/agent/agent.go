@@ -142,27 +142,27 @@ func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *Sim
 	return newSimpleFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
 }
 
-// 1: TODO
+// 1: Angelo
 func NewAcadmemicSupportStudyAgent(prompt string, apiFuncs ...interface{}) Agent {
 	return NewLoggingAgent(newSpecializedAgent("academic_support_study_agent", prompt, apiFuncs...))
 }
 
-// 2: TODO
+// 2: Angelo
 func NewAdminUniServicesAgent(prompt string, apiFuncs ...interface{}) Agent {
 	return NewLoggingAgent(newSpecializedAgent("admin_uni_services_agent", prompt, apiFuncs...))
 }
 
-// 3: TODO
+// 3: Anshul
 func NewCareerProfessionalDevelopmentAgent(prompt string, apiFuncs ...interface{}) Agent {
 	return NewLoggingAgent(newSpecializedAgent("career_professional_development_agent", prompt, apiFuncs...))
 }
 
-// 4: TODO
+// 4: Anshul
 func NewWellbeingMentalHealthPersonalDevelopmentAgent(prompt string, apiFuncs ...interface{}) Agent {
 	return NewLoggingAgent(newSpecializedAgent("wellbeing_mental_health_personal_development_agent", prompt, apiFuncs...))
 }
 
-// 5: TODO
+// 5: Alex
 func NewFinancialAccomodationResourceAgent(prompt string, apiFuncs ...interface{}) Agent {
 	return NewLoggingAgent(newSpecializedAgent("financial_accomodation_resource_agent", prompt, apiFuncs...))
 }

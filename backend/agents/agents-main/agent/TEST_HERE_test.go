@@ -12,6 +12,7 @@ var (
 	abc_api_client = abc_api.NewMockAbcApiClient()
 )
 
+// 1. Angelo
 func Test_NewAcadmemicSupportStudyAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
@@ -36,6 +37,7 @@ func Test_NewAcadmemicSupportStudyAgent(t *testing.T) {
 	runAgentAndPrintResultFrom(agent, query)
 }
 
+// 2. Angelo
 func Test_NewAdminUniServicesAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
@@ -63,6 +65,7 @@ func Test_NewAdminUniServicesAgent(t *testing.T) {
 	runAgentAndPrintResultFrom(agent, query)
 }
 
+// 3. Anshul
 func Test_CareerProfessionalDevelopmentAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
@@ -86,6 +89,7 @@ func Test_CareerProfessionalDevelopmentAgent(t *testing.T) {
 	runAgentAndPrintResultFrom(agent, query)
 }
 
+// 4. Anshul
 func Test_WellbeingMentalHealthPersonalDevelopmentAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
@@ -103,7 +107,7 @@ func Test_WellbeingMentalHealthPersonalDevelopmentAgent(t *testing.T) {
 	runAgentAndPrintResultFrom(agent, query)
 }
 
-// ALEX
+// 5. ALEX
 func Test_FinancialAccomodationResourceAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
@@ -123,7 +127,7 @@ func Test_FinancialAccomodationResourceAgent(t *testing.T) {
 	runAgentAndPrintResultFrom(agent, query)
 }
 
-// ALEX
+// 6. ALEX
 func Test_CampusLifeSocialAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
@@ -145,7 +149,7 @@ func Test_CampusLifeSocialAgent(t *testing.T) {
 	runAgentAndPrintResultFrom(agent, query)
 }
 
-// TEO
+// 7. TEO
 func Test_AccessibilityDisabilityAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
@@ -158,7 +162,7 @@ func Test_AccessibilityDisabilityAgent(t *testing.T) {
 	runAgentAndPrintResultFrom(agent, query)
 }
 
-// TEO
+// 8. TEO
 func Test_TransitionDiversityMiscAgent(t *testing.T) {
 	var (
 		prompt = `EDIT THIS PROMPT`
