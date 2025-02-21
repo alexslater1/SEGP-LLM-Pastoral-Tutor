@@ -8,10 +8,10 @@ type YearsResponse struct {
 	Years []int `json:"years"`
 }
 
-func (m *MockAbcApiClient) GetYears() (*YearsResponse, error) {
-	return &YearsResponse{
+func (m *MockAbcApiClient) GetYears() YearsResponse {
+	return YearsResponse{
 		Years: []int{2018, 2019, 2020, 2021, 2022},
-	}, nil
+	}
 }
 
 type CohortResponse struct {
