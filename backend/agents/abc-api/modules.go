@@ -1,6 +1,6 @@
 package abc_api
 
-type ModuleResponse struct {
+type ModuleResponse3 struct {
 	Code                   string                     `json:"code"`
 	Title                  string                     `json:"title"`
 	Terms                  []int                      `json:"terms"`
@@ -51,8 +51,8 @@ type EnrolledStudentResponse struct {
 }
 
 // For first term modules
-func (m *MockAbcApiClient) GetModules() ([]*ModuleResponse, error) {
-	return []*ModuleResponse{
+func (m *MockAbcApiClient) GetModules() ([]*ModuleResponse3, error) {
+	return []*ModuleResponse3{
 		{
 			Code:        "60001",
 			Title:       "Advanced Computer Architecture",
@@ -221,8 +221,8 @@ func (m *MockAbcApiClient) GetModules() ([]*ModuleResponse, error) {
 }
 
 // For Intro to ML
-func (m *MockAbcApiClient) GetModule() (*ModuleResponse, error) {
-	return &ModuleResponse{
+func (m *MockAbcApiClient) GetModule() (*ModuleResponse3, error) {
+	return &ModuleResponse3{
 			Code:        "60012",
 			Title:       "Introduction to Machine Learning",
 			ECTS:        5,
@@ -263,7 +263,7 @@ func (m *MockAbcApiClient) GetModule() (*ModuleResponse, error) {
 }
 
 // Truncated for SEGP
-func (m *MockAbcApiClient) GetEnrolledStudents() ([]*EnrolledStudentResponse, error) {
+func (m *MockAbcApiClient) GetEnrolledStudents2() ([]*EnrolledStudentResponse, error) {
 	return []*EnrolledStudentResponse{
 		{
 			Login:     "jw5322",
