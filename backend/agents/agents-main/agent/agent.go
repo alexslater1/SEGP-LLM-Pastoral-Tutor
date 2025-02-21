@@ -12,6 +12,7 @@ import (
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
+	"github.com/segp/agents-main/utils"
 )
 
 const (
@@ -81,7 +82,7 @@ func NewPersonalTutorAgent() Agent {
 		supabaseStore     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 		agentEventHistory = history.NewAgentEventHistory(supabaseStore)
 
-		toolHandler = tools.NewToolHandler([]tools.Tool{
+		toolHandler = tools.NewGiveAnswerToolHandler([]tools.Tool{
 			// tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
 		})
 	)
@@ -119,74 +120,66 @@ func NewDefaultEventStoringLoggingPersonalTutorAgent() Agent {
 
 // ^ FINISH IGNORING
 
-func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *FastAgent {
+func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *SimpleFastAgent {
 	var (
+		basePrompt = ""
+
 		description        = "TODO"
-		geminiLlm          = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
-		ragKnowledge       = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+		geminiLlm          = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		ragKnowledge       = knowledge.NewRAGKnowledge(utils.Required(os.Getenv("RAG_BASE_URL"), "RAG_BASE_URL"))
 		extraKnowledge     = knowledge.NewExtraKnowledge(apiFuncs...)
 		conjoinedKnowledge = knowledge.NewConjoinedKnowledge(ragKnowledge, extraKnowledge)
 		realClock          = clock.NewRealClock()
 
 		googleSearchClient = googleSearch.NewRodClient()
-		supabaseStore      = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+		supabaseStore      = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE"))
 		agentEventHistory  = history.NewAgentEventHistory(supabaseStore)
 
-		toolHandler = tools.NewGoogleSearchToolHandler(googleSearchClient)
+		toolHandler = tools.NewNoToolGoogleSearchToolHandler(googleSearchClient)
 	)
 
-	return &FastAgent{
-		ID:                    id,
-		Desc:                  description,
-		Prompt:                prompt,
-		entityIdsCanOffloadTo: []entity.Entity{entity.UserEntity},
+	finalPrompt := basePrompt + prompt
 
-		ToolHandler: toolHandler,
-		LLM:         geminiLlm,
-		Knowledge:   conjoinedKnowledge,
-		Clock:       realClock,
-		History:     agentEventHistory,
-
-		subscribers: []chan AgentEvent{},
-	}
+	return newSimpleFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
 }
 
-// 1: TODO
-func NewAcadmemicSupportStudyAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("academic_support_study_agent", prompt, apiFuncs...)
+// 1: Angelo
+func NewAcadmemicSupportStudyAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("academic_support_study_agent", prompt, apiFuncs...))
 }
 
-// 2: TODO
-func NewAdminUniServicesAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("admin_uni_services_agent", prompt, apiFuncs...)
+// 2: Angelo
+func NewAdminUniServicesAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("admin_uni_services_agent", prompt, apiFuncs...))
 }
 
-// 3: TODO
-func NewCareerProfessionalDevelopmentAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("career_professional_development_agent", prompt, apiFuncs...)
+// 3: Anshul
+func NewCareerProfessionalDevelopmentAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("career_professional_development_agent", prompt, apiFuncs...))
 }
 
-// 4: TODO
-func NewWellbeingMentalHealthPersonalDevelopmentAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("wellbeing_mental_health_personal_development_agent", prompt, apiFuncs...)
+// 4: Anshul
+func NewWellbeingMentalHealthPersonalDevelopmentAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("wellbeing_mental_health_personal_development_agent", prompt, apiFuncs...))
 }
 
-// 5: TODO
-func NewFinancialAccomodationResourceAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("financial_accomodation_resource_agent", prompt, apiFuncs...)
+// 5: Alex
+func NewFinancialAccomodationResourceAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("financial_accomodation_resource_agent", prompt, apiFuncs...))
 }
 
 // 6: Alex
-func NewCampusLifeSocialAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("campus_life_social_agent", prompt, apiFuncs...)
+func NewCampusLifeSocialAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("campus_life_social_agent", prompt, apiFuncs...))
 }
 
 // 7: Teo
-func NewAccessibilityDisabilityAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("accessibility_disability_agent", prompt, apiFuncs...)
+func NewAccessibilityDisabilityAgent(prompt string, apiFuncs ...interface{}) Agent {
+	return NewLoggingAgent(newSpecializedAgent("accessibility_disability_agent", prompt, apiFuncs...))
 }
 
 // 8: Teo
-func NewTransitionDiversityMiscAgent(prompt string, apiFuncs ...interface{}) *FastAgent {
-	return newSpecializedAgent("transition_diversity_misc_agent", prompt, apiFuncs...)
+func NewTransitionDiversityMiscAgent(prompt string, apiFuncs ...interface{}) Agent {
+	a := newSpecializedAgent("transition_diversity_misc_agent", prompt, apiFuncs...)
+	return NewLoggingAgent(a)
 }

@@ -17,10 +17,6 @@ import (
 	"github.com/segp/agents-main/utils"
 )
 
-const (
-	maxIterations = 10
-)
-
 type FastAgent struct {
 	ID     string
 	Desc   string
