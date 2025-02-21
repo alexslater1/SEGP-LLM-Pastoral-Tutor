@@ -262,7 +262,7 @@ func (m *MockAbcApiClient) GetModule() ModuleResponse3 {
 }
 
 // Truncated for SEGP
-func (m *MockAbcApiClient) GetEnrolledStudents2() []EnrolledStudentResponse {
+func (m *MockAbcApiClient) GetEnrolledStudents() []EnrolledStudentResponse {
 	return []EnrolledStudentResponse{
 		{
 			Login:     "jw5322",

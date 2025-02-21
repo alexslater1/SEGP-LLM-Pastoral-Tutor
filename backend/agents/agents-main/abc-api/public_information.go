@@ -1,6 +1,6 @@
 package abc_api
 
-type PublicCourseResponse struct {
+type PublicModuleResponse struct {
 	Code  string `json:"code"`
 	Title string `json:"title"`
 	ECTS  int    `json:"ects"`
@@ -12,8 +12,8 @@ type PublicModuleTypesResponse struct {
 	SyllabusLabel string `json:"syllabus_label"`
 }
 
-func (m *MockAbcApiClient) GetPublicCourses() PublicCourseResponse {
-	return PublicCourseResponse{
+func (m *MockAbcApiClient) GetPublicModules() PublicModuleResponse {
+	return PublicModuleResponse{
 		Code:  "50002",
 		Title: "Software Engineering Design",
 		ECTS:  5,

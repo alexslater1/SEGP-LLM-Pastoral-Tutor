@@ -48,89 +48,85 @@ type StaffPeopleResponse struct {
 	Modules               []ModuleHelpedResponse `json:"modules"`
 }
 
-func (m *MockAbcApiClient) GetStudents() ([]StudentResponse, error) {
-	return []StudentResponse{
-		{
-			Login:            "as4522",
-			Year:             "2324",
-			Email:            "as4522@ic.ac.uk",
-			Firstname:        "Anshul",
-			Lastname:         "Sendil",
-			Salutation:       "Mr",
-			Cohort:           "c3",
-			DegreeYear:       "meng3",
-			RoleInDepartment: "student",
-			Modules: []ModuleResponse{
-				{
-					Level: 3,
-					Code:  "50009",
-					Title: "Computer Vision",
-					Terms: []int{1, 2},
-				},
-				{
-					Level: 3,
-					Code:  "50010",
-					Title: "Network Security",
-					Terms: []int{1},
-				},
-				{
-					Level: 3,
-					Code:  "50002",
-					Title: "Software Engineering Group Project",
-					Terms: []int{2},
-				},
-				{
-					Level: 3,
-					Code:  "50011",
-					Title: "Japanese Language and Culture",
-					Terms: []int{1, 2},
-				},
+func (m *MockAbcApiClient) GetStudents() StudentResponse {
+	return StudentResponse{
+		Login:            "as4522",
+		Year:             "2324",
+		Email:            "as4522@ic.ac.uk",
+		Firstname:        "Anshul",
+		Lastname:         "Sendil",
+		Salutation:       "Mr",
+		Cohort:           "c3",
+		DegreeYear:       "meng3",
+		RoleInDepartment: "student",
+		Modules: []ModuleResponse{
+			{
+				Level: 3,
+				Code:  "50009",
+				Title: "Computer Vision",
+				Terms: []int{1, 2},
 			},
-			ModulesHelped: []ModuleHelpedResponse{}, // No modules helped as he's struggling with his own studies
-			PersonalTutor: PersonalTutorResponse{
-				Login:     "dsmith",
-				Firstname: "David",
-				Lastname:  "Smith",
+			{
+				Level: 3,
+				Code:  "50010",
+				Title: "Network Security",
+				Terms: []int{1},
+			},
+			{
+				Level: 3,
+				Code:  "50002",
+				Title: "Software Engineering Group Project",
+				Terms: []int{2},
+			},
+			{
+				Level: 3,
+				Code:  "50011",
+				Title: "Japanese Language and Culture",
+				Terms: []int{1, 2},
 			},
 		},
-	}, nil
+		ModulesHelped: []ModuleHelpedResponse{}, // No modules helped as he's struggling with his own studies
+		PersonalTutor: PersonalTutorResponse{
+			Login:     "dsmith",
+			Firstname: "David",
+			Lastname:  "Smith",
+		},
+	}
 }
 
-func (m *MockAbcApiClient) GetStaff() ([]StaffPeopleResponse, error) {
+func (m *MockAbcApiClient) GetStaff() StaffPeopleResponse {
+	return StaffPeopleResponse{
+		Login:                 "rbc",
+		Year:                  "2223",
+		Email:                 "rbc@ic.ac.uk",
+		Firstname:             "Rob",
+		Lastname:              "Chatley",
+		Salutation:            "Mr",
+		RoleInDepartment:      "staff",
+		RolesInDepartment:     []string{"staff", "2nd Year Undergraduate Coordinator"},
+		HasExtensionClearance: true,
+		Modules: []ModuleHelpedResponse{
+			{
+				Code:  "50002",
+				Title: "Software Engineering Group Project",
+				Roles: []string{"Lecturer"},
+				Terms: []int{1, 2},
+			},
+		},
+	}
+}
+
+func (m *MockAbcApiClient) GetAllStaffList() []StaffPeopleResponse {
 	return []StaffPeopleResponse{
-		{
-			Login:                 "rbc",
-			Year:                  "2223",
-			Email:                 "rbc@ic.ac.uk",
-			Firstname:             "Rob",
-			Lastname:              "Chatley",
-			Salutation:            "Mr",
-			RoleInDepartment:      "staff",
-			RolesInDepartment:     []string{"staff", "2nd Year Undergraduate Coordinator"},
-			HasExtensionClearance: true,
-			Modules: []ModuleHelpedResponse{
-				{
-					Code:  "50002",
-					Title: "Software Engineering Group Project",
-					Roles: []string{"Lecturer"},
-					Terms: []int{1, 2},
-				},
-			},
-		},
-	}, nil
-}
-
-func (m *MockAbcApiClient) GetAllStaffList() ([]StaffResponse, error) {
-	return []StaffResponse{
 		{
 			Login:            "rbc",
 			Email:            "rbc@ic.ac.uk",
-			FirstName:        "Rob",
-			LastName:         "Chatley",
+			Firstname:        "Rob",
+			Lastname:         "Chatley",
 			Salutation:       "Mr",
 			RoleInDepartment: "staff",
 		},
-	}, nil
+	}
 }
 
 type ProfileImageResponse struct {
@@ -162,7 +158,7 @@ type ModuleResponse2 struct {
 	Students   []string `json:"students"`
 }
 
-func (m *MockAbcApiClient) GetEnrolledStudents() EnrolledStudentsResponse {
+func (m *MockAbcApiClient) GetModulesEnrolledStudents() EnrolledStudentsResponse {
 	return EnrolledStudentsResponse{
 		Modules: []ModuleResponse2{
 			{ModuleCode: "50002", Students: []string{"anshul"}},
@@ -176,7 +172,7 @@ type IdentityResponse struct {
 	Email   string `json:"email"`
 }
 
-func (m *MockAbcApiClient) IdentityForGivenLoginOrEmail(givenLoginOrEmail string) IdentityResponse {
+func (m *MockAbcApiClient) GetIdentity() IdentityResponse {
 	return IdentityResponse{
 		IsStaff: false,
 		Login:   "anshul",
