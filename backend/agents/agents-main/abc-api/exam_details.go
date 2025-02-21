@@ -11,8 +11,8 @@ type ModuleConsolidationResponse struct {
 	ExamQuestionsNeeded    int    `json:"exam_questions_needed"`
 }
 
-func (m *MockAbcApiClient) GetModuleConsolidation() (*[]ModuleConsolidationResponse, error) {
-	return &[]ModuleConsolidationResponse{
+func (m *MockAbcApiClient) GetModuleConsolidation() []ModuleConsolidationResponse {
+	return []ModuleConsolidationResponse{
 		{
 			AcademicYear:           "2324",
 			ExamClass:              "bm2",
@@ -23,7 +23,7 @@ func (m *MockAbcApiClient) GetModuleConsolidation() (*[]ModuleConsolidationRespo
 			ExamQuestionsTotal:     3,
 			ExamQuestionsNeeded:    3,
 		},
-	}, nil
+	}
 }
 
 type ExamRegistrationResponse struct {
@@ -31,11 +31,11 @@ type ExamRegistrationResponse struct {
 	Students []string `json:"students"`
 }
 
-func (m *MockAbcApiClient) GetExamRegistrations() (*[]ExamRegistrationResponse, error) {
-	return &[]ExamRegistrationResponse{
+func (m *MockAbcApiClient) GetExamRegistrations() []ExamRegistrationResponse {
+	return []ExamRegistrationResponse{
 		{
 			ExamCode: "COMP50002",
 			Students: []string{"123456", "456789"},
 		},
-	}, nil
+	}
 }

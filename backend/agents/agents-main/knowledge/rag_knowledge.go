@@ -103,3 +103,7 @@ func (r *RAGKnowledge) chunksFrom(query string) ([]ChunkResponse, []ContactRespo
 
 	return ragResponse.Chunks.Data, ragResponse.Contacts.Data, nil
 }
+
+func (r *RAGKnowledge) Name() string {
+	return "rag"
+}

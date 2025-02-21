@@ -12,16 +12,18 @@ type ExamResponse struct {
 	AnswerbookExamURL string `json:"answerbook_exam_url"`
 }
 
-func (m *MockAbcApiClient) GetExams() (*ExamResponse, error) {
-	return &ExamResponse{
-		Period:            "2024-2025",
-		Term:              2,
-		ExamDate:          "2025-05-15",
-		StartTime:         "14:00",
-		Duration:          120,
-		Title:             "Software Engineering Design",
-		ModuleCode:        "50002",
-		ComputerBased:     true,
-		AnswerbookExamURL: "https://exams.doc.ic.ac.uk/50002/2025",
-	}, nil
+func (m *MockAbcApiClient) GetExams() []ExamResponse {
+	return []ExamResponse{
+		{
+			Period:            "2024-2025",
+			Term:              2,
+			ExamDate:          "2025-05-15",
+			StartTime:         "14:00",
+			Duration:          120,
+			Title:             "Software Engineering Design",
+			ModuleCode:        "50002",
+			ComputerBased:     true,
+			AnswerbookExamURL: "https://exams.doc.ic.ac.uk/50002/2025",
+		},
+	}
 }

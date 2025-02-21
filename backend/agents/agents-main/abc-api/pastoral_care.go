@@ -30,8 +30,8 @@ type TutorTuteeRelation struct {
 
 type PersonalTuteesForTutorResponse []TutorTuteeRelation
 
-func (m *MockAbcApiClient) GetTutorialGroups() (*TutorialGroupsResponse, error) {
-	return &TutorialGroupsResponse{
+func (m *MockAbcApiClient) GetTutorialGroups() TutorialGroupsResponse {
+	return TutorialGroupsResponse{
 		{
 			Number: 3,
 			Type:   "MEng Computing",
@@ -53,11 +53,11 @@ func (m *MockAbcApiClient) GetTutorialGroups() (*TutorialGroupsResponse, error) 
 				},
 			},
 		},
-	}, nil
+	}
 }
 
-func (m *MockAbcApiClient) GetPersonalTuteesForTutor() (*PersonalTuteesForTutorResponse, error) {
-	return &PersonalTuteesForTutorResponse{
+func (m *MockAbcApiClient) GetPersonalTuteesForTutor() PersonalTuteesForTutorResponse {
+	return PersonalTuteesForTutorResponse{
 		{
 			Tutor: PersonResponse{
 				Login:     "tutor123",
@@ -84,5 +84,5 @@ func (m *MockAbcApiClient) GetPersonalTuteesForTutor() (*PersonalTuteesForTutorR
 				Cohort:    "2023/24",
 			},
 		},
-	}, nil
+	}
 }
