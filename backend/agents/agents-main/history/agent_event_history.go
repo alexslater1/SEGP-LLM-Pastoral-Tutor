@@ -81,7 +81,8 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 	mostRecentAction := ""
 
 	for _, event := range agentEvents {
-		if event.Type == "tool_call_choice" {
+		switch event.Type {
+		case "tool_call_choice":
 			toolCallChoice := event.Metadata.(map[string]interface{})["toolCallChoice"].(map[string]interface{})
 
 			parsedArgs := map[string]string{}
@@ -93,25 +94,17 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 			a := parsedArgs["description_of_action"]
 			mostRecentAction = a
 			actions = append(actions, a)
-			continue
-		}
 
-		if event.Type == "tool_call_result" {
+		case "tool_call_result":
 			actions = append(actions, "Thinking")
-			continue
-		}
 
-		if event.Type == "answer_success" {
+		case "answer_success":
 			answer = event.Metadata.(map[string]interface{})["answer"].(string)
-			continue
-		}
 
-		if event.Type == "error" {
+		case "answer_error":
 			err = event.Metadata.(map[string]interface{})["error"].(string)
-			continue
-		}
 
-		if event.Type == "query" {
+		case "query":
 			q := event.Metadata.(map[string]interface{})["query"].(string)
 			if query == nil {
 				// we only care about the first agent's query
