@@ -20,8 +20,8 @@ type CohortResponse struct {
 	DegreeShort string `json:"degree_short"`
 }
 
-func (m *MockAbcApiClient) GetCohorts() (*[]CohortResponse, error) {
-	return &[]CohortResponse{
+func (m *MockAbcApiClient) GetCohorts() []CohortResponse {
+	return []CohortResponse{
 		{
 			DegreeYear:  0,
 			Degree:      "Bachelor of Science in Computer Science",
@@ -37,7 +37,7 @@ func (m *MockAbcApiClient) GetCohorts() (*[]CohortResponse, error) {
 			Degree:      "Doctor of Philosophy in Data Science",
 			DegreeShort: "PhD DS",
 		},
-	}, nil
+	}
 }
 
 type AcademicPeriodResponse struct {
@@ -47,7 +47,7 @@ type AcademicPeriodResponse struct {
 	End   time.Time `json:"end"`
 }
 
-func (m *MockAbcApiClient) GetAcademicPeriods() (*[][]AcademicPeriodResponse, error) {
+func (m *MockAbcApiClient) GetAcademicPeriods() [][]AcademicPeriodResponse {
 	const layout = "2006-01-02"
 
 	// Create a sample academic period.
@@ -68,7 +68,7 @@ func (m *MockAbcApiClient) GetAcademicPeriods() (*[][]AcademicPeriodResponse, er
 	}
 
 	// Return a nested slice of AcademicPeriod.
-	return &[][]AcademicPeriodResponse{
+	return [][]AcademicPeriodResponse{
 		{mockPeriod},
-	}, nil
+	}
 }

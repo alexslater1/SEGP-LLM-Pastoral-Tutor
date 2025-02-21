@@ -12,18 +12,18 @@ type PublicModuleTypesResponse struct {
 	SyllabusLabel string `json:"syllabus_label"`
 }
 
-func (m *MockAbcApiClient) GetPublicCourses() (*PublicCourseResponse, error) {
-	return &PublicCourseResponse{
+func (m *MockAbcApiClient) GetPublicCourses() PublicCourseResponse {
+	return PublicCourseResponse{
 		Code:  "50002",
 		Title: "Software Engineering Design",
 		ECTS:  5,
-	}, nil
+	}
 }
 
-func (m *MockAbcApiClient) GetPublicModuleTypes() (*PublicModuleTypesResponse, error) {
-	return &PublicModuleTypesResponse{
+func (m *MockAbcApiClient) GetPublicModuleTypes() PublicModuleTypesResponse {
+	return PublicModuleTypesResponse{
 		Title:         "Software Engineering Design",
 		Code:          "50002",
 		SyllabusLabel: "Software Engineering Design",
-	}, nil
+	}
 }

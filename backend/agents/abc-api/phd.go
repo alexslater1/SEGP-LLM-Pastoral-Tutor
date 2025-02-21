@@ -32,8 +32,8 @@ type PhdStudentInformationResponse struct {
     Supervisors   []Supervisor `json:"supervisors"`
 }
 
-func (m *MockAbcApiClient) GetPhdStudentsForSupervisor() (*PhdStudentsForSupervisorResponse, error) {
-    return &PhdStudentsForSupervisorResponse{
+func (m *MockAbcApiClient) GetPhdStudentsForSupervisor() PhdStudentsForSupervisorResponse {
+    return PhdStudentsForSupervisorResponse{
         Login:        "azhang435",
         FirstName:    "Aisha",
         LastName:     "Zhang",
@@ -58,11 +58,11 @@ func (m *MockAbcApiClient) GetPhdStudentsForSupervisor() (*PhdStudentsForSupervi
                 Role:         "Secondary Supervisor",
             },
         },
-    }, nil
+    }
 }
 
-func (m *MockAbcApiClient) GetPhdStudentInformation() (*PhdStudentInformationResponse, error) {
-    return &PhdStudentInformationResponse{
+func (m *MockAbcApiClient) GetPhdStudentInformation() PhdStudentInformationResponse {
+    return PhdStudentInformationResponse{
         Login:         "msmith123",
         FirstName:     "Maria",
         LastName:      "Smith",
@@ -87,5 +87,5 @@ func (m *MockAbcApiClient) GetPhdStudentInformation() (*PhdStudentInformationRes
                 Role:         "Secondary Supervisor",
             },
         },
-    }, nil
+    }
 }

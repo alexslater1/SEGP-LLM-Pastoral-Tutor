@@ -147,10 +147,10 @@ type TotalEnrolledStudentsResponse struct {
 	Total int `json:"total"`
 }
 
-func (m *MockAbcApiClient) GetTotalEnrolledStudents() (*TotalEnrolledStudentsResponse, error) {
-	return &TotalEnrolledStudentsResponse{
+func (m *MockAbcApiClient) GetTotalEnrolledStudents() TotalEnrolledStudentsResponse {
+	return TotalEnrolledStudentsResponse{
 		Total: 100,
-	}, nil
+	}
 }
 
 type EnrolledStudentsResponse struct {
@@ -162,12 +162,12 @@ type ModuleResponse2 struct {
 	Students   []string `json:"students"`
 }
 
-func (m *MockAbcApiClient) GetEnrolledStudents() (*EnrolledStudentsResponse, error) {
-	return &EnrolledStudentsResponse{
+func (m *MockAbcApiClient) GetEnrolledStudents() EnrolledStudentsResponse {
+	return EnrolledStudentsResponse{
 		Modules: []ModuleResponse2{
 			{ModuleCode: "50002", Students: []string{"anshul"}},
 		},
-	}, nil
+	}
 }
 
 type IdentityResponse struct {
@@ -176,12 +176,12 @@ type IdentityResponse struct {
 	Email   string `json:"email"`
 }
 
-func (m *MockAbcApiClient) IdentityForGivenLoginOrEmail(givenLoginOrEmail string) (*IdentityResponse, error) {
-	return &IdentityResponse{
+func (m *MockAbcApiClient) IdentityForGivenLoginOrEmail(givenLoginOrEmail string) IdentityResponse {
+	return IdentityResponse{
 		IsStaff: false,
 		Login:   "anshul",
 		Email:   "as522@ic.ac.uk",
-	}, nil
+	}
 }
 
 type StudentDetailsResponse struct {
@@ -207,8 +207,8 @@ type StudentDetailsResponse struct {
 	} `json:"personal_tutor"`
 }
 
-func (m *MockAbcApiClient) GetStudentDetails() (*StudentDetailsResponse, error) {
-	return &StudentDetailsResponse{
+func (m *MockAbcApiClient) GetStudentDetails() StudentDetailsResponse {
+	return StudentDetailsResponse{
 		Login:            "anshul",
 		Email:            "anshul@university.edu",
 		Lastname:         "Sharma",
@@ -233,13 +233,10 @@ func (m *MockAbcApiClient) GetStudentDetails() (*StudentDetailsResponse, error) 
 			Lastname:  "Donaldson",
 			Firstname: "Alistair",
 		},
-	}, nil
+	}
 }
 
-func (m *MockAbcApiClient) GetAllStudents() ([]StudentDetailsResponse, error) {
-	studentDetails, err := m.GetStudentDetails()
-	if err != nil {
-		return nil, err
-	}
-	return []StudentDetailsResponse{*studentDetails}, nil
+func (m *MockAbcApiClient) GetAllStudents() []StudentDetailsResponse {
+	studentDetails := m.GetStudentDetails()
+	return []StudentDetailsResponse{studentDetails}
 }
