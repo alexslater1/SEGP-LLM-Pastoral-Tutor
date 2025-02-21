@@ -12,6 +12,7 @@ import (
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
+	"github.com/segp/agents-main/utils"
 )
 
 const (
@@ -124,14 +125,14 @@ func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *Sim
 		basePrompt = ""
 
 		description        = "TODO"
-		geminiLlm          = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
-		ragKnowledge       = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
+		geminiLlm          = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		ragKnowledge       = knowledge.NewRAGKnowledge(utils.Required(os.Getenv("RAG_BASE_URL"), "RAG_BASE_URL"))
 		extraKnowledge     = knowledge.NewExtraKnowledge(apiFuncs...)
 		conjoinedKnowledge = knowledge.NewConjoinedKnowledge(ragKnowledge, extraKnowledge)
 		realClock          = clock.NewRealClock()
 
 		googleSearchClient = googleSearch.NewRodClient()
-		supabaseStore      = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+		supabaseStore      = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE"))
 		agentEventHistory  = history.NewAgentEventHistory(supabaseStore)
 
 		toolHandler = tools.NewNoToolGoogleSearchToolHandler(googleSearchClient)

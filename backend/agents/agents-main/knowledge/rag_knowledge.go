@@ -3,6 +3,7 @@ package knowledge
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -80,6 +81,7 @@ func (r *RAGKnowledge) Get(query string) (*string, error) {
 	}
 
 	result := fmt.Sprintf("Context Chunks: %s\nContact Chunks: %s", string(jsonTexts), string(jsonContactTexts))
+	log.Printf("!!!!!!!!! RAGKnowledge result: %s", result)
 	return &result, nil
 }
 
