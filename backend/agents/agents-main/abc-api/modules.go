@@ -51,13 +51,13 @@ type EnrolledStudentResponse struct {
 }
 
 // For first term modules
-func (m *MockAbcApiClient) GetModules() ([]*ModuleResponse3, error) {
-	return []*ModuleResponse3{
+func (m *MockAbcApiClient) GetModules() []ModuleResponse3 {
+	return []ModuleResponse3{
 		{
-			Code:        "60001",
-			Title:       "Advanced Computer Architecture",
-			ECTS:        5,
-			Terms:       []int{1},
+			Code:              "60001",
+			Title:             "Advanced Computer Architecture",
+			ECTS:              5,
+			Terms:             []int{1},
 			ApplicableCohorts: []string{"c3", "c4", "i3", "i4", "j3", "j4", "o3", "x1", "x3", "x5"},
 			CohortRegulations: []CohortRegulationResponse{
 				{Cohort: "c3", PassMark: 40},
@@ -71,73 +71,73 @@ func (m *MockAbcApiClient) GetModules() ([]*ModuleResponse3, error) {
 				{Cohort: "x1", PassMark: 40},
 				{Cohort: "x5", PassMark: 40},
 			},
-			ExamContribution: 80,
+			ExamContribution:       80,
 			CourseworkContribution: 20,
-			ExamQuestionsTotal: 3,
-			ExamQuestionsNeeded: 3,
+			ExamQuestionsTotal:     3,
+			ExamQuestionsNeeded:    3,
 			Staff: []StaffResponse{
 				{
-					Login:          "phjk",
-					Email:          "p.kelly@imperial.ac.uk",
+					Login:            "phjk",
+					Email:            "p.kelly@imperial.ac.uk",
 					RoleInDepartment: "staff",
-					LastName:       "Kelly",
-					FirstName:      "Paul",
-					Department:     "DoC",
-					CID:            "00003206",
+					LastName:         "Kelly",
+					FirstName:        "Paul",
+					Department:       "DoC",
+					CID:              "00003206",
 				},
 			},
 			Helpers: []HelperResponse{
 				{
-					Login:    "lp721",
-					Email:    "l.panayi21@imperial.ac.uk",
-					LastName: "Panayi",
-					FirstName: "Luke",
-					RoleInDepartment:    "Tutorial Helper",
+					Login:            "lp721",
+					Email:            "l.panayi21@imperial.ac.uk",
+					LastName:         "Panayi",
+					FirstName:        "Luke",
+					RoleInDepartment: "Tutorial Helper",
 					Department:       "DoC",
 				},
 			},
 		},
 		{
-			Code:        "60007",
-			Title:       "The Theory and Practice of Concurrent Programming",
-			ECTS:        5,
-			Terms:       []int{1},
+			Code:              "60007",
+			Title:             "The Theory and Practice of Concurrent Programming",
+			ECTS:              5,
+			Terms:             []int{1},
 			ApplicableCohorts: []string{"c3", "j3"},
 			CohortRegulations: []CohortRegulationResponse{
 				{Cohort: "c3", PassMark: 40},
 				{Cohort: "j3", PassMark: 40},
 			},
-			ExamContribution: 80,
+			ExamContribution:       80,
 			CourseworkContribution: 20,
-			ExamQuestionsTotal: 2,
-			ExamQuestionsNeeded: 2,
+			ExamQuestionsTotal:     2,
+			ExamQuestionsNeeded:    2,
 			Staff: []StaffResponse{
 				{
-					Login:          "azalea",
-					Email:          "azalea.raad@imperial.ac.uk",
+					Login:            "azalea",
+					Email:            "azalea.raad@imperial.ac.uk",
 					RoleInDepartment: "staff",
-					LastName:       "Raad",
-					FirstName:      "Azalea",
-					Department:     "DoC",
-					CID:            "00483298",
+					LastName:         "Raad",
+					FirstName:        "Azalea",
+					Department:       "DoC",
+					CID:              "00483298",
 				},
 			},
 			Helpers: []HelperResponse{
 				{
-					Login:    "sh2221",
-					Email:    "shinghin.ho21@imperial.ac.uk",
-					LastName: "Ho",
-					FirstName: "Shing",
-					RoleInDepartment:    "Tutorial Helper",
+					Login:            "sh2221",
+					Email:            "shinghin.ho21@imperial.ac.uk",
+					LastName:         "Ho",
+					FirstName:        "Shing",
+					RoleInDepartment: "Tutorial Helper",
 					Department:       "DoC",
 				},
 			},
 		},
 		{
-			Code:        "60012",
-			Title:       "Introduction to Machine Learning",
-			ECTS:        5,
-			Terms:       []int{1},
+			Code:              "60012",
+			Title:             "Introduction to Machine Learning",
+			ECTS:              5,
+			Terms:             []int{1},
 			ApplicableCohorts: []string{"c3", "i3", "j3", "o3"},
 			CohortRegulations: []CohortRegulationResponse{
 				{Cohort: "c3", PassMark: 40},
@@ -145,126 +145,125 @@ func (m *MockAbcApiClient) GetModules() ([]*ModuleResponse3, error) {
 				{Cohort: "j3", PassMark: 40},
 				{Cohort: "o3", PassMark: 40},
 			},
-			ExamContribution: 70,
+			ExamContribution:       70,
 			CourseworkContribution: 30,
-			ExamQuestionsTotal: 3,
-			ExamQuestionsNeeded: 3,
+			ExamQuestionsTotal:     3,
+			ExamQuestionsNeeded:    3,
 			Staff: []StaffResponse{
 				{
-					Login:          "jwang4",
-					Email:          "josiah.wang@imperial.ac.uk",
+					Login:            "jwang4",
+					Email:            "josiah.wang@imperial.ac.uk",
 					RoleInDepartment: "staff",
-					LastName:       "Wang",
-					FirstName:      "Josiah",
-					Department:     "DoC",
-					CID:            "01030000",
+					LastName:         "Wang",
+					FirstName:        "Josiah",
+					Department:       "DoC",
+					CID:              "01030000",
 				},
 			},
 			Helpers: []HelperResponse{
 				{
-					Login:    "ad5518",
-					Email:    "adam.dejl18@imperial.ac.uk",
-					LastName: "Dejl",
-					FirstName: "Adam",
-					RoleInDepartment:    "Tutorial Helper",
+					Login:            "ad5518",
+					Email:            "adam.dejl18@imperial.ac.uk",
+					LastName:         "Dejl",
+					FirstName:        "Adam",
+					RoleInDepartment: "Tutorial Helper",
 					Department:       "DoC",
 				},
 			},
 		},
 		{
-		Code:   "70015",
-		Title:  "Mathematics for Machine Learning",
-		Terms:  []int{1},
-		ApplicableCohorts: []string{
-			"a5", "c3", "c4", "i4", "o3", "q5", "r6", "s5", "t5",
+			Code:  "70015",
+			Title: "Mathematics for Machine Learning",
+			Terms: []int{1},
+			ApplicableCohorts: []string{
+				"a5", "c3", "c4", "i4", "o3", "q5", "r6", "s5", "t5",
+			},
+			CohortRegulations: []CohortRegulationResponse{
+				{"r6", 50},
+				{"t5", 50},
+				{"c3", 50},
+				{"c4", 50},
+				{"i4", 50},
+				{"s5", 50},
+				{"a5", 50},
+				{"q5", 50},
+				{"o3", 50},
+			},
+			ExamContribution:       70,
+			CourseworkContribution: 30,
+			ExamQuestionsTotal:     3,
+			ExamQuestionsNeeded:    3,
+			ECTS:                   5,
+			Staff: []StaffResponse{
+				{
+					Login:            "rac101",
+					Email:            "robert.craven@imperial.ac.uk",
+					FirstName:        "Robert",
+					LastName:         "Craven",
+					RoleInDepartment: "staff",
+					Department:       "DoC",
+					CID:              "00343970",
+				},
+			},
+			Helpers: []HelperResponse{
+				{
+					Login:            "zo122",
+					Email:            "z.ou22@imperial.ac.uk",
+					FirstName:        "Zijing",
+					LastName:         "Ou",
+					RoleInDepartment: "Tutorial Helper",
+					Department:       "DoC",
+				},
+			},
 		},
+	}
+}
+
+// For Intro to ML
+func (m *MockAbcApiClient) GetModule() ModuleResponse3 {
+	return ModuleResponse3{
+		Code:              "60012",
+		Title:             "Introduction to Machine Learning",
+		ECTS:              5,
+		Terms:             []int{1},
+		ApplicableCohorts: []string{"c3", "i3", "j3", "o3"},
 		CohortRegulations: []CohortRegulationResponse{
-			{"r6", 50},
-			{"t5", 50},
-			{"c3", 50},
-			{"c4", 50},
-			{"i4", 50},
-			{"s5", 50},
-			{"a5", 50},
-			{"q5", 50},
-			{"o3", 50},
+			{Cohort: "c3", PassMark: 40},
+			{Cohort: "i3", PassMark: 40},
+			{Cohort: "j3", PassMark: 40},
+			{Cohort: "o3", PassMark: 40},
 		},
 		ExamContribution:       70,
 		CourseworkContribution: 30,
 		ExamQuestionsTotal:     3,
 		ExamQuestionsNeeded:    3,
-		ECTS:                   5,
 		Staff: []StaffResponse{
 			{
-				Login:            "rac101",
-				Email:            "robert.craven@imperial.ac.uk",
-				FirstName:        "Robert",
-				LastName:         "Craven",
+				Login:            "jwang4",
+				Email:            "josiah.wang@imperial.ac.uk",
 				RoleInDepartment: "staff",
+				LastName:         "Wang",
+				FirstName:        "Josiah",
 				Department:       "DoC",
-				CID:              "00343970",
+				CID:              "01030000",
 			},
 		},
 		Helpers: []HelperResponse{
 			{
-				Login:            "zo122",
-				Email:            "z.ou22@imperial.ac.uk",
-				FirstName:        "Zijing",
-				LastName:         "Ou",
+				Login:            "ad5518",
+				Email:            "adam.dejl18@imperial.ac.uk",
+				LastName:         "Dejl",
+				FirstName:        "Adam",
 				RoleInDepartment: "Tutorial Helper",
 				Department:       "DoC",
 			},
 		},
-	},
-	}, nil
-
-}
-
-// For Intro to ML
-func (m *MockAbcApiClient) GetModule() (*ModuleResponse3, error) {
-	return &ModuleResponse3{
-			Code:        "60012",
-			Title:       "Introduction to Machine Learning",
-			ECTS:        5,
-			Terms:       []int{1},
-			ApplicableCohorts: []string{"c3", "i3", "j3", "o3"},
-			CohortRegulations: []CohortRegulationResponse{
-				{Cohort: "c3", PassMark: 40},
-				{Cohort: "i3", PassMark: 40},
-				{Cohort: "j3", PassMark: 40},
-				{Cohort: "o3", PassMark: 40},
-			},
-			ExamContribution: 70,
-			CourseworkContribution: 30,
-			ExamQuestionsTotal: 3,
-			ExamQuestionsNeeded: 3,
-			Staff: []StaffResponse{
-				{
-					Login:          "jwang4",
-					Email:          "josiah.wang@imperial.ac.uk",
-					RoleInDepartment: "staff",
-					LastName:       "Wang",
-					FirstName:      "Josiah",
-					Department:     "DoC",
-					CID:            "01030000",
-				},
-			},
-			Helpers: []HelperResponse{
-				{
-					Login:    "ad5518",
-					Email:    "adam.dejl18@imperial.ac.uk",
-					LastName: "Dejl",
-					FirstName: "Adam",
-					RoleInDepartment:    "Tutorial Helper",
-					Department:       "DoC",
-				},
-			},
-		}, nil
+	}
 }
 
 // Truncated for SEGP
-func (m *MockAbcApiClient) GetEnrolledStudents2() ([]*EnrolledStudentResponse, error) {
-	return []*EnrolledStudentResponse{
+func (m *MockAbcApiClient) GetEnrolledStudents2() []EnrolledStudentResponse {
+	return []EnrolledStudentResponse{
 		{
 			Login:     "jw5322",
 			Email:     "james.watling22@imperial.ac.uk",
@@ -310,5 +309,5 @@ func (m *MockAbcApiClient) GetEnrolledStudents2() ([]*EnrolledStudentResponse, e
 			Status:    "Normal",
 			Cohort:    "c3",
 		},
-		}, nil
+	}
 }
