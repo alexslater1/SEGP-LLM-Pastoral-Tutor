@@ -53,11 +53,13 @@ export function useChat({
     enabled: !!id,
   });
 
-  // When the chat hook is unmounted, we should invalidate the all-messages so it 
+  // When the chat hook is unmounted, we should invalidate the all-messages so it
   // can be refetched when a chat url is navigated to again
   useEffect(() => {
     return () => {
-      queryClient.invalidateQueries({ queryKey: ["all-messages", chatSessionID] });
+      queryClient.invalidateQueries({
+        queryKey: ["all-messages", chatSessionID],
+      });
     };
   }, []);
 
@@ -89,8 +91,8 @@ export function useChat({
       return currentLastMessage;
     }
 
-    if (statusResponse.type === Status.FAILED) {
-      currentLastMessage.status = Status.FAILED;
+    if (statusResponse.type === Status.ERROR) {
+      currentLastMessage.status = Status.ERROR;
       currentLastMessage.content = statusResponse.error as string;
       stop();
       return currentLastMessage;
@@ -203,7 +205,7 @@ export function useChat({
         content: sendError,
         role: Role.ASSISTANT,
         actions: [],
-        status: Status.FAILED,
+        status: Status.ERROR,
       };
     } else {
       setChatSessionID(newSessionID as string);
@@ -438,7 +440,7 @@ async function checkStatusByRequestID(
   } catch (currentError) {
     console.error("Error:", currentError);
     return {
-      type: Status.FAILED,
+      type: Status.ERROR,
       error: (currentError as Error).message,
     };
   }

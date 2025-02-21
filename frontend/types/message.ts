@@ -1,16 +1,22 @@
-export type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
+export type JSONValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JSONValue[]
+  | { [key: string]: JSONValue };
 
 export enum Status {
-    PENDING = "pending",
-    COMPLETED = "completed",
-    FAILED = "failed",
+  PENDING = "pending",
+  COMPLETED = "completed",
+  ERROR = "error",
 }
 
 export enum Role {
-    SYSTEM = "system",
-    USER = "user",
-    ASSISTANT = "assistant",
-    DATA = "data",
+  SYSTEM = "system",
+  USER = "user",
+  ASSISTANT = "assistant",
+  DATA = "data",
 }
 
 export type Message = {
@@ -22,4 +28,4 @@ export type Message = {
   data?: JSONValue;
   actions: string[];
   status: Status;
-}
+};

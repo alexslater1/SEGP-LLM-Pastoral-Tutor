@@ -50,7 +50,7 @@ function PureMessages({
           message.actions.length === 0 ? (
           <ThinkingMessage key={message.id} />
         ) : (
-          <ErrorMessage error={message.content} />
+          <ErrorMessage key={message.id} error={message.content} />
         )
       )}
 
