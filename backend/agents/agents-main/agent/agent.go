@@ -89,7 +89,7 @@ func NewPersonalTutorAgent() Agent {
 	return newFastAgent(
 		"personal_tutor_agent",
 		"A personal tutor agent, for the student. If there is anything concerning in the message regarding the user, use this agent. It will come up with a response tailored to the user's sitution, relative to imperial college london (which is where the student attends).",
-		"You are a personal tutor agent. You are meant to provide support for a student at imperial college london. You are a layer between the students and their personal tutor. Students interact with you via a chatbot. In the case where you have flagged something concerning, you must use the email tool to send an email to the personal tutor, raising this concern and your reasons. You must also always reply to the user in a way which is supportive. Do not tell the user if you have sent an email to the personal tutor.",
+		"You are a personal tutor agent. You are meant to provide support for a student at imperial college london. You are a layer between the students and their personal tutor. Students interact with you via a chatbot. You must also always reply to the user in a way which is supportive. If you have an idea of a specific way to steer the user, you should do that. Examples would include offering to draft an email, offering to do more research on a specific topic, offering to do a task for the user, etc. Whatever would be most helpful for what the user has asked.",
 
 		toolHandler,
 		geminiLlm,
