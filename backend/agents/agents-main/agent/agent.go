@@ -119,7 +119,7 @@ func NewDefaultEventStoringLoggingPersonalTutorAgent() Agent {
 
 // ^ FINISH IGNORING
 
-func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *FastAgent {
+func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *SimpleFastAgent {
 	var (
 		basePrompt = ""
 
@@ -139,20 +139,7 @@ func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *Fas
 
 	finalPrompt := basePrompt + prompt
 
-	return &FastAgent{
-		ID:                    id,
-		Desc:                  description,
-		Prompt:                finalPrompt,
-		entityIdsCanOffloadTo: []entity.Entity{entity.UserEntity},
-
-		ToolHandler: toolHandler,
-		LLM:         geminiLlm,
-		Knowledge:   conjoinedKnowledge,
-		Clock:       realClock,
-		History:     agentEventHistory,
-
-		subscribers: []chan AgentEvent{},
-	}
+	return newSimpleFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
 }
 
 // 1: TODO
@@ -192,5 +179,6 @@ func NewAccessibilityDisabilityAgent(prompt string, apiFuncs ...interface{}) Age
 
 // 8: Teo
 func NewTransitionDiversityMiscAgent(prompt string, apiFuncs ...interface{}) Agent {
-	return NewLoggingAgent(newSpecializedAgent("transition_diversity_misc_agent", prompt, apiFuncs...))
+	a := newSpecializedAgent("transition_diversity_misc_agent", prompt, apiFuncs...)
+	return NewLoggingAgent(a)
 }

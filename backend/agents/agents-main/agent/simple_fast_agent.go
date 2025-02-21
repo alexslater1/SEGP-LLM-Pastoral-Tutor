@@ -106,13 +106,13 @@ func (a *SimpleFastAgent) publish(event AgentEvent) {
 }
 
 func (a *SimpleFastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, error) {
-	answer, reason, err := a.extractAnswerAndReason(toolChoice)
+	response, reason, err := a.extractResponseAndReason(toolChoice)
 	if err != nil {
 		return nil, err
 	}
-	a.publish(NewAnswerSuccessEvent(ctx, *answer, *reason))
+	a.publish(NewAnswerSuccessEvent(ctx, *response, *reason))
 	return &AgentResponse{
-		Answer: answer,
+		Answer: response,
 		Reason: reason,
 	}, nil
 }
@@ -296,18 +296,18 @@ func (a *SimpleFastAgent) toolChoicesString() (string, error) {
 }
 
 // TODO: remove duplication of this
-func (a *SimpleFastAgent) extractAnswerAndReason(toolCall *tools.ToolCall) (*string, *string, error) {
+func (a *SimpleFastAgent) extractResponseAndReason(toolCall *tools.ToolCall) (*string, *string, error) {
 	var arguments map[string]string
 	if err := json.Unmarshal([]byte(toolCall.Arguments), &arguments); err != nil {
 		return nil, nil, err
 	}
 
 	reason := arguments["reason"]
-	answer := arguments["answer"]
+	response := arguments["response"]
 
 	// a.publish(NewAnswerSuccessEvent(requestId, answer, reason))
 
-	return &answer, &reason, nil
+	return &response, &reason, nil
 }
 
 func (a *SimpleFastAgent) formattedToolsStringFrom(prevToolCalls []tools.ToolCall) string {
