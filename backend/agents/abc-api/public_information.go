@@ -1,13 +1,15 @@
+package abc_api
+
 type PublicCourseResponse struct {
-    Code  string `json:"code"`
-    Title string `json:"title"`
-    ECTS  int    `json:"ects"`
+	Code  string `json:"code"`
+	Title string `json:"title"`
+	ECTS  int    `json:"ects"`
 }
 
 type PublicModuleTypesResponse struct {
-    Title         string `json:"title"`
-    Code          string `json:"code"`
-    SyllabusLabel string `json:"syllabus_label"`
+	Title         string `json:"title"`
+	Code          string `json:"code"`
+	SyllabusLabel string `json:"syllabus_label"`
 }
 
 func (m *MockAbcApiClient) GetPublicCourses() (*PublicCourseResponse, error) {

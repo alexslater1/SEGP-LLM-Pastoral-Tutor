@@ -1,22 +1,22 @@
 package abc_api
 
-type Person struct {
+type PersonResponse struct {
 	Login     string `json:"login"`
 	Lastname  string `json:"lastname"`
 	Firstname string `json:"firstname"`
 }
 
-type TutorialGroup struct {
-	Number  int      `json:"number"`
-	Type    string   `json:"type"`
-	Tutor   Person   `json:"tutor"`
-	UTA     Person   `json:"uta"`
-	Members []Person `json:"members"`
+type TutorialGroupResponse struct {
+	Number  int              `json:"number"`
+	Type    string           `json:"type"`
+	Tutor   PersonResponse   `json:"tutor"`
+	UTA     PersonResponse   `json:"uta"`
+	Members []PersonResponse `json:"members"`
 }
 
-type TutorialGroupsResponse []TutorialGroup
+type TutorialGroupsResponse []TutorialGroupResponse
 
-type Tutee struct {
+type TuteeResponse struct {
 	Login     string `json:"login"`
 	Lastname  string `json:"lastname"`
 	Firstname string `json:"firstname"`
@@ -24,31 +24,33 @@ type Tutee struct {
 }
 
 type TutorTuteeRelation struct {
-	Tutor Person `json:"tutor"`
-	Tutee Tutee  `json:"tutee"`
+	Tutor PersonResponse `json:"tutor"`
+	Tutee TuteeResponse  `json:"tutee"`
 }
 
 type PersonalTuteesForTutorResponse []TutorTuteeRelation
 
 func (m *MockAbcApiClient) GetTutorialGroups() (*TutorialGroupsResponse, error) {
 	return &TutorialGroupsResponse{
-		Number: 3,
-		Type:   "MEng Computing",
-		Tutor: Person{
-			Login:     "tutor123",
-			Lastname:  "Smith",
-			Firstname: "John",
-		},
-		UTA: Person{
-			Login:     "uta456",
-			Lastname:  "Johnson",
-			Firstname: "Sarah",
-		},
-		Members: []Person{
-			{
-				Login:     "as4522",
-				Lastname:  "Kumar",
-				Firstname: "Anshul",
+		{
+			Number: 3,
+			Type:   "MEng Computing",
+			Tutor: PersonResponse{
+				Login:     "tutor123",
+				Lastname:  "Smith",
+				Firstname: "John",
+			},
+			UTA: PersonResponse{
+				Login:     "uta456",
+				Lastname:  "Johnson",
+				Firstname: "Sarah",
+			},
+			Members: []PersonResponse{
+				{
+					Login:     "as4522",
+					Lastname:  "Kumar",
+					Firstname: "Anshul",
+				},
 			},
 		},
 	}, nil
@@ -57,12 +59,12 @@ func (m *MockAbcApiClient) GetTutorialGroups() (*TutorialGroupsResponse, error) 
 func (m *MockAbcApiClient) GetPersonalTuteesForTutor() (*PersonalTuteesForTutorResponse, error) {
 	return &PersonalTuteesForTutorResponse{
 		{
-			Tutor: Person{
+			Tutor: PersonResponse{
 				Login:     "tutor123",
 				Lastname:  "Smith",
 				Firstname: "John",
 			},
-			Tutee: Tutee{
+			Tutee: TuteeResponse{
 				Login:     "as4522",
 				Lastname:  "Kumar",
 				Firstname: "Anshul",
@@ -70,12 +72,12 @@ func (m *MockAbcApiClient) GetPersonalTuteesForTutor() (*PersonalTuteesForTutorR
 			},
 		},
 		{
-			Tutor: Person{
+			Tutor: PersonResponse{
 				Login:     "tutor123",
 				Lastname:  "Smith",
 				Firstname: "John",
 			},
-			Tutee: Tutee{
+			Tutee: TuteeResponse{
 				Login:     "jane22",
 				Lastname:  "Doe",
 				Firstname: "Jane",
@@ -84,4 +86,3 @@ func (m *MockAbcApiClient) GetPersonalTuteesForTutor() (*PersonalTuteesForTutorR
 		},
 	}, nil
 }
-

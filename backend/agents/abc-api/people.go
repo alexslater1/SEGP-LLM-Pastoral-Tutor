@@ -1,37 +1,5 @@
 package abc_api
 
-/*
-[
-  {
-    "login": "rbc",
-    "year": "2223",
-    "email": "rbc@ic.ac.uk",
-    "firstname": "Rob",
-    "lastname": "Chatley",
-    "salutation": "Mr",
-    "role_in_department": "staff",
-    "roles_in_department": [
-      "staff",
-      "2nd Year Undergraduate Coordinator"
-    ],
-    "has_extension_clearance": true,
-    "modules": [
-      {
-        "code": "50002",
-        "title": "Software Engineering Design",
-        "terms": [
-          1,
-          2
-        ],
-        "roles": [
-          "Lecturer"
-        ]
-      }
-    ]
-  }
-]
-*/
-
 type ModuleResponse struct {
 	Level int    `json:"level"`
 	Code  string `json:"code"`
@@ -163,4 +131,115 @@ func (m *MockAbcApiClient) GetAllStaffList() ([]StaffResponse, error) {
 			RoleInDepartment: "staff",
 		},
 	}, nil
+}
+
+type ProfileImageResponse struct {
+	Image string `json:"image"`
+}
+
+func (m *MockAbcApiClient) GetProfileImage() (*ProfileImageResponse, error) {
+	return &ProfileImageResponse{
+		Image: "https://imperialimages.com/as4522/profile.jpg",
+	}, nil
+}
+
+type TotalEnrolledStudentsResponse struct {
+	Total int `json:"total"`
+}
+
+func (m *MockAbcApiClient) GetTotalEnrolledStudents() (*TotalEnrolledStudentsResponse, error) {
+	return &TotalEnrolledStudentsResponse{
+		Total: 100,
+	}, nil
+}
+
+type EnrolledStudentsResponse struct {
+	Modules []ModuleResponse2 `json:"modules"`
+}
+
+type ModuleResponse2 struct {
+	ModuleCode string   `json:"module_code"`
+	Students   []string `json:"students"`
+}
+
+func (m *MockAbcApiClient) GetEnrolledStudents() (*EnrolledStudentsResponse, error) {
+	return &EnrolledStudentsResponse{
+		Modules: []ModuleResponse2{
+			{ModuleCode: "50002", Students: []string{"anshul"}},
+		},
+	}, nil
+}
+
+type IdentityResponse struct {
+	IsStaff bool   `json:"is_staff"`
+	Login   string `json:"login"`
+	Email   string `json:"email"`
+}
+
+func (m *MockAbcApiClient) IdentityForGivenLoginOrEmail(givenLoginOrEmail string) (*IdentityResponse, error) {
+	return &IdentityResponse{
+		IsStaff: false,
+		Login:   "anshul",
+		Email:   "as522@ic.ac.uk",
+	}, nil
+}
+
+type StudentDetailsResponse struct {
+	Login            string `json:"login"`
+	Email            string `json:"email"`
+	Lastname         string `json:"lastname"`
+	Firstname        string `json:"firstname"`
+	Salutation       string `json:"salutation"`
+	Year             string `json:"year"`
+	RoleInDepartment string `json:"role_in_department"`
+	Cohort           string `json:"cohort"`
+	CID              string `json:"cid"`
+	ExamClass        string `json:"exam_class"`
+	DegreeCode       string `json:"degree_code"`
+	DegreeYear       string `json:"degree_year"`
+	StudentStatus    string `json:"student_status"`
+	EntryYear        int    `json:"entry_year"`
+	FeeStatus        string `json:"fee_status"`
+	PersonalTutor    struct {
+		Login     string `json:"login"`
+		Lastname  string `json:"lastname"`
+		Firstname string `json:"firstname"`
+	} `json:"personal_tutor"`
+}
+
+func (m *MockAbcApiClient) GetStudentDetails() (*StudentDetailsResponse, error) {
+	return &StudentDetailsResponse{
+		Login:            "anshul",
+		Email:            "anshul@university.edu",
+		Lastname:         "Sharma",
+		Firstname:        "Anshul",
+		Salutation:       "Mr.",
+		Year:             "3",
+		RoleInDepartment: "Student",
+		Cohort:           "2021",
+		CID:              "A12345678",
+		ExamClass:        "2025",
+		DegreeCode:       "MEng Computing",
+		DegreeYear:       "2024",
+		StudentStatus:    "Active",
+		EntryYear:        2022,
+		FeeStatus:        "Home",
+		PersonalTutor: struct {
+			Login     string `json:"login"`
+			Lastname  string `json:"lastname"`
+			Firstname string `json:"firstname"`
+		}{
+			Login:     "ad321",
+			Lastname:  "Donaldson",
+			Firstname: "Alistair",
+		},
+	}, nil
+}
+
+func (m *MockAbcApiClient) GetAllStudents() ([]StudentDetailsResponse, error) {
+	studentDetails, err := m.GetStudentDetails()
+	if err != nil {
+		return nil, err
+	}
+	return []StudentDetailsResponse{*studentDetails}, nil
 }
