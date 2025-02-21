@@ -25,6 +25,7 @@ type StaffResponse struct {
 	Email            string `json:"email"`
 	FirstName        string `json:"firstname"`
 	LastName         string `json:"lastname"`
+	Salutation       string `json:"salutation"`
 	RoleInDepartment string `json:"role_in_department"`
 	Department       string `json:"department"`
 	CID              string `json:"cid"`

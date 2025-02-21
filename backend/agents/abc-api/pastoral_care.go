@@ -1,0 +1,88 @@
+package abc_api
+
+type PersonResponse struct {
+	Login     string `json:"login"`
+	Lastname  string `json:"lastname"`
+	Firstname string `json:"firstname"`
+}
+
+type TutorialGroupResponse struct {
+	Number  int              `json:"number"`
+	Type    string           `json:"type"`
+	Tutor   PersonResponse   `json:"tutor"`
+	UTA     PersonResponse   `json:"uta"`
+	Members []PersonResponse `json:"members"`
+}
+
+type TutorialGroupsResponse []TutorialGroupResponse
+
+type TuteeResponse struct {
+	Login     string `json:"login"`
+	Lastname  string `json:"lastname"`
+	Firstname string `json:"firstname"`
+	Cohort    string `json:"cohort"`
+}
+
+type TutorTuteeRelation struct {
+	Tutor PersonResponse `json:"tutor"`
+	Tutee TuteeResponse  `json:"tutee"`
+}
+
+type PersonalTuteesForTutorResponse []TutorTuteeRelation
+
+func (m *MockAbcApiClient) GetTutorialGroups() (*TutorialGroupsResponse, error) {
+	return &TutorialGroupsResponse{
+		{
+			Number: 3,
+			Type:   "MEng Computing",
+			Tutor: PersonResponse{
+				Login:     "tutor123",
+				Lastname:  "Smith",
+				Firstname: "John",
+			},
+			UTA: PersonResponse{
+				Login:     "uta456",
+				Lastname:  "Johnson",
+				Firstname: "Sarah",
+			},
+			Members: []PersonResponse{
+				{
+					Login:     "as4522",
+					Lastname:  "Kumar",
+					Firstname: "Anshul",
+				},
+			},
+		},
+	}, nil
+}
+
+func (m *MockAbcApiClient) GetPersonalTuteesForTutor() (*PersonalTuteesForTutorResponse, error) {
+	return &PersonalTuteesForTutorResponse{
+		{
+			Tutor: PersonResponse{
+				Login:     "tutor123",
+				Lastname:  "Smith",
+				Firstname: "John",
+			},
+			Tutee: TuteeResponse{
+				Login:     "as4522",
+				Lastname:  "Kumar",
+				Firstname: "Anshul",
+				Cohort:    "2023/24",
+			},
+		},
+		{
+			Tutor: PersonResponse{
+				Login:     "tutor123",
+				Lastname:  "Smith",
+				Firstname: "John",
+			},
+			Tutee: TuteeResponse{
+				Login:     "jane22",
+				Lastname:  "Doe",
+				Firstname: "Jane",
+				Cohort:    "2023/24",
+			},
+		},
+	}, nil
+}
