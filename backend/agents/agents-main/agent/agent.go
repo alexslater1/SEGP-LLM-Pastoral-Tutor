@@ -68,7 +68,7 @@ func NewPersonalTutorAgent() Agent {
 		supabaseStore     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 		agentEventHistory = history.NewAgentEventHistory(supabaseStore)
 
-		toolHandler = tools.NewGiveAnswerToolHandler([]tools.Tool{
+		toolHandler = tools.NewToolHandler([]tools.Tool{
 			// tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
 		})
 	)
@@ -121,7 +121,7 @@ func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *Fas
 		supabaseStore      = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE"))
 		agentEventHistory  = history.NewAgentEventHistory(supabaseStore)
 
-		toolHandler = tools.NewNoToolGoogleSearchToolHandler(googleSearchClient)
+		toolHandler = tools.NewGoogleSearchToolHandler(googleSearchClient)
 	)
 
 	finalPrompt := basePrompt + prompt
