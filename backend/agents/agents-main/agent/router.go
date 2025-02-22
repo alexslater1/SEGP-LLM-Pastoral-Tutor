@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
+	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/llm"
 )
 
@@ -36,10 +38,15 @@ func NewRouter(llm llm.LLM, agents []Agent) *Router {
 }
 
 func (r *Router) Run(ctx context.Context, query string) (*AgentResponse, error) {
+	ctx = context_keys.SetAgentID(ctx, r.Id())
+
+	slog.Info("Running router", "query", query)
+	r.publish(NewQueryEvent(ctx, query))
 	agent, _, err := r.pickAgentForQuery(ctx, query)
 	if err != nil {
 		return nil, err
 	}
+
 	return agent.Run(ctx, query)
 }
 
@@ -69,8 +76,16 @@ func (r *Router) Unsubscribe(ch <-chan AgentEvent) {
 
 func (r *Router) forwardEventsLoop(agentCh <-chan AgentEvent) {
 	for event := range agentCh {
-		for _, subscriber := range r.subscribers {
-			subscriber <- event
+		r.publish(event)
+	}
+}
+
+func (r *Router) publish(event AgentEvent) {
+	for _, subscriber := range r.subscribers {
+		select {
+		case subscriber <- event:
+		default:
+			slog.Warn("Subscriber buffer is full, skipping event", "event", event)
 		}
 	}
 }
@@ -91,6 +106,7 @@ func (r *Router) pickAgentForQuery(ctx context.Context, query string) (Agent, st
 	if !ok {
 		return nil, "", fmt.Errorf("agent not found")
 	}
+	r.publish(NewRouterSelectionEvent(ctx, routerSelection.AgentID, routerSelection.Reason))
 	return agent, routerSelection.Reason, nil
 }
 

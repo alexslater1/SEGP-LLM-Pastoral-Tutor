@@ -66,14 +66,14 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 		}
 
 		// TODO: put this in different thread maybe? Idk might break some stuff
-		ctx, err := linkSessionToRequest(r.Context(), store, req.Query, llm)
+		newCtx, err := linkSessionToRequest(r.Context(), store, req.Query, llm)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error linking session to request %v", err.Error()), http.StatusInternalServerError)
 			return
 		}
 
 		go func() {
-			resp, err := agent.Run(r.Context(), req.Query)
+			resp, err := agent.Run(newCtx, req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				rr := storage.NewCompletionResult(requestId, nil, nil, err)
@@ -96,7 +96,7 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			}
 		}()
 
-		sessionId, ok := context_keys.GetSessionID(ctx)
+		sessionId, ok := context_keys.GetSessionID(newCtx)
 		if !ok {
 			slog.Error("session_id not found in context")
 			return
@@ -201,36 +201,41 @@ func latestThinkingEventStatusResponse(events []storage.AgentEvent) *ChatComplet
 // 	return createStatusFromEvent(newestEvent)
 // }
 
-func linkSessionToRequest(ctx context.Context, store storage.Storage, query string, llm llm.LLM) (context.Context, error) {
-	requestID, ok := context_keys.GetRequestID(ctx)
+// Create new context so that doesnt cancel when request completes
+// (So agent can keep running in new thread)
+func linkSessionToRequest(oldCtx context.Context, store storage.Storage, query string, llm llm.LLM) (context.Context, error) {
+	newContext := context.Background()
+	requestID, ok := context_keys.GetRequestID(oldCtx)
 	if !ok {
-		return ctx, fmt.Errorf("request_id not found in context")
+		return oldCtx, fmt.Errorf("request_id not found in context")
 	}
 
-	userID, ok := context_keys.GetUserID(ctx)
+	userID, ok := context_keys.GetUserID(oldCtx)
 	if !ok {
-		return ctx, fmt.Errorf("user_id not found in context")
+		return oldCtx, fmt.Errorf("user_id not found in context")
 	}
 
-	sessionID, ok := context_keys.GetSessionID(ctx)
+	sessionID, ok := context_keys.GetSessionID(oldCtx)
 	if !ok {
 		session, err := storage.Store(store, storage.NewSession(requestID, userID))
 		if err != nil {
-			return ctx, fmt.Errorf("error creating session %v", err.Error())
+			return oldCtx, fmt.Errorf("error creating session %v", err.Error())
 		}
 
 		go handleSetSessionName(llm, store, session.ID, query)
-
-		ctx = context_keys.SetSessionID(ctx, session.ID)
 		sessionID = session.ID
 	}
 
 	_, err := storage.Store(store, storage.NewRequestSession(sessionID, requestID))
 	if err != nil {
-		return ctx, fmt.Errorf("error creating request session %v", err.Error())
+		return oldCtx, fmt.Errorf("error creating request session %v", err.Error())
 	}
 
-	return ctx, nil
+	newContext = context_keys.SetRequestID(newContext, requestID)
+	newContext = context_keys.SetUserID(newContext, userID)
+	newContext = context_keys.SetSessionID(newContext, sessionID)
+
+	return newContext, nil
 }
 
 func handleSetSessionName(llm llm.LLM, store storage.Storage, sessionId string, query string) (string, error) {

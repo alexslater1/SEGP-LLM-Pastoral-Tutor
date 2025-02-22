@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/segp/agents-main/llm"
+	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -74,4 +75,48 @@ func TestRouterRun(t *testing.T) {
 	resp, err := router.Run(context.Background(), "What is the weather in London?")
 	assert.NoError(t, err)
 	t.Logf("Response answer: %+v", *resp.Answer)
+}
+
+func TestRouterSubscribe(t *testing.T) {
+	var (
+		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm    = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+	)
+	router := NewRouter(llm, agents)
+
+	router.Subscribe()
+	router.Unsubscribe(router.Subscribe())
+}
+
+func TestRouterEvents(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test as CICD is true")
+	}
+
+	var (
+		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm    = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+	)
+
+	logginRouter := NewLoggingAgent(NewRouter(llm, agents))
+
+	resp, err := logginRouter.Run(context.Background(), "What is the date today?")
+	assert.NoError(t, err)
+	t.Logf("Response answer: %+v", *resp.Answer)
+	t.Logf("Response reason: %+v", *resp.Reason)
+}
+
+func TestRouterRunWithLoggingAndEventStoring(t *testing.T) {
+	var (
+		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm    = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
+		store  = storage.NewMemoryStorage()
+
+		routerAgent = NewEventStoringAgent(NewLoggingAgent(NewRouter(llm, agents)), store)
+	)
+
+	resp, err := routerAgent.Run(context.Background(), "What is the date today?")
+	assert.NoError(t, err)
+	t.Logf("Response answer: %+v", *resp.Answer)
+	t.Logf("Response reason: %+v", *resp.Reason)
 }

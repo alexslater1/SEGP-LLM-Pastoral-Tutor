@@ -10,13 +10,14 @@ import (
 type AgentEventType string
 
 const (
-	AgentEventTypeThink          AgentEventType = "think"
-	AgentEventTypeQuery          AgentEventType = "query"
-	AgentEventTypeToolCallChoice AgentEventType = "tool_call_choice"
-	AgentEventTypeToolCallResult AgentEventType = "tool_call_result"
-	AgentEventTypeAnswerSuccess  AgentEventType = "answer_success"
-	AgentEventTypeAnswerError    AgentEventType = "answer_error"
-	AgentEventTypeOffloadTask    AgentEventType = "offload_task"
+	AgentEventTypeThink           AgentEventType = "think"
+	AgentEventTypeQuery           AgentEventType = "query"
+	AgentEventTypeToolCallChoice  AgentEventType = "tool_call_choice"
+	AgentEventTypeToolCallResult  AgentEventType = "tool_call_result"
+	AgentEventTypeAnswerSuccess   AgentEventType = "answer_success"
+	AgentEventTypeAnswerError     AgentEventType = "answer_error"
+	AgentEventTypeOffloadTask     AgentEventType = "offload_task"
+	AgentEventTypeRouterSelection AgentEventType = "router_selection"
 )
 
 type AgentEvent struct {
@@ -133,6 +134,22 @@ func NewAnswerErrorEvent(ctx context.Context, error string) AgentEvent {
 	}
 	return AgentEvent{
 		Type:      AgentEventTypeAnswerError,
+		RequestID: requestId,
+		Data:      data,
+	}
+}
+
+func NewRouterSelectionEvent(ctx context.Context, selectedAgentID string, reason string) AgentEvent {
+	requestId, ok := context_keys.GetRequestID(ctx)
+	if !ok {
+		requestId = ""
+	}
+	data := map[string]interface{}{"selectedAgentID": selectedAgentID, "reason": reason}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
+	return AgentEvent{
+		Type:      AgentEventTypeRouterSelection,
 		RequestID: requestId,
 		Data:      data,
 	}
