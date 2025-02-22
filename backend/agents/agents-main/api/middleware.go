@@ -29,24 +29,6 @@ func CreateMiddlewareStack(xs ...Middleware) Middleware {
 	}
 }
 
-type wrappedWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (w *wrappedWriter) WriteHeader(statusCode int) {
-	w.statusCode = statusCode
-	w.ResponseWriter.WriteHeader(statusCode)
-}
-
-func (w *wrappedWriter) Write(data []byte) (int, error) {
-	if w.statusCode == 0 {
-		// If WriteHeader was never called, default to status 200
-		w.statusCode = http.StatusOK
-	}
-	return w.ResponseWriter.Write(data)
-}
-
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var jwtSecret = utils.Required(os.Getenv("JWT_SECRET"), "JWT_SECRET is required")
