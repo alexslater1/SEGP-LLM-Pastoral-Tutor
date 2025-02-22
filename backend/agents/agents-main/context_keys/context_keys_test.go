@@ -75,3 +75,17 @@ func TestSetAndGetUserID(t *testing.T) {
 		t.Errorf("Expected user ID %q, got %q", userID, got)
 	}
 }
+
+func TestSetAndGetAgentID(t *testing.T) {
+	const agentID = "agent123"
+	ctx := context.Background()
+
+	// Add the agent ID to the context.
+	ctxWithAgent := SetAgentID(ctx, agentID)
+
+	// Retrieve the agent ID from the context.
+	got, ok := GetAgentID(ctxWithAgent)
+	if !ok {
+		t.Errorf("Expected agent ID %q, got %q", agentID, got)
+	}
+}
