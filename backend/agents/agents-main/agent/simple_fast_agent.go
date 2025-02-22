@@ -71,6 +71,8 @@ func (a *SimpleFastAgent) Description() string {
 }
 
 func (a *SimpleFastAgent) Run(ctx context.Context, query string) (*AgentResponse, error) {
+	ctx = context_keys.SetAgentID(ctx, a.ID)
+
 	a.publish(NewQueryEvent(ctx, query))
 	response, err := a.logicLoop(ctx, query)
 	if err != nil {
