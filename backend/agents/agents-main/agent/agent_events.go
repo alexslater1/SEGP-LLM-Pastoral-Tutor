@@ -30,10 +30,15 @@ func NewQueryEvent(ctx context.Context, query string) AgentEvent {
 	if !ok {
 		requestId = ""
 	}
+	data := map[string]interface{}{"query": query}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
+
 	return AgentEvent{
 		Type:      AgentEventTypeQuery,
 		RequestID: requestId,
-		Data:      map[string]interface{}{"query": query},
+		Data:      data,
 	}
 }
 
@@ -42,12 +47,14 @@ func NewThinkEvent(ctx context.Context, thoughts string) AgentEvent {
 	if !ok {
 		requestId = ""
 	}
+	data := map[string]interface{}{"thoughts": thoughts}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeThink,
 		RequestID: requestId,
-		Data: map[string]interface{}{
-			"thoughts": thoughts,
-		},
+		Data:      data,
 	}
 }
 
@@ -56,12 +63,14 @@ func NewToolCallResultEvent(ctx context.Context, toolCallResult *string) AgentEv
 	if !ok {
 		requestId = ""
 	}
+	data := map[string]interface{}{"toolCallResult": *toolCallResult}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallResult,
 		RequestID: requestId,
-		Data: map[string]interface{}{
-			"toolCallResult": *toolCallResult,
-		},
+		Data:      data,
 	}
 }
 
@@ -70,13 +79,14 @@ func NewAnswerSuccessEvent(ctx context.Context, answer string, reason string) Ag
 	if !ok {
 		requestId = ""
 	}
+	data := map[string]interface{}{"answer": answer, "reason": reason}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeAnswerSuccess,
 		RequestID: requestId,
-		Data: map[string]interface{}{
-			"answer": answer,
-			"reason": reason,
-		},
+		Data:      data,
 	}
 }
 
@@ -85,12 +95,14 @@ func NewToolCallChoiceEvent(ctx context.Context, toolCall tools.ToolCall) AgentE
 	if !ok {
 		requestId = ""
 	}
+	data := map[string]interface{}{"toolCallChoice": toolCall}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeToolCallChoice,
 		RequestID: requestId,
-		Data: map[string]interface{}{
-			"toolCallChoice": toolCall,
-		},
+		Data:      data,
 	}
 }
 
@@ -99,10 +111,14 @@ func NewOffloadTaskEvent(ctx context.Context, entityId string, task string) Agen
 	if !ok {
 		requestId = ""
 	}
+	data := map[string]interface{}{"entityId": entityId, "task": task}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeOffloadTask,
 		RequestID: requestId,
-		Data:      map[string]interface{}{"entityId": entityId, "task": task},
+		Data:      data,
 	}
 }
 
@@ -111,9 +127,13 @@ func NewAnswerErrorEvent(ctx context.Context, error string) AgentEvent {
 	if !ok {
 		requestId = ""
 	}
+	data := map[string]interface{}{"error": error}
+	if agentID, ok := context_keys.GetAgentID(ctx); ok {
+		data["agentID"] = agentID
+	}
 	return AgentEvent{
 		Type:      AgentEventTypeAnswerError,
 		RequestID: requestId,
-		Data:      map[string]interface{}{"error": error},
+		Data:      data,
 	}
 }
