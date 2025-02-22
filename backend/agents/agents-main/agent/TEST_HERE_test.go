@@ -6,10 +6,12 @@ import (
 	"testing"
 
 	abc_api "github.com/segp/agents-main/abc-api"
+	emarking_api "github.com/segp/agents-main/emarking-api"
 )
 
 var (
 	abc_api_client = abc_api.NewMockAbcApiClient()
+	emarking_api_client = emarking_api.NewMockEmarkingApiClient()
 )
 
 // 1. Angelo
@@ -28,6 +30,10 @@ func Test_NewAcadmemicSupportStudyAgent(t *testing.T) {
 			abc_api_client.GetIdentity(),
 			abc_api_client.GetAcademicPeriods(),
 			abc_api_client.GetCohorts(),
+
+			emarking_api_client.GetExercises(),
+			emarking_api_client.GetFeedback(),
+			emarking_api_client.GetSubmissionGroup(),
 		}
 
 		query = `EDIT THIS QUERY`
@@ -56,6 +62,10 @@ func Test_NewAdminUniServicesAgent(t *testing.T) {
 			abc_api_client.GetPublicModuleTypes(),
 			abc_api_client.GetAllStudents(),
 			abc_api_client.GetTotalEnrolledStudents(),
+
+			emarking_api_client.GetExercises(),
+			emarking_api_client.GetFeedback(),
+			emarking_api_client.GetSubmissionGroup(),
 		}
 
 		query = `EDIT THIS QUERY`

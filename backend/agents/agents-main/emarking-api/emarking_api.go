@@ -6,6 +6,6 @@ type EmarkingApi interface {
 type MockEmarkingApiClient struct {
 }
 
-func NewMockAbcApiClient() *MockEmarkingApiClient {
+func NewMockEmarkingApiClient() *MockEmarkingApiClient {
 	return &MockEmarkingApiClient{}
 }

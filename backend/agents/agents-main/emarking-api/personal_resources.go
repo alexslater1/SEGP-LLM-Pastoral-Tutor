@@ -23,9 +23,10 @@ type ExerciseResponse struct {
 	Weight                    int       `json:"weight"`
 	MarksHiddenToStudents     bool      `json:"marks_hidden_to_students,omitempty"`
 	Deliverables              []DeliverableResponse `json:"deliverables"`
+	ExtendedEnd			   	  string `json:"extended_end,omitempty"`
 	Mark                      MarkResponse      `json:"mark,omitempty"`
-	Submissions               []SubmissionResponse `json:"submissions,omitempty"`
-	Feedback                  FeedbackResponse `json:"feedback,omitempty"`
+	Submissions               []SubmissionResponse `json:"submissions"`
+	Feedback                  FeedbackResponse `json:"feedback"`
 }
 
 type MarkResponse struct {
@@ -81,7 +82,14 @@ func (m *MockEmarkingApiClient) GetExercises() []ExerciseResponse {
 					Type: "file",
 				},
 			},
-			Submissions:           []SubmissionResponse{},
+			ExtendedEnd: "2024-11-06T17:00:00+00:00",
+			Submissions:           []SubmissionResponse{
+				{
+					Username: "as4522",
+					Timestamp: "2024-11-06T15:41:29+00:00",
+					TargetSubmissionFileName: "practice.zip",
+				},
+			},
 		},
 		{
 			Year:              "2425",
