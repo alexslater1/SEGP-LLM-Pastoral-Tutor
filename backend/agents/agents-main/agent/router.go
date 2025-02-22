@@ -8,6 +8,11 @@ import (
 	"github.com/segp/agents-main/llm"
 )
 
+const (
+	id          = "router"
+	description = "A router for a set of agents"
+)
+
 type routerSelectionStructuredOutput struct {
 	AgentID string `json:"agent_id"`
 	Reason  string `json:"reason"`
@@ -16,10 +21,18 @@ type routerSelectionStructuredOutput struct {
 type Router struct {
 	llm    llm.LLM
 	agents []Agent
+
+	subscribers []chan AgentEvent
 }
 
 func NewRouter(llm llm.LLM, agents []Agent) *Router {
-	return &Router{llm: llm, agents: agents}
+	r := &Router{llm: llm, agents: agents, subscribers: []chan AgentEvent{}}
+
+	for _, agent := range agents {
+		go r.forwardEventsLoop(agent.Subscribe())
+	}
+
+	return r
 }
 
 func (r *Router) Run(ctx context.Context, query string) (*AgentResponse, error) {
@@ -28,6 +41,38 @@ func (r *Router) Run(ctx context.Context, query string) (*AgentResponse, error) 
 		return nil, err
 	}
 	return agent.Run(ctx, query)
+}
+
+func (r *Router) Id() string {
+	return id
+}
+
+func (r *Router) Description() string {
+	return description
+}
+
+func (r *Router) Subscribe() <-chan AgentEvent {
+	ch := make(chan AgentEvent, defaultSubscriberBufferSize)
+	r.subscribers = append(r.subscribers, ch)
+	return ch
+}
+
+func (r *Router) Unsubscribe(ch <-chan AgentEvent) {
+	for i, subscriber := range r.subscribers {
+		if subscriber == ch {
+			close(subscriber)
+			r.subscribers = append(r.subscribers[:i], r.subscribers[i+1:]...)
+			break
+		}
+	}
+}
+
+func (r *Router) forwardEventsLoop(agentCh <-chan AgentEvent) {
+	for event := range agentCh {
+		for _, subscriber := range r.subscribers {
+			subscriber <- event
+		}
+	}
 }
 
 func (r *Router) pickAgentForQuery(ctx context.Context, query string) (Agent, string, error) {
