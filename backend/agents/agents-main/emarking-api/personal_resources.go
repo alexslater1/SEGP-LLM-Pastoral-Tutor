@@ -33,10 +33,6 @@ type MarkResponse struct {
 	Marker        string    `json:"marker"`
 	Mark          int       `json:"mark"`
 	Timestamp     string `json:"timestamp"`
-	Cap           int       `json:"cap"`
-	CapReason     string    `json:"cap_reason"`
-	Withheld      string `json:"withheld"`
-	WithheldBy    string    `json:"withheld_by"`
 }
 
 
@@ -131,6 +127,12 @@ func (m *MockEmarkingApiClient) GetExercises() []ExerciseResponse {
 					Type: "file",
 				},
 			},
+			Mark: MarkResponse{
+				StudentUsername: "as4522",
+				Marker: "jwang4",
+				Mark: 80,
+				Timestamp: "2024-11-13T19:00:00+00:00",
+			},
 			Submissions:           []SubmissionResponse{
 				{
 					Username: "as4522",
@@ -211,6 +213,12 @@ func (m *MockEmarkingApiClient) GetExerciseSummary() ExerciseResponse {
 				Name: "source.zip",
 				Type: "file",
 			},
+		},
+		Mark: MarkResponse{
+			StudentUsername: "as4522",
+			Marker: "jwang4",
+			Mark: 80,
+			Timestamp: "2024-11-13T19:00:00+00:00",
 		},
 		Submissions:           []SubmissionResponse{
 			{
