@@ -11,7 +11,6 @@ import (
 
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/context_keys"
-	"github.com/segp/agents-main/crew"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
@@ -47,7 +46,7 @@ type ChatCompletionV2Response struct {
 	SessionID string `json:"session_id"`
 }
 
-func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage, history history.History, llm llm.LLM) http.HandlerFunc {
+func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.History, llm llm.LLM) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -74,7 +73,7 @@ func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage,
 		}
 
 		go func() {
-			answer, reason, err := crew.Run(r.Context(), req.Query, agent.Id())
+			resp, err := agent.Run(r.Context(), req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				rr := storage.NewCompletionResult(requestId, nil, nil, err)
@@ -85,12 +84,12 @@ func ChatCompletionV2(crew *crew.Crew, agent agent.Agent, store storage.Storage,
 				return
 			}
 
-			slog.Info("agent response", "answer", *answer)
-			if reason != nil {
-				slog.Info("agent response", "reason", *reason)
+			slog.Info("agent response", "answer", *resp.Answer)
+			if resp.Reason != nil {
+				slog.Info("agent response", "reason", *resp.Reason)
 			}
 
-			rr := storage.NewCompletionResult(requestId, answer, reason, err)
+			rr := storage.NewCompletionResult(requestId, resp.Answer, resp.Reason, err)
 			_, err = storage.Store(store, rr)
 			if err != nil {
 				slog.Error("error storing request result", "error", err.Error())

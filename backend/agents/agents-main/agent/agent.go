@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/segp/agents-main/clock"
-	"github.com/segp/agents-main/entity"
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/knowledge"
@@ -19,29 +18,18 @@ const (
 	defaultSubscriberBufferSize = 100
 )
 
-type OffloadTask struct {
-	Entity entity.Entity
-	Task   string
-}
-
 type AgentResponse struct {
 	Answer *string
 	Reason *string
-
-	OffloadTask *OffloadTask
 }
 
 type Agent interface {
-	entity.Entity
-
 	Run(ctx context.Context, input string) (*AgentResponse, error)
 	Subscribe() <-chan AgentEvent
 	Unsubscribe(ch <-chan AgentEvent)
 
-	// change to set can offload to???
-	addCanOffloadToEntity(...entity.Entity)
-	canOffloadToEntities() []entity.Entity
-	clone() Agent
+	Id() string
+	Description() string
 }
 
 // IGNORE THIS
@@ -68,8 +56,6 @@ func NewDefaultUserQueryAgent() Agent {
 		knowledge,
 		realClock,
 		agentEventHistory,
-
-		entity.UserEntity,
 	)
 }
 
@@ -120,7 +106,7 @@ func NewDefaultEventStoringLoggingPersonalTutorAgent() Agent {
 
 // ^ FINISH IGNORING
 
-func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *SimpleFastAgent {
+func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *FastAgent {
 	var (
 		basePrompt = ""
 
@@ -140,7 +126,7 @@ func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *Sim
 
 	finalPrompt := basePrompt + prompt
 
-	return newSimpleFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
+	return newFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
 }
 
 // 1: Angelo

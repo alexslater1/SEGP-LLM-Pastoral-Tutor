@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 	"strings"
-
-	"github.com/segp/agents-main/entity"
 )
 
 type LoggingAgent struct {
@@ -39,18 +37,6 @@ func (a *LoggingAgent) Subscribe() <-chan AgentEvent {
 
 func (a *LoggingAgent) Unsubscribe(ch <-chan AgentEvent) {
 	a.Agent.Unsubscribe(ch)
-}
-
-func (a *LoggingAgent) clone() Agent {
-	return NewLoggingAgent(a.Agent.clone())
-}
-
-func (a *LoggingAgent) addCanOffloadToEntity(entities ...entity.Entity) {
-	a.Agent.addCanOffloadToEntity(entities...)
-}
-
-func (a *LoggingAgent) canOffloadToEntities() []entity.Entity {
-	return a.Agent.canOffloadToEntities()
 }
 
 func (a *LoggingAgent) loggingLoop(ch <-chan AgentEvent) {
