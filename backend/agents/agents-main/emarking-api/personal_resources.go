@@ -175,6 +175,44 @@ func (m *MockEmarkingApiClient) GetExercises() []ExerciseResponse {
 			},
 			Submissions:           []SubmissionResponse{},
 		},
+		{
+			Year:              "2425",
+			ModuleCode:        "60001",
+			Title:             "The Coursework",
+			Start:             "2024-10-29T12:00:00+00:00",
+			End:               "2024-11-19T19:00:00+00:00",
+			SubmissionType:    "individual",
+			MaximumMark:       100,
+			ExpectedHours:     8,
+			Spec: "https://scientia.doc.ic.ac.uk/api/2425/60001",
+			Weight:            100,
+			Deliverables: []DeliverableResponse{
+				{
+					Name: "report.pdf",
+					Type: "file",
+				},
+			},
+			Submissions:           []SubmissionResponse{},
+		},
+		{
+			Year:              "2425",
+			ModuleCode:        "70015",
+			Title:             "The Coursework",
+			Start:             "2024-11-04T12:00:00+00:00",
+			End:               "2024-12-02T17:00:00+00:00",
+			SubmissionType:    "group",
+			MaximumMark:       100,
+			ExpectedHours:     30,
+			Spec: "https://scientia.doc.ic.ac.uk/api/2425/70015",
+			Weight:            100,
+			Deliverables: []DeliverableResponse{
+				{
+					Name: "report.pdf",
+					Type: "file",
+				},
+			},
+			Submissions:           []SubmissionResponse{},
+		},
 	}
 }
 
