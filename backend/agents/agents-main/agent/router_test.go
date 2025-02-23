@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/utils"
@@ -35,10 +36,11 @@ func TestRouterPickAgentForQuery(t *testing.T) {
 	}
 
 	var (
-		llm    = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
-		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm     = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		agents  = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		history = history.NewLocalHistory()
 	)
-	router := NewRouter(llm, agents)
+	router := NewRouter(llm, agents, history)
 
 	t1 := time.Now()
 	agent, reason, err := router.pickAgentForQuery(context.Background(), "What is the weather in London?")
@@ -67,10 +69,11 @@ func TestRouterRun(t *testing.T) {
 	}
 
 	var (
-		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
-		llm    = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		agents  = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm     = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		history = history.NewLocalHistory()
 	)
-	router := NewRouter(llm, agents)
+	router := NewRouter(llm, agents, history)
 
 	resp, err := router.Run(context.Background(), "What is the weather in London?")
 	assert.NoError(t, err)
@@ -79,10 +82,11 @@ func TestRouterRun(t *testing.T) {
 
 func TestRouterSubscribe(t *testing.T) {
 	var (
-		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
-		llm    = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		agents  = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm     = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		history = history.NewLocalHistory()
 	)
-	router := NewRouter(llm, agents)
+	router := NewRouter(llm, agents, history)
 
 	router.Subscribe()
 	router.Unsubscribe(router.Subscribe())
@@ -94,11 +98,12 @@ func TestRouterEvents(t *testing.T) {
 	}
 
 	var (
-		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
-		llm    = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		agents  = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm     = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		history = history.NewLocalHistory()
 	)
 
-	logginRouter := NewLoggingAgent(NewRouter(llm, agents))
+	logginRouter := NewLoggingAgent(NewRouter(llm, agents, history))
 
 	resp, err := logginRouter.Run(context.Background(), "What is the date today?")
 	assert.NoError(t, err)
@@ -108,11 +113,12 @@ func TestRouterEvents(t *testing.T) {
 
 func TestRouterRunWithLoggingAndEventStoring(t *testing.T) {
 	var (
-		agents = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
-		llm    = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
-		store  = storage.NewMemoryStorage()
+		agents  = []Agent{NewDefaultUserQueryAgent(), NewPersonalTutorAgent()}
+		llm     = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
+		store   = storage.NewMemoryStorage()
+		history = history.NewLocalHistory()
 
-		routerAgent = NewEventStoringAgent(NewLoggingAgent(NewRouter(llm, agents)), store)
+		routerAgent = NewEventStoringAgent(NewLoggingAgent(NewRouter(llm, agents, history)), store)
 	)
 
 	resp, err := routerAgent.Run(context.Background(), "What is the date today?")

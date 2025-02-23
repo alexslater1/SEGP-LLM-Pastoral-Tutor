@@ -34,7 +34,7 @@ func main() {
 		routerAgent = agent.NewEventStoringAgent(agent.NewLoggingAgent(agent.NewRouter(llm, []agent.Agent{
 			agent.NewDefaultUserQueryAgent(),
 			agent.NewPersonalTutorAgent(),
-		})), store)
+		}, history)), store)
 
 		js = []jobs.Job{
 			// jobs.NewChatCheckerJob(store, history, llm, email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),

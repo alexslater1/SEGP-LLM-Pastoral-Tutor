@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/llm"
 )
 
@@ -21,14 +23,15 @@ type routerSelectionStructuredOutput struct {
 }
 
 type Router struct {
-	llm    llm.LLM
-	agents []Agent
+	llm     llm.LLM
+	agents  []Agent
+	history history.History
 
 	subscribers []chan AgentEvent
 }
 
-func NewRouter(llm llm.LLM, agents []Agent) *Router {
-	r := &Router{llm: llm, agents: agents, subscribers: []chan AgentEvent{}}
+func NewRouter(llm llm.LLM, agents []Agent, history history.History) *Router {
+	r := &Router{llm: llm, agents: agents, history: history, subscribers: []chan AgentEvent{}}
 
 	for _, agent := range agents {
 		go r.forwardEventsLoop(agent.Subscribe())
@@ -80,6 +83,14 @@ func (r *Router) forwardEventsLoop(agentCh <-chan AgentEvent) {
 	}
 }
 
+func (r *Router) chatHistory(ctx context.Context) ([]string, error) {
+	sessionId, ok := context_keys.GetSessionID(ctx)
+	if !ok {
+		return nil, nil
+	}
+	return r.history.GetMessageHistory(sessionId)
+}
+
 func (r *Router) publish(event AgentEvent) {
 	for _, subscriber := range r.subscribers {
 		select {
@@ -90,9 +101,28 @@ func (r *Router) publish(event AgentEvent) {
 	}
 }
 
+func (r *Router) queryAndHistoryStrFrom(ctx context.Context, query string) (string, error) {
+	chatHistory, err := r.chatHistory(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if len(chatHistory) == 0 {
+		return fmt.Sprintf("The user has typed the following query: %s", query), nil
+	}
+
+	return fmt.Sprintf("Up to this point, the chat history is as follows:\n%s\n\nThe user has now typed the following query: %s", strings.Join(chatHistory, "\n"), query), nil
+}
+
 func (r *Router) pickAgentForQuery(ctx context.Context, query string) (Agent, string, error) {
+	queryAndHistoryStr, err := r.queryAndHistoryStrFrom(ctx, query)
+	if err != nil {
+		return nil, "", err
+	}
+
 	agentSelectionStr := agentSelectionStringFrom(r.agents)
-	prompt := fmt.Sprintf("You are a router for a set of agents. The agents are as follows:\n%s\n\nThe user has asked the following question: %s\n\nPlease select the most appropriate agent to answer the question. Your response must specify the agent ID and a reason for the selection. You must always select an agent.", agentSelectionStr, query)
+	prompt := fmt.Sprintf("You are a router for a set of agents. The agents are as follows:\n%s\n\n%s\n\nPlease select the most appropriate agent to answer the query. Your response must specify the agent ID and a reason for the selection. You must always select an agent.", agentSelectionStr, queryAndHistoryStr)
+	// slog.Info("Prompt", "prompt", prompt)
 	response, err := r.llm.StructuredOutputCompletion(ctx, prompt, routerSelectionStructuredOutput{})
 	if err != nil {
 		return nil, "", err
