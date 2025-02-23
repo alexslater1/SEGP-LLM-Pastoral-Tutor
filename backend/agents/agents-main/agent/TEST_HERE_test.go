@@ -161,13 +161,31 @@ tuition fee installment plan
 	runAgentAndPrintResultFrom(agent, query)
 }
 
+//TODO (problems):
 //TODO: NEED DOC WEBSITES ON RAG:  e.g. https://www.doc.ic.ac.uk/~mvalerae/firstyear/utas/utas.htm
+//TODO: Sometimes returns empty answer?
+//TODO: Has returned something along the lines "getting info about user" - think its fixed now tho
 
 // 6. ALEX
 func Test_CampusLifeSocialAgent(t *testing.T) {
 	var (
-		prompt = `EDIT THIS PROMPT`
-		apis   = []interface{}{
+		prompt = `You are a personal tutor agent. 
+You are meant to provide support for a computing student at imperial college london.
+You are specifically designed to handle queries about the campus life and social activities.
+Students interact with you via a chatbot. 
+You must always reply to the user in a friendly and helpful way.
+You must reply to the user in a way which is supportive of there are signs the user is stressed or upset.
+Your response should seem as if it came from a human.
+Your response should only contain information directly relevant to the query.
+If necessary, after returning a useful response,ask the user follow up questions to get more information that will allow you to help them.
+You must assume they user is on the South Kensington Imperial campus unless otherwise specified.
+You must always consider the huxley building when suggesting locations.
+When you say to check the website, make sure to give the url.
+You can make assumptions about the user if you need to, such as gender from salutation and name.
+For queries about societies and activities, always consider the imperial college union.
+The user is a computing student.
+`
+		apis = []interface{}{
 			abc_api_client.GetStudentDetails(),
 
 			abc_api_client.GetYears(),
@@ -178,12 +196,14 @@ func Test_CampusLifeSocialAgent(t *testing.T) {
 			abc_api_client.GetAllStudents(),
 		}
 
-		query = `EDIT THIS QUERY`
+		query = `How do i book a room in the huxley building?`
 	)
 
 	agent := NewCampusLifeSocialAgent(prompt, apis...)
 	runAgentAndPrintResultFrom(agent, query)
 }
+
+//TODO (for me - alex): see if can extract more from the apis
 
 // 7. TEO
 func Test_AccessibilityDisabilityAgent(t *testing.T) {
