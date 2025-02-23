@@ -110,6 +110,13 @@ func (t *ToolHandler) Call(toolCall ToolCall) (*string, error) {
 		}
 		id, err := typedTool.SendEmail(htmlBody.(string))
 		return &id, err
+
+	case *SearchTool:
+		query, ok := parsedArgs["query"]
+		if !ok {
+			return nil, fmt.Errorf("query is required")
+		}
+		return typedTool.Search(query.(string))
 	}
 	return nil, fmt.Errorf("no tool matched the name %s", toolCall.Name)
 }

@@ -239,12 +239,12 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	if iteration == 0 {
-		prompt = fmt.Sprintf("You are a reAct agent. %s. Here are previous messages: %+v. Your goal is to solve the following: `%s`. Here is some (potentially relevant) knowledge from a source: `%s`.", a.Prompt, chatHistory, query, *knowledgeContext)
+		prompt = fmt.Sprintf("At your core, you are a reAct agent. However, you must also abide by these system prompts: (%s). Here are previous messages: %+v. The user has now just said: `%s`. Here is some (potentially relevant) knowledge from a source: `%s`.", a.Prompt, chatHistory, query, *knowledgeContext)
 	} else {
-		prompt = fmt.Sprintf("You are a reAct agent. %s. You are currently in the process of solving: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool where `%s`. ", a.Prompt, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
+		prompt = fmt.Sprintf("At your core, you are a reAct agent. However, you must also abide by these system prompts: (%s). As a reminder, the user has just said: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool were `%s`.", a.Prompt, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
 
-	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you need to find out), of how to solve the problem."
+	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you may need to find out), of how to respond to the user."
 
 	toolChoiceString, err := a.toolChoicesString()
 	if err != nil {
@@ -253,12 +253,12 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 
 	prompt += ` You have these tools at your disposal: ` + toolChoiceString
 
-	prompt += ` It is also essential that you give your thoughts in the _thoughts field. If you believe you already know the answer to the query, or that you will be unable to get the answer, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
+	prompt += ` It is also essential that you give your thoughts in the _thoughts field. If you believe you know enough already to respond to the user, or that you are reaching diminishing returns from calling tools, pick the give_answer tool. Information: The date and time is ` + a.Clock.CurrentDateTime().Format(time.RFC3339) + `. ` + a.iterationBasedPrompt(iteration)
 
 	prompt += ` Ensure to also provide a "description_of_action" which is a short description of what you will be doing when calling this tool, in present progressive tense. This will be shown to the user progressively as an interactive loading indicator.`
 
 	if iteration > 0 {
-		prompt += fmt.Sprintf(" The tools you have alreaady called, in order of oldest to newest are: %s. Refrain from doing things you have already done.", a.formattedToolsStringFrom(prevToolCalls))
+		prompt += fmt.Sprintf(" The tools you have already called, in order of oldest to newest are: %s. Refrain from doing things you have already done.", a.formattedToolsStringFrom(prevToolCalls))
 	}
 
 	return &prompt, nil

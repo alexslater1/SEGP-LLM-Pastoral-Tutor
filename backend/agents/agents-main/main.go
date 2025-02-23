@@ -32,8 +32,14 @@ func main() {
 		llm = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
 
 		routerAgent = agent.NewEventStoringAgent(agent.NewLoggingAgent(agent.NewRouter(llm, []agent.Agent{
-			agent.NewDefaultUserQueryAgent(),
-			agent.NewPersonalTutorAgent(),
+			agent.NewAcadmemicSupportStudyAgent(),
+			agent.NewAdminUniServicesAgent(),
+			agent.NewCareerProfessionalDevelopmentAgent(),
+			agent.NewWellbeingMentalHealthPersonalDevelopmentAgent(),
+			agent.NewFinancialAccomodationResourceAgent(),
+			agent.NewCampusLifeSocialAgent(),
+			agent.NewAccessibilityDisabilityAgent(),
+			agent.NewTransitionDiversityMiscAgent(),
 		}, history)), store)
 
 		js = []jobs.Job{
