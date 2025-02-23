@@ -121,7 +121,9 @@ func newSpecializedAgent(id string, prompt string, apiFuncs ...interface{}) *Fas
 		supabaseStore      = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE"))
 		agentEventHistory  = history.NewAgentEventHistory(supabaseStore)
 
-		toolHandler = tools.NewGoogleSearchToolHandler(googleSearchClient)
+		toolHandler = tools.NewToolHandler([]tools.Tool{
+			tools.NewSearchTool(ragKnowledge, tools.NewGoogleSearchFirstResultsPageContentsTool(googleSearchClient, 3)),
+		})
 	)
 
 	finalPrompt := basePrompt + prompt
