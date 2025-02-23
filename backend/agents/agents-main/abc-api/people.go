@@ -169,7 +169,10 @@ type ModuleResponse2 struct {
 func (m *MockAbcApiClient) GetModulesEnrolledStudents() EnrolledStudentsResponse {
 	return EnrolledStudentsResponse{
 		Modules: []ModuleResponse2{
-			{ModuleCode: "50002", Students: []string{"anshul"}},
+			{ModuleCode: "60001", Students: []string{"anshul"}},
+			{ModuleCode: "60007", Students: []string{"anshul"}},
+			{ModuleCode: "60012", Students: []string{"anshul"}},
+			{ModuleCode: "70015", Students: []string{"anshul"}},
 		},
 	}
 }
