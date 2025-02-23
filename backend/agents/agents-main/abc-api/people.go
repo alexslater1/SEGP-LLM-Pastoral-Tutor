@@ -126,6 +126,14 @@ func (m *MockAbcApiClient) GetAllStaffList() []StaffPeopleResponse {
 			Salutation:       "Mr",
 			RoleInDepartment: "staff",
 		},
+		{
+			Login:            "ad321",
+			Email:            "ad321@ic.ac.uk",
+			Firstname:        "Alastair",
+			Lastname:         "Donaldson",
+			Salutation:       "Prof",
+			RoleInDepartment: "staff",
+		},
 	}
 }
 
