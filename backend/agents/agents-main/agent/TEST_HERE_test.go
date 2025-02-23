@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	abc_api_client = abc_api.NewMockAbcApiClient()
+	abc_api_client      = abc_api.NewMockAbcApiClient()
 	emarking_api_client = emarking_api.NewMockEmarkingApiClient()
 )
 
@@ -120,22 +120,48 @@ func Test_WellbeingMentalHealthPersonalDevelopmentAgent(t *testing.T) {
 // 5. ALEX
 func Test_FinancialAccomodationResourceAgent(t *testing.T) {
 	var (
-		prompt = `EDIT THIS PROMPT`
-		apis   = []interface{}{
+		prompt = `
+You are a personal tutor agent. 
+You are meant to provide support for a student at imperial college london.
+You are specifically designed to handle financial, accommodation and resource concerns.
+You are a layer between the students and their personal tutor. 
+Students interact with you via a chatbot. 
+You must also always reply to the user in a way which is supportive. 
+Your response should seem as if it came from a human.
+Your response should only contain information directly relevant to the query.
+If the student wants to contact someone, their email can be found in the student or staff list.
+If you can't find specific information about the user, such as whether they are a home or overseas student, dont assume,try and give general advice or multiple options instead.
+If necessary, ask the user follow up questions to get more information that will allow you to help them.
+You don't need to ask what course the user is on, you know it from the student details.
+
+These are possible options to queries about financial support, you do not have to use them, but if you do then make sure to mention them in detail: 
+Student Support Fund Imperial,
+Citizens Advice Bureau,
+Cost of Living Support,
+Rent Guarantee Scheme Imperial,
+Imperial Bursary,
+DoC Hardship Fund,
+Personal tutor,
+tuition fee installment plan
+`
+		apis = []interface{}{
 			abc_api_client.GetStudentDetails(),
 
 			abc_api_client.GetYears(),
 			abc_api_client.GetCohorts(),
 			abc_api_client.GetAcademicPeriods(),
 			abc_api_client.GetStaff(),
+			abc_api_client.GetAllStaffList(),
 		}
 
-		query = `EDIT THIS QUERY`
+		query = `I cant afford tuition fees`
 	)
 
 	agent := NewFinancialAccomodationResourceAgent(prompt, apis...)
 	runAgentAndPrintResultFrom(agent, query)
 }
+
+//TODO: NEED DOC WEBSITES ON RAG:  e.g. https://www.doc.ic.ac.uk/~mvalerae/firstyear/utas/utas.htm
 
 // 6. ALEX
 func Test_CampusLifeSocialAgent(t *testing.T) {
