@@ -127,7 +127,7 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse
 
 	for i := 0; i < maxIterations; i++ {
 		var knowledgeContext *string
-		if false { // skip this for now on first iteration
+		if i == 0 {
 			nk, err := a.Knowledge.Get(query)
 			if err != nil {
 				return nil, err
@@ -239,7 +239,7 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	if iteration == 0 {
-		prompt = fmt.Sprintf("(%s). Here are the messags from the user, and your responses, up to this point: %+v. The most recent thing the user has now just said is: `%s`.", a.Prompt, chatHistory, query)
+		prompt = fmt.Sprintf("(%s). Here are the messags from the user, and your responses, up to this point: %+v. The most recent thing the user has now just said is: `%s`. Here is some data to do with the user: %+v", a.Prompt, chatHistory, query, *knowledgeContext)
 	} else {
 		prompt = fmt.Sprintf("Remember, (%s). This is the current state of the conversation so far: %+v, with the user most recently saying: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool were `%s`.", a.Prompt, chatHistory, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}

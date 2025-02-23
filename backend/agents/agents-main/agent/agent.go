@@ -118,11 +118,11 @@ func newSpecializedAgent(id string, prompt string, description string, apiFuncs 
 	var (
 		basePrompt = ""
 
-		geminiLlm          = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
-		ragKnowledge       = knowledge.NewRAGKnowledge(utils.Required(os.Getenv("RAG_BASE_URL"), "RAG_BASE_URL"))
-		extraKnowledge     = knowledge.NewExtraKnowledge(apiFuncs...)
-		conjoinedKnowledge = knowledge.NewConjoinedKnowledge(ragKnowledge, extraKnowledge)
-		realClock          = clock.NewRealClock()
+		geminiLlm      = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
+		ragKnowledge   = knowledge.NewRAGKnowledge(utils.Required(os.Getenv("RAG_BASE_URL"), "RAG_BASE_URL"))
+		extraKnowledge = knowledge.NewExtraKnowledge(apiFuncs...)
+		// conjoinedKnowledge = knowledge.NewConjoinedKnowledge(ragKnowledge, extraKnowledge)
+		realClock = clock.NewRealClock()
 
 		googleSearchClient = googleSearch.NewRodClient()
 		supabaseStore      = storage.NewSupabaseStorage(utils.Required(os.Getenv("SUPABASE_URL"), "SUPABASE_URL"), utils.Required(os.Getenv("SUPABASE_SERVICE_KEY"), "SUPABASE_SERVICE"))
@@ -135,7 +135,7 @@ func newSpecializedAgent(id string, prompt string, description string, apiFuncs 
 
 	finalPrompt := prompt + basePrompt
 
-	return newFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
+	return newFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, extraKnowledge, realClock, agentEventHistory)
 }
 
 // 1: Angelo
