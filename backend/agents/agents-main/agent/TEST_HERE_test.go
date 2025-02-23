@@ -76,6 +76,8 @@ func Test_NewAdminUniServicesAgent(t *testing.T) {
 }
 
 // 3. Anshul
+// Additional RAG pages:
+// - https://www.imperial.ac.uk/placements/the-inplace-system/
 func Test_CareerProfessionalDevelopmentAgent(t *testing.T) {
 	var (
 		prompt = `
@@ -144,7 +146,8 @@ End with a follow up question to guide the student on their next steps
 			abc_api_client.GetPublicModuleTypes(),
 		}
 
-		query = `how do i write a cv`
+		//query = `I need a placement as part of my degree this year. What's a good place to look? Does Imperial have a job portal or something?`
+		query = `What kind of research would I do in a UROPS? Anything relevant to me?`
 	)
 
 	agent := NewCareerProfessionalDevelopmentAgent(prompt, apis...)
