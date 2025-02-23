@@ -225,5 +225,5 @@ func runAgentAndPrintResultFrom(agent Agent, prompt string) {
 		log.Fatalf("Error running agent: %v", err)
 	}
 
-	log.Printf("Result: %+v", resp)
+	log.Printf("Answer: %s\nReason: %s", *resp.Answer, *resp.Reason)
 }
