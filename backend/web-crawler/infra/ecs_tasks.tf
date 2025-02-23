@@ -58,8 +58,8 @@ resource "aws_ecs_task_definition" "rag_worker" {
   family                   = "rag-worker"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = "1024" # 1 vCPU
-  memory                   = "2048" # 2 GB
+  cpu                      = "2048" # 2 vCPU
+  memory                   = "4096" # 4 GB
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 
@@ -142,7 +142,7 @@ resource "aws_ecs_task_definition" "scraper_worker" {
         },
         {
           name  = "CONCURRENCY"
-          value = "10"
+          value = "2"
         }
       ]
 

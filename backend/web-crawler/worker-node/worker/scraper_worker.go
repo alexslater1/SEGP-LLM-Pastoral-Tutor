@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	coordinator_client "github.com/ethanhosier/worker-node/coordinator_client"
@@ -71,6 +72,8 @@ func (w *ScraperWorker) Execute(ctx context.Context, task *coordinator_client.Ta
 	if err != nil {
 		return err
 	}
+
+	time.Sleep(500 * time.Millisecond)
 
 	return w.coordinatorClient.CreateTask(ctx, coordinator_client.CoordinatorClientTaskTopicRag, ragTask)
 }

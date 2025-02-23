@@ -70,7 +70,7 @@ resource "aws_lambda_permission" "allow_eventbridge" {
 
 # Auto Scaling for RAG Service
 resource "aws_appautoscaling_target" "rag" {
-  max_capacity       = 150
+  max_capacity       = 5.0
   min_capacity       = 1
   resource_id        = "service/${aws_ecs_cluster.rag.name}/${aws_ecs_service.rag.name}"
   scalable_dimension = "ecs:service:DesiredCount"
@@ -105,7 +105,7 @@ resource "aws_appautoscaling_policy" "rag_queue" {
 
 # Auto Scaling for Scraper Service
 resource "aws_appautoscaling_target" "scraper" {
-  max_capacity       = 10
+  max_capacity       = 1
   min_capacity       = 1
   resource_id        = "service/${aws_ecs_cluster.scraper.name}/${aws_ecs_service.scraper.name}"
   scalable_dimension = "ecs:service:DesiredCount"

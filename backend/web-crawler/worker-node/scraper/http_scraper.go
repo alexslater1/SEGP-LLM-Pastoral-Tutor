@@ -24,6 +24,11 @@ func (h *HttpScraper) HtmlFrom(url string) (*string, error) {
 
 	// Make HTTP GET request
 	resp, err := http.Get(formattedUrl)
+
+	if resp.StatusCode != http.StatusOK {
+		panic(fmt.Sprintf("failed to make http get request for url %s: %d", formattedUrl, resp.StatusCode))
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to make http get request for url %s: %w", formattedUrl, err)
 	}
