@@ -57,6 +57,24 @@ func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesA
 		return agentEvents, nil
 	})
 
+	completionResultsTasks := utils.DoAsyncList(agentRequestSessions, func(agentRequestSession storage.RequestSession) (*storage.CompletionResult, error) {
+		resp, err := storage.GetAll[storage.CompletionResult](h.store, map[string]string{"request_id": agentRequestSession.RequestID})
+		if err != nil {
+			return nil, err
+		}
+
+		if len(resp) == 0 {
+			return nil, nil
+		}
+
+		return &resp[0], nil
+	})
+
+	completionResults, err := utils.GetAsyncList(completionResultsTasks)
+	if err != nil {
+		return nil, err
+	}
+
 	requestEventsLists, err := utils.GetAsyncList(requestEventsTasks)
 	if err != nil {
 		return nil, err
@@ -64,17 +82,17 @@ func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesA
 
 	messagesAndActions := make([]MessagesAndActions, len(agentRequestSessions))
 	for i, agentEvents := range requestEventsLists {
-		messagesAndActions[i] = *h.messagesAndActionsFrom(agentRequestSessions[i].RequestID, agentEvents)
+		messagesAndActions[i] = *h.messagesAndActionsFrom(agentRequestSessions[i].RequestID, agentEvents, completionResults[i])
 	}
 
 	return messagesAndActions, nil
 }
 
-func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents []storage.AgentEvent) *MessagesAndActions {
+func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents []storage.AgentEvent, completionResult *storage.CompletionResult) *MessagesAndActions {
 	var (
 		query  *string
-		answer string
 		err    string
+		answer string
 	)
 
 	actions := []string{}
@@ -98,11 +116,10 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 		case "tool_call_result":
 			actions = append(actions, "Thinking")
 
-		case "answer_success":
-			answer = event.Metadata.(map[string]interface{})["answer"].(string)
-
-		case "answer_error":
-			err = event.Metadata.(map[string]interface{})["error"].(string)
+		// case "answer_success":
+		// 	answer = event.Metadata.(map[string]interface{})["answer"].(string)
+		// case "answer_error":
+		// 	err = event.Metadata.(map[string]interface{})["error"].(string)
 
 		case "query":
 			q := event.Metadata.(map[string]interface{})["query"].(string)
@@ -114,10 +131,20 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 		}
 	}
 
-	responseType := responseStatusFrom(answer, err)
+	responseType := responseStatusFrom(completionResult, err)
 	currentAction := ""
 	if responseType == StatusResponseTypePending {
 		currentAction = mostRecentAction
+	}
+
+	if completionResult != nil {
+		if completionResult.Error != nil {
+			err = *completionResult.Error
+		}
+
+		if completionResult.Result != nil {
+			answer = *completionResult.Result
+		}
 	}
 
 	return &MessagesAndActions{
@@ -132,12 +159,12 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 	}
 }
 
-func responseStatusFrom(answer string, error string) StatusResponseType {
+func responseStatusFrom(completionResult *storage.CompletionResult, error string) StatusResponseType {
 	if error != "" {
 		return StatusResponseTypeError
 	}
 
-	if answer != "" {
+	if completionResult != nil && completionResult.Result != nil {
 		return StatusResponseTypeCompleted
 	}
 

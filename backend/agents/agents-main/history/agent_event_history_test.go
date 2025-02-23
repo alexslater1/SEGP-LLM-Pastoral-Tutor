@@ -181,7 +181,7 @@ func timeAdd(t time.Time, d time.Duration) *time.Time {
 
 func TestGetMessagesAndActions(t *testing.T) {
 	var (
-		sessionID = "979c9168-29b4-46f9-9128-8e7e13829f3f"
+		sessionID = "7fc63fda-c955-4dd6-bbb8-9166fa95e53a"
 		store     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 	)
 
@@ -193,4 +193,20 @@ func TestGetMessagesAndActions(t *testing.T) {
 	}
 
 	fmt.Printf("messagesAndActions: %+v\n", messagesAndActions)
+}
+
+func TestMessagesHistory(t *testing.T) {
+	var (
+		sessionID = "7fc63fda-c955-4dd6-bbb8-9166fa95e53a"
+		store     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+	)
+
+	history := NewAgentEventHistory(store)
+
+	messages, err := history.GetMessageHistory(sessionID)
+	if err != nil {
+		t.Fatalf("failed to get message history: %v", err)
+	}
+
+	fmt.Printf("messages: %+v\n", messages)
 }

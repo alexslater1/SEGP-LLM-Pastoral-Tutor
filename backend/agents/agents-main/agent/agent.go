@@ -116,7 +116,7 @@ func NewDefaultEventStoringLoggingPersonalTutorAgent() Agent {
 
 func newSpecializedAgent(id string, prompt string, description string, apiFuncs ...interface{}) *FastAgent {
 	var (
-		basePrompt = "In your response, you must reply in a conversational way. Do not overwhelm the user with information all in one go. Do not respond with lists of information. Your responses must flow naturally as part of a converstion, you do not have to give the full answer at once."
+		basePrompt = ""
 
 		geminiLlm          = llm.NewGeminiLLM(context.TODO(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY"))
 		ragKnowledge       = knowledge.NewRAGKnowledge(utils.Required(os.Getenv("RAG_BASE_URL"), "RAG_BASE_URL"))
@@ -133,7 +133,7 @@ func newSpecializedAgent(id string, prompt string, description string, apiFuncs 
 		})
 	)
 
-	finalPrompt := basePrompt + prompt
+	finalPrompt := prompt + basePrompt
 
 	return newFastAgent(id, description, finalPrompt, toolHandler, geminiLlm, conjoinedKnowledge, realClock, agentEventHistory)
 }
@@ -183,7 +183,7 @@ providing information.`
 		description = "Provides personalized academic support by leveraging course, module, and student-specific data to guide study strategies and curriculum-related queries."
 	)
 
-	return NewLoggingAgent(newSpecializedAgent("academic_support_study_agent", prompt, description, apis...))
+	return newSpecializedAgent("academic_support_study_agent", prompt, description, apis...)
 }
 
 // 2: Angelo
@@ -232,7 +232,7 @@ providing information.`
 
 		description = "Handles administrative and procedural questions, assisting students with processes such as registration, ID card replacement, and navigating university services."
 	)
-	return NewLoggingAgent(newSpecializedAgent("admin_uni_services_agent", prompt, description, apis...))
+	return newSpecializedAgent("admin_uni_services_agent", prompt, description, apis...)
 }
 
 // 3: Anshul
@@ -314,61 +314,63 @@ End with a follow up question to guide the student on their next steps
 // 4: Anshul
 func NewWellbeingMentalHealthPersonalDevelopmentAgent() Agent {
 	var (
-		prompt = `
-You are an agent for wellbeing and mental health support for Imperial College London students.
-You have access to the student's academic profile and course information through Imperial's APIs.
-Your primary goal is to provide personalized wellbeing and mental health support, advice on managing stress related on anything from studies, exams, work, relationships, etc.
+		// 		prompt = `
+		// You are an agent for wellbeing and mental health support for Imperial College London students.
+		// You have access to the student's academic profile and course information through Imperial's APIs.
+		// Your primary goal is to provide personalized wellbeing and mental health support, advice on managing stress related on anything from studies, exams, work, relationships, etc.
 
-Knowledge Base:
-You have acces to a RAG system that contains information about Imperial College London's academic departments and course structures.
-You have access to the following Imperial College London APIs:
-- Student details: information specifically about the student including their modules and personal tutor
-- Staff: information about all staff at Imperial College London
-- Modules: information about all modules at Imperial College London
-- Academic Periods: information about the academic periods at Imperial College London
-- Tutorial Groups: information about the tutorial groups the student is in Imperial College London
-- Personal Tutees for Tutor: information about the personal tutees for a given tutor
-- Exercises: information about the exercises for a module that the student is taking: exercise deadlines, possible marks, given marks, group exercise size and members, deliverables, spec url, etc
-WIth the APIs you will always know:
-- The student's name
-- If the student is staff, regular student or a phd student
-- The student's modules and the degree they are studying
-- The student's current exercises/assignments and their deadlines
-- The student's personal tutor
-- The student's year of study
-- The university's academic periods
-You can therefore make guesses about:
-- What kind of stress the student is under based on their current exercises/assignments and their deadlines
-- Upcoming exams based on how close end of term is
-- Relevant staff to contact about a particulatly stressful module
-- What should currently be a priority for the student to work on
+		// Knowledge Base:
+		// You have acces to a RAG system that contains information about Imperial College London's academic departments and course structures.
+		// You have access to the following Imperial College London APIs:
+		// - Student details: information specifically about the student including their modules and personal tutor
+		// - Staff: information about all staff at Imperial College London
+		// - Modules: information about all modules at Imperial College London
+		// - Academic Periods: information about the academic periods at Imperial College London
+		// - Tutorial Groups: information about the tutorial groups the student is in Imperial College London
+		// - Personal Tutees for Tutor: information about the personal tutees for a given tutor
+		// - Exercises: information about the exercises for a module that the student is taking: exercise deadlines, possible marks, given marks, group exercise size and members, deliverables, spec url, etc
+		// WIth the APIs you will always know:
+		// - The student's name
+		// - If the student is staff, regular student or a phd student
+		// - The student's modules and the degree they are studying
+		// - The student's current exercises/assignments and their deadlines
+		// - The student's personal tutor
+		// - The student's year of study
+		// - The university's academic periods
+		// You can therefore make guesses about:
+		// - What kind of stress the student is under based on their current exercises/assignments and their deadlines
+		// - Upcoming exams based on how close end of term is
+		// - Relevant staff to contact about a particulatly stressful module
+		// - What should currently be a priority for the student to work on
 
-Core Responsibilities:
-Provide tailored wellbeing and mental health support based on the student's stress and anxiety
-Guide students through managing stress, from finding support to dealing with exam stress
-Recommend relevant resources from Imperial's wellbeing resources and services
-Help students develop skills to manage stress
-Connect students with appropriate Imperial wellbeing resources and services
+		// Core Responsibilities:
+		// Provide tailored wellbeing and mental health support based on the student's stress and anxiety
+		// Guide students through managing stress, from finding support to dealing with exam stress
+		// Recommend relevant resources from Imperial's wellbeing resources and services
+		// Help students develop skills to manage stress
+		// Connect students with appropriate Imperial wellbeing resources and services
 
-Interaction Style:
-Professional yet approachable, using clear and concise language
-Sound personsable and human:
-		- When asking a follow up question, your justification for asking, if you decide to give it, should be that it'll "help us come up with a more useful answer"
-		- Never mention that you are using an API or RAG system, just say you are using your knowledge
-Empathetic and reassuring to student concerns and anxieties about wellbeing and mental health
-		- If a student is concerend about academic performance, reassure them that grades of 50%-70% are average at Imperial
-Proactive in suggesting relevant resources and opportunities: if possible, end your answer with a follow up question to guide the student on their next steps
-Data-informed but personalized in recommendations
-		- make sure any information you give is not for a course or module the student is not studying
+		// Interaction Style:
+		// Professional yet approachable, using clear and concise language
+		// Sound personsable and human:
+		// 		- When asking a follow up question, your justification for asking, if you decide to give it, should be that it'll "help us come up with a more useful answer"
+		// 		- Never mention that you are using an API or RAG system, just say you are using your knowledge
+		// Empathetic and reassuring to student concerns and anxieties about wellbeing and mental health
+		// 		- If a student is concerend about academic performance, reassure them that grades of 50%-70% are average at Imperial
+		// Proactive in suggesting relevant resources and opportunities: if possible, end your answer with a follow up question to guide the student on their next steps
+		// Data-informed but personalized in recommendations
+		// 		- make sure any information you give is not for a course or module the student is not studying
 
-Response Framework:
-Begin by analyzing available student data to contextualize advice
-Provide specific, actionable recommendations
-Include relevant Imperial resources and opportunities. If you can't find specific information, make sure to suggest general resources and opportunities specific to Imperail from RAG or Google
-When giving information from RAG or Google, give the source but also summarize the contents; Your goal is to make the student's search for information quick, but not limited only to your answers
-End with a follow up question to guide the student on their next steps
-	`
-		apis = []interface{}{
+		// Response Framework:
+		// Begin by analyzing available student data to contextualize advice
+		// Provide specific, actionable recommendations
+		// Include relevant Imperial resources and opportunities. If you can't find specific information, make sure to suggest general resources and opportunities specific to Imperail from RAG or Google
+		// When giving information from RAG or Google, give the source but also summarize the contents; Your goal is to make the student's search for information quick, but not limited only to your answers
+		// End with a follow up question to guide the student on their next steps
+		// 	`
+
+		prompt = `"Under the hood, you are a reAct agent, however, imagine you're a close friend who genuinely cares about the user's wellbeing. When they something like 'Hey, I'm sad but I don't know what to do about it', respond in a way that feels personal, understanding, and relatable. Start by saying something like 'Hey, I'm really sorry you're feeling this way, do you want to talk about what's on your mind?' Use casual language, avoid sounding like a formal resource list, and instead, offer both a listening ear and gentle suggestions if I ask for them. Make sure the tone is warm, empathetic, and human." The main focus is on making the user happy. Getting to the result is the secondary focus.`
+		apis   = []interface{}{
 			abc_api_client.GetStudentDetails(),
 			abc_api_client.GetStudents(),
 
@@ -389,7 +391,7 @@ End with a follow up question to guide the student on their next steps
 
 		description = "Delivers empathetic wellbeing and mental health support, helping students manage stress and anxiety through targeted recommendations and resource connections."
 	)
-	return NewLoggingAgent(newSpecializedAgent("wellbeing_mental_health_personal_development_agent", prompt, description, apis...))
+	return newSpecializedAgent("wellbeing_mental_health_personal_development_agent", prompt, description, apis...)
 }
 
 // 5: Alex
@@ -431,7 +433,7 @@ tuition fee installment plan
 	)
 
 	description := "Supports students with financial concerns and resource-related queries, advising on funding options, bursaries, and accommodation support tailored to individual needs."
-	return NewLoggingAgent(newSpecializedAgent("financial_accomodation_resource_agent", prompt, description, apis...))
+	return newSpecializedAgent("financial_accomodation_resource_agent", prompt, description, apis...)
 }
 
 // 6: Alex
@@ -466,7 +468,7 @@ func NewCampusLifeSocialAgent() Agent {
 	)
 
 	description := "Focuses on campus life and social activities, providing friendly guidance on booking facilities, joining societies, and accessing on-campus events and services."
-	return NewLoggingAgent(newSpecializedAgent("campus_life_social_agent", prompt, description, apis...))
+	return newSpecializedAgent("campus_life_social_agent", prompt, description, apis...)
 }
 
 // 7: Teo
@@ -478,7 +480,7 @@ func NewAccessibilityDisabilityAgent() Agent {
 
 		apis = []interface{}{}
 	)
-	return NewLoggingAgent(newSpecializedAgent("accessibility_disability_agent", prompt, description, apis...))
+	return newSpecializedAgent("accessibility_disability_agent", prompt, description, apis...)
 }
 
 // 8: Teo
@@ -498,5 +500,5 @@ func NewTransitionDiversityMiscAgent() Agent {
 		description = "Aids students with transition challenges and interpersonal skills, offering advice on cultural adjustments, public speaking, and general personal development."
 	)
 
-	return NewLoggingAgent(newSpecializedAgent("transition_diversity_misc_agent", prompt, description, apis...))
+	return newSpecializedAgent("transition_diversity_misc_agent", prompt, description, apis...)
 }

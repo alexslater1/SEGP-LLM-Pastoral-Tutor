@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 
 	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/history"
@@ -27,11 +28,17 @@ type Router struct {
 	agents  []Agent
 	history history.History
 
-	subscribers []chan AgentEvent
+	subscribersMu sync.RWMutex
+	subscribers   []chan AgentEvent
 }
 
 func NewRouter(llm llm.LLM, agents []Agent, history history.History) *Router {
-	r := &Router{llm: llm, agents: agents, history: history, subscribers: []chan AgentEvent{}}
+	r := &Router{
+		llm:         llm,
+		agents:      agents,
+		history:     history,
+		subscribers: []chan AgentEvent{},
+	}
 
 	for _, agent := range agents {
 		go r.forwardEventsLoop(agent.Subscribe())
@@ -63,11 +70,16 @@ func (r *Router) Description() string {
 
 func (r *Router) Subscribe() <-chan AgentEvent {
 	ch := make(chan AgentEvent, defaultSubscriberBufferSize)
+	r.subscribersMu.Lock()
 	r.subscribers = append(r.subscribers, ch)
+	r.subscribersMu.Unlock()
 	return ch
 }
 
 func (r *Router) Unsubscribe(ch <-chan AgentEvent) {
+	r.subscribersMu.Lock()
+	defer r.subscribersMu.Unlock()
+
 	for i, subscriber := range r.subscribers {
 		if subscriber == ch {
 			close(subscriber)
@@ -92,6 +104,9 @@ func (r *Router) chatHistory(ctx context.Context) ([]string, error) {
 }
 
 func (r *Router) publish(event AgentEvent) {
+	r.subscribersMu.RLock()
+	defer r.subscribersMu.RUnlock()
+
 	for _, subscriber := range r.subscribers {
 		select {
 		case subscriber <- event:

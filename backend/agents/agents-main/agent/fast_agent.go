@@ -127,7 +127,7 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse
 
 	for i := 0; i < maxIterations; i++ {
 		var knowledgeContext *string
-		if i == 0 {
+		if false { // skip this for now on first iteration
 			nk, err := a.Knowledge.Get(query)
 			if err != nil {
 				return nil, err
@@ -196,7 +196,7 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 		return nil, nil, err
 	}
 
-	// slog.Info("Thinking and acting prompt", "prompt", *prompt)
+	slog.Info("Thinking and acting prompt", "prompt", *prompt)
 
 	structuredCompletion, err := a.LLM.StructuredOutputCompletion(context.TODO(), *prompt, StructuredOutput{})
 	if err != nil {
@@ -239,9 +239,9 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	if iteration == 0 {
-		prompt = fmt.Sprintf("At your core, you are a reAct agent. However, you must also abide by these system prompts: (%s). Here are previous messages: %+v. The user has now just said: `%s`. Here is some (potentially relevant) knowledge from a source: `%s`.", a.Prompt, chatHistory, query, *knowledgeContext)
+		prompt = fmt.Sprintf("(%s). Here are the messags from the user, and your responses, up to this point: %+v. The most recent thing the user has now just said is: `%s`.", a.Prompt, chatHistory, query)
 	} else {
-		prompt = fmt.Sprintf("At your core, you are a reAct agent. However, you must also abide by these system prompts: (%s). As a reminder, the user has just said: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool were `%s`.", a.Prompt, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
+		prompt = fmt.Sprintf("Remember, (%s). This is the current state of the conversation so far: %+v, with the user most recently saying: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool were `%s`.", a.Prompt, chatHistory, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
 
 	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you may need to find out), of how to respond to the user."

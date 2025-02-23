@@ -31,7 +31,8 @@ func main() {
 
 		llm = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
 
-		routerAgent = agent.NewEventStoringAgent(agent.NewLoggingAgent(agent.NewRouter(llm, []agent.Agent{
+		// TODO: why does this order matter??? -> does the go routine go out of scope...
+		routerAgent = agent.NewLoggingAgent(agent.NewEventStoringAgent(agent.NewRouter(llm, []agent.Agent{
 			agent.NewAcadmemicSupportStudyAgent(),
 			agent.NewAdminUniServicesAgent(),
 			agent.NewCareerProfessionalDevelopmentAgent(),
@@ -40,7 +41,7 @@ func main() {
 			agent.NewCampusLifeSocialAgent(),
 			agent.NewAccessibilityDisabilityAgent(),
 			agent.NewTransitionDiversityMiscAgent(),
-		}, history)), store)
+		}, history), store))
 
 		js = []jobs.Job{
 			// jobs.NewChatCheckerJob(store, history, llm, email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),

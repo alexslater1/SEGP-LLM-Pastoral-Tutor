@@ -7,19 +7,22 @@ import (
 )
 
 type LoggingAgent struct {
-	Agent Agent
+	Agent       Agent
+	subscribers []chan AgentEvent
 }
 
 func NewLoggingAgent(agent Agent) *LoggingAgent {
-	return &LoggingAgent{Agent: agent}
+	ch := agent.Subscribe()
+	a := &LoggingAgent{
+		Agent:       agent,
+		subscribers: make([]chan AgentEvent, 0),
+	}
+
+	go a.loggingLoop(ch)
+	return a
 }
 
 func (a *LoggingAgent) Run(ctx context.Context, input string) (*AgentResponse, error) {
-	ch := a.Subscribe()
-	defer a.Unsubscribe(ch)
-
-	go a.loggingLoop(ch)
-
 	return a.Agent.Run(ctx, input)
 }
 
@@ -32,16 +35,27 @@ func (a *LoggingAgent) Description() string {
 }
 
 func (a *LoggingAgent) Subscribe() <-chan AgentEvent {
-	return a.Agent.Subscribe()
+	ch := make(chan AgentEvent, defaultSubscriberBufferSize)
+	a.subscribers = append(a.subscribers, ch)
+	return ch
 }
 
 func (a *LoggingAgent) Unsubscribe(ch <-chan AgentEvent) {
-	a.Agent.Unsubscribe(ch)
+	for i, subscriber := range a.subscribers {
+		if subscriber == ch {
+			close(subscriber)
+			a.subscribers = append(a.subscribers[:i], a.subscribers[i+1:]...)
+			break
+		}
+	}
 }
 
 func (a *LoggingAgent) loggingLoop(ch <-chan AgentEvent) {
 	for event := range ch {
 		a.handleLoggingEvent(event)
+		for _, subscriber := range a.subscribers {
+			subscriber <- event
+		}
 	}
 }
 
@@ -51,5 +65,5 @@ func (a *LoggingAgent) handleLoggingEvent(event AgentEvent) {
 	// 	return
 	// }
 
-	log.Printf("%s (%s):\n%+v\n\n", strings.ToUpper(string(event.Type)), event.RequestID, event.Data)
+	log.Printf("[Logging Agent]%s (%s):\n%+v\n\n", strings.ToUpper(string(event.Type)), event.RequestID, event.Data)
 }

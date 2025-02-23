@@ -2,9 +2,12 @@ package agent
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/segp/agents-main/context_keys"
+	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/tools"
 	"github.com/stretchr/testify/assert"
 )
@@ -91,4 +94,23 @@ func TestNewAnswerErrorEvent(t *testing.T) {
 	assert.Equal(t, AgentEventTypeAnswerError, event.Type)
 	assert.Equal(t, requestID, event.RequestID)
 	assert.Equal(t, error, event.Data["error"])
+}
+
+func TestIdk(t *testing.T) {
+	if os.Getenv("TEST_IDK") != "true" {
+		t.Skip("skipping test")
+	}
+
+	storage := storage.NewMemoryStorage()
+	agent := NewWellbeingMentalHealthPersonalDevelopmentAgent()
+	// llm := llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY"))
+
+	a := NewLoggingAgent(NewEventStoringAgent(agent, storage))
+
+	resp, err := a.Run(context.Background(), "test ")
+	if err != nil {
+		t.Fatalf("error running agent:  %v", err)
+	}
+
+	fmt.Printf("%+v\n", resp)
 }

@@ -77,7 +77,7 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				rr := storage.NewCompletionResult(requestId, nil, nil, err)
-				_, err = storage.Store(store, rr)
+				_, err := storage.Store(store, rr)
 				if err != nil {
 					slog.Error("error storing request result", "error", err.Error())
 				}
@@ -90,10 +90,12 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			}
 
 			rr := storage.NewCompletionResult(requestId, resp.Answer, resp.Reason, err)
-			_, err = storage.Store(store, rr)
+			d, err := storage.Store(store, rr)
 			if err != nil {
 				slog.Error("error storing request result", "error", err.Error())
 			}
+
+			fmt.Printf("yeahhhh %+v\n", d)
 		}()
 
 		sessionId, ok := context_keys.GetSessionID(newCtx)
