@@ -48,7 +48,7 @@ func (m *MockAbcApiClient) GetTutorialGroups() TutorialGroupsResponse {
 			Members: []PersonResponse{
 				{
 					Login:     "as4522",
-					Lastname:  "Kumar",
+					Lastname:  "Sendil",
 					Firstname: "Anshul",
 				},
 			},
