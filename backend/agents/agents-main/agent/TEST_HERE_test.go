@@ -44,9 +44,7 @@ func Test_FinancialAccomodationResourceAgent(t *testing.T) {
 }
 
 //TODO (problems):
-//TODO: NEED DOC WEBSITES ON RAG:  e.g. https://www.doc.ic.ac.uk/~mvalerae/firstyear/utas/utas.htm
 //TODO: Sometimes returns empty answer?
-//TODO: Has returned something along the lines "getting info about user" - think its fixed now tho
 
 // 6. ALEX
 func Test_CampusLifeSocialAgent(t *testing.T) {
