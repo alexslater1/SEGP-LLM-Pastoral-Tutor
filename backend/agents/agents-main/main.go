@@ -41,6 +41,7 @@ func main() {
 			agent.NewCampusLifeSocialAgent(),
 			agent.NewAccessibilityDisabilityAgent(),
 			agent.NewTransitionDiversityMiscAgent(),
+			agent.NewGeneralPurposeAgent(),
 		}, history), store))
 
 		js = []jobs.Job{
