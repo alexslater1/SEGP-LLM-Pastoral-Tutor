@@ -94,26 +94,219 @@ func (m *MockAbcApiClient) GetStudents() StudentResponse {
 	}
 }
 
-func (m *MockAbcApiClient) GetStaff() StaffPeopleResponse {
-	return StaffPeopleResponse{
-		Login:                 "rbc",
-		Year:                  "2223",
-		Email:                 "rbc@ic.ac.uk",
-		Firstname:             "Rob",
-		Lastname:              "Chatley",
-		Salutation:            "Mr",
-		RoleInDepartment:      "staff",
-		RolesInDepartment:     []string{"staff", "2nd Year Undergraduate Coordinator"},
-		HasExtensionClearance: true,
-		Modules: []ModuleHelpedResponse{
-			{
-				Code:  "50002",
-				Title: "Software Engineering Group Project",
-				Roles: []string{"Lecturer"},
-				Terms: []int{1, 2},
+func (m *MockAbcApiClient) GetStaff() []StaffPeopleResponse {
+	return []StaffPeopleResponse{
+		{
+			Login:                 "phjk",
+			Year:                  "",
+			Email:                 "p.kelly@imperial.ac.uk",
+			Firstname:             "Paul",
+			Lastname:              "Kelly",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60001",
+					Title: "Advanced Computer Architecture",
+					Roles: []string{"staff"},
+					Terms: []int{1},
+				},
+			},
+		},
+		{
+			Login:                 "lp721",
+			Year:                  "",
+			Email:                 "l.panayi21@imperial.ac.uk",
+			Firstname:             "Luke",
+			Lastname:              "Panayi",
+			Salutation:            "",
+			RoleInDepartment:      "Tutorial Helper",
+			RolesInDepartment:     []string{"Tutorial Helper"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60001",
+					Title: "Advanced Computer Architecture",
+					Roles: []string{"Tutorial Helper"},
+					Terms: []int{1},
+				},
+			},
+		},
+		{
+			Login:                 "abgh",
+			Year:                  "",
+			Email:                 "abhijeet.ghosh@imperial.ac.uk",
+			Firstname:             "Abhijeet",
+			Lastname:              "Ghosh",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60005",
+					Title: "Graphics",
+					Roles: []string{"staff"},
+					Terms: []int{2},
+				},
+			},
+		},
+		{
+			Login:                 "bkainz",
+			Year:                  "",
+			Email:                 "b.kainz@imperial.ac.uk",
+			Firstname:             "Bernhard",
+			Lastname:              "Kainz",
+			Salutation:            "",
+			RoleInDepartment:      "Tutorial Helper",
+			RolesInDepartment:     []string{"Tutorial Helper"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60005",
+					Title: "Graphics",
+					Roles: []string{"Tutorial Helper"},
+					Terms: []int{2},
+				},
+			},
+		},
+		{
+			Login:                 "wbai",
+			Year:                  "",
+			Email:                 "w.bai@imperial.ac.uk",
+			Firstname:             "Wenjia",
+			Lastname:              "Bai",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60006",
+					Title: "Computer Vision",
+					Roles: []string{"staff"},
+					Terms: []int{2},
+				},
+			},
+		},
+		{
+			Login:                 "azalea",
+			Year:                  "",
+			Email:                 "azalea.raad@imperial.ac.uk",
+			Firstname:             "Azalea",
+			Lastname:              "Raad",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60007",
+					Title: "The Theory and Practice of Concurrent Programming",
+					Roles: []string{"staff"},
+					Terms: []int{1},
+				},
+			},
+		},
+		{
+			Login:                 "sh2221",
+			Year:                  "",
+			Email:                 "shinghin.ho21@imperial.ac.uk",
+			Firstname:             "Shing",
+			Lastname:              "Ho",
+			Salutation:            "",
+			RoleInDepartment:      "Tutorial Helper",
+			RolesInDepartment:     []string{"Tutorial Helper"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60007",
+					Title: "The Theory and Practice of Concurrent Programming",
+					Roles: []string{"Tutorial Helper"},
+					Terms: []int{1},
+				},
+			},
+		},
+		{
+			Login:                 "ttod",
+			Year:                  "",
+			Email:                 "timothy.todman@imperial.ac.uk",
+			Firstname:             "Timothy",
+			Lastname:              "Todman",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60008",
+					Title: "Custom Computing",
+					Roles: []string{"staff"},
+					Terms: []int{2},
+				},
+			},
+		},
+		{
+			Login:                 "wluk",
+			Year:                  "",
+			Email:                 "w.luk@imperial.ac.uk",
+			Firstname:             "Wayne",
+			Lastname:              "Luk",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60008",
+					Title: "Custom Computing",
+					Roles: []string{"staff"},
+					Terms: []int{2},
+				},
+			},
+		},
+		{
+			Login:                 "jwang4",
+			Year:                  "",
+			Email:                 "josiah.wang@imperial.ac.uk",
+			Firstname:             "Josiah",
+			Lastname:              "Wang",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60012",
+					Title: "Introduction to Machine Learning",
+					Roles: []string{"staff"},
+					Terms: []int{1},
+				},
+			},
+		},
+		{
+			Login:                 "ad5518",
+			Year:                  "",
+			Email:                 "adam.dejl18@imperial.ac.uk",
+			Firstname:             "Adam",
+			Lastname:              "Dejl",
+			Salutation:            "",
+			RoleInDepartment:      "Tutorial Helper",
+			RolesInDepartment:     []string{"Tutorial Helper"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60012",
+					Title: "Introduction to Machine Learning",
+					Roles: []string{"Tutorial Helper"},
+					Terms: []int{1},
+				},
 			},
 		},
 	}
+
 }
 
 func (m *MockAbcApiClient) GetAllStaffList() []StaffPeopleResponse {
@@ -173,6 +366,9 @@ func (m *MockAbcApiClient) GetModulesEnrolledStudents() EnrolledStudentsResponse
 			{ModuleCode: "60007", Students: []string{"anshul"}},
 			{ModuleCode: "60012", Students: []string{"anshul"}},
 			{ModuleCode: "70015", Students: []string{"anshul"}},
+			{ModuleCode: "60006", Students: []string{"anshul"}},
+			{ModuleCode: "60008", Students: []string{"anshul"}},
+			{ModuleCode: "60005", Students: []string{"anshul"}},
 		},
 	}
 }

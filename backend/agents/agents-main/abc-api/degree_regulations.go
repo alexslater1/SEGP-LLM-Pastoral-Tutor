@@ -1,12 +1,5 @@
 package abc_api
 
-var (
-	examContrib     = 60
-	cwContrib       = 40
-	totalQuestions  = 4
-	neededQuestions = 2
-)
-
 type DegreeRegulationsResponse struct {
 	DegreeCode     string           `json:"degree_code"`
 	Cohort         string           `json:"cohort"`
@@ -34,7 +27,21 @@ type ModuleItem struct {
 	ExamQuestionsNeeded    *int     `json:"exam_questions_needed,omitempty"`
 }
 
+func intPtr(i int) *int {
+	return &i
+}
+
 func (m *MockAbcApiClient) GetDegreeRegulations() DegreeRegulationsResponse {
+
+	examContr80 := 80
+	cwContr20 := 20
+	examContr70 := 70
+	cwContr30 := 30
+	examQTotal3 := 3
+	examQNeeded3 := 3
+	examQTotal2 := 2
+	examQNeeded2 := 2
+
 	return DegreeRegulationsResponse{
 		DegreeCode:     "beng",
 		Cohort:         "c3",
@@ -61,14 +68,74 @@ func (m *MockAbcApiClient) GetDegreeRegulations() DegreeRegulationsResponse {
 				MinimumSelection: 4,
 				Modules: []ModuleItem{
 					{
-						Code:                   "50002",
-						Title:                  "Software Engineering Design",
-						Terms:                  []int{1, 2},
+						Code:                   "60001",
+						Title:                  "Advanced Computer Architecture",
+						Terms:                  []int{1},
+						ApplicableCohorts:      []string{"c3", "c4", "i3", "i4", "j3", "j4", "o3", "x1", "x3", "x5"},
+						ExamContribution:       intPtr(examContr80),
+						CourseworkContribution: intPtr(cwContr20),
+						ExamQuestionsTotal:     intPtr(examQTotal3),
+						ExamQuestionsNeeded:    intPtr(examQNeeded3),
+					},
+					{
+						Code:                   "60005",
+						Title:                  "Graphics",
+						Terms:                  []int{2},
+						ApplicableCohorts:      []string{"c3", "c4", "i3", "i4", "j3", "j4", "o3", "x1", "x3", "x5"},
+						ExamContribution:       intPtr(examContr80),
+						CourseworkContribution: intPtr(cwContr20),
+						ExamQuestionsTotal:     intPtr(examQTotal3),
+						ExamQuestionsNeeded:    intPtr(examQNeeded3),
+					},
+					{
+						Code:                   "60006",
+						Title:                  "Computer Vision",
+						Terms:                  []int{2},
+						ApplicableCohorts:      []string{"c3", "c4", "i3", "i4", "j3", "j4", "o3", "x1", "x3", "x5"},
+						ExamContribution:       intPtr(examContr70),
+						CourseworkContribution: intPtr(cwContr30),
+						ExamQuestionsTotal:     intPtr(examQTotal3),
+						ExamQuestionsNeeded:    intPtr(examQNeeded3),
+					},
+					{
+						Code:                   "60007",
+						Title:                  "The Theory and Practice of Concurrent Programming",
+						Terms:                  []int{1},
 						ApplicableCohorts:      []string{"c3", "j3"},
-						ExamContribution:       &examContrib,
-						CourseworkContribution: &cwContrib,
-						ExamQuestionsTotal:     &totalQuestions,
-						ExamQuestionsNeeded:    &neededQuestions,
+						ExamContribution:       intPtr(examContr80),
+						CourseworkContribution: intPtr(cwContr20),
+						ExamQuestionsTotal:     intPtr(examQTotal2),
+						ExamQuestionsNeeded:    intPtr(examQNeeded2),
+					},
+					{
+						Code:                   "60008",
+						Title:                  "Custom Computing",
+						Terms:                  []int{2},
+						ApplicableCohorts:      []string{"c3", "c4", "i3", "i4", "j3", "j4", "o3", "x1", "x3", "x5"},
+						ExamContribution:       intPtr(examContr80),
+						CourseworkContribution: intPtr(cwContr20),
+						ExamQuestionsTotal:     intPtr(examQTotal3),
+						ExamQuestionsNeeded:    intPtr(examQNeeded3),
+					},
+					{
+						Code:                   "60012",
+						Title:                  "Introduction to Machine Learning",
+						Terms:                  []int{1},
+						ApplicableCohorts:      []string{"c3", "i3", "j3", "o3"},
+						ExamContribution:       intPtr(examContr70),
+						CourseworkContribution: intPtr(cwContr30),
+						ExamQuestionsTotal:     intPtr(examQTotal3),
+						ExamQuestionsNeeded:    intPtr(examQNeeded3),
+					},
+					{
+						Code:                   "70015",
+						Title:                  "Mathematics for Machine Learning",
+						Terms:                  []int{1},
+						ApplicableCohorts:      []string{"a5", "c3", "c4", "i4", "o3", "q5", "r6", "s5", "t5"},
+						ExamContribution:       intPtr(examContr70),
+						CourseworkContribution: intPtr(cwContr30),
+						ExamQuestionsTotal:     intPtr(examQTotal3),
+						ExamQuestionsNeeded:    intPtr(examQNeeded3),
 					},
 				},
 			},
