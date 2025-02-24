@@ -23,19 +23,64 @@ type CohortResponse struct {
 func (m *MockAbcApiClient) GetCohorts() []CohortResponse {
 	return []CohortResponse{
 		{
-			DegreeYear:  0,
+			DegreeYear:  1,
 			Degree:      "Bachelor of Science in Computer Science",
 			DegreeShort: "BSc CS",
 		},
 		{
 			DegreeYear:  1,
-			Degree:      "Master of Engineering in Software Engineering",
-			DegreeShort: "MEng SE",
+			Degree:      "Master of Computing",
+			DegreeShort: "c1",
 		},
 		{
 			DegreeYear:  2,
-			Degree:      "Doctor of Philosophy in Data Science",
-			DegreeShort: "PhD DS",
+			Degree:      "Master of Computing",
+			DegreeShort: "c2",
+		},
+		{
+			DegreeYear:  3,
+			Degree:      "Master of Computing",
+			DegreeShort: "c3",
+		},
+		{
+			DegreeYear:  4,
+			Degree:      "Master of Computing",
+			DegreeShort: "c4",
+		},
+		{
+			DegreeYear:  1,
+			Degree:      "Bachelors of Computing",
+			DegreeShort: "c1",
+		},
+		{
+			DegreeYear:  2,
+			Degree:      "Bachelors of Computing",
+			DegreeShort: "c2",
+		},
+		{
+			DegreeYear:  3,
+			Degree:      "Bachelors of Computing",
+			DegreeShort: "c3",
+		},
+		{
+			DegreeYear:  1,
+			Degree:      "Joint Maths and Computing",
+			DegreeShort: "j1",
+		},
+		{
+			DegreeYear:  2,
+			Degree:      "Joint Maths and Computing",
+			DegreeShort: "j2",
+		},
+		{
+			DegreeYear:  3,
+			Degree:      "Joint Maths and Computing",
+			DegreeShort: "j3",
+		},
+		{
+			DegreeYear:  4,
+			Degree:      "Joint Maths and Computing",
+			DegreeShort: "j4",
 		},
 	}
 }
@@ -47,28 +92,31 @@ type AcademicPeriodResponse struct {
 	End   time.Time `json:"end"`
 }
 
-func (m *MockAbcApiClient) GetAcademicPeriods() [][]AcademicPeriodResponse {
-	const layout = "2006-01-02"
+func (m *MockAbcApiClient) GetAcademicPeriods() []AcademicPeriodResponse {
+	return []AcademicPeriodResponse{
+		// 2021
+		{"Autumn 2021", 16, time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC), time.Date(2021, 12, 21, 23, 59, 59, 0, time.UTC)},
+		{"Spring 2021", 14, time.Date(2021, 1, 11, 0, 0, 0, 0, time.UTC), time.Date(2021, 4, 16, 23, 59, 59, 0, time.UTC)},
+		{"Summer 2021", 10, time.Date(2021, 5, 3, 0, 0, 0, 0, time.UTC), time.Date(2021, 7, 9, 23, 59, 59, 0, time.UTC)},
 
-	// Create a sample academic period.
-	period, err := time.Parse(layout, "2021-10-01")
-	if err != nil {
-		panic(err)
-	}
-	periodEnd, err := time.Parse(layout, "2022-12-17")
-	if err != nil {
-		panic(err)
-	}
+		// 2022
+		{"Autumn 2022", 16, time.Date(2022, 9, 1, 0, 0, 0, 0, time.UTC), time.Date(2022, 12, 21, 23, 59, 59, 0, time.UTC)},
+		{"Spring 2022", 14, time.Date(2022, 1, 10, 0, 0, 0, 0, time.UTC), time.Date(2022, 4, 15, 23, 59, 59, 0, time.UTC)},
+		{"Summer 2022", 10, time.Date(2022, 5, 2, 0, 0, 0, 0, time.UTC), time.Date(2022, 7, 8, 23, 59, 59, 0, time.UTC)},
 
-	mockPeriod := AcademicPeriodResponse{
-		Name:  "autumn term",
-		Weeks: 11,
-		Start: period,
-		End:   periodEnd,
-	}
+		// 2023
+		{"Autumn 2023", 16, time.Date(2023, 9, 4, 0, 0, 0, 0, time.UTC), time.Date(2023, 12, 22, 23, 59, 59, 0, time.UTC)},
+		{"Spring 2023", 14, time.Date(2023, 1, 9, 0, 0, 0, 0, time.UTC), time.Date(2023, 4, 14, 23, 59, 59, 0, time.UTC)},
+		{"Summer 2023", 10, time.Date(2023, 5, 1, 0, 0, 0, 0, time.UTC), time.Date(2023, 7, 7, 23, 59, 59, 0, time.UTC)},
 
-	// Return a nested slice of AcademicPeriod.
-	return [][]AcademicPeriodResponse{
-		{mockPeriod},
+		// 2024
+		{"Autumn 2024", 16, time.Date(2024, 9, 2, 0, 0, 0, 0, time.UTC), time.Date(2024, 12, 20, 23, 59, 59, 0, time.UTC)},
+		{"Spring 2024", 14, time.Date(2024, 1, 8, 0, 0, 0, 0, time.UTC), time.Date(2024, 4, 12, 23, 59, 59, 0, time.UTC)},
+		{"Summer 2024", 10, time.Date(2024, 5, 6, 0, 0, 0, 0, time.UTC), time.Date(2024, 7, 12, 23, 59, 59, 0, time.UTC)},
+
+		// 2025
+		{"Autumn 2025", 16, time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC), time.Date(2025, 12, 19, 23, 59, 59, 0, time.UTC)},
+		{"Spring 2025", 14, time.Date(2025, 1, 6, 0, 0, 0, 0, time.UTC), time.Date(2025, 4, 11, 23, 59, 59, 0, time.UTC)},
+		{"Summer 2025", 10, time.Date(2025, 5, 5, 0, 0, 0, 0, time.UTC), time.Date(2025, 7, 11, 23, 59, 59, 0, time.UTC)},
 	}
 }

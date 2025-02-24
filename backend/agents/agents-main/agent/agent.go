@@ -165,11 +165,11 @@ providing information.`
 			abc_api_client.GetStudentDetails(),
 
 			abc_api_client.GetModules(),
-			abc_api_client.GetModule(),
+			// abc_api_client.GetModule(),
 			abc_api_client.GetEnrolledStudents(),
 			abc_api_client.GetModulesEnrolledStudents(),
 			abc_api_client.GetExams(),
-			abc_api_client.GetPublicModuleTypes(),
+			// abc_api_client.GetPublicModuleTypes(),
 			abc_api_client.GetDegreeRegulations(),
 			abc_api_client.GetStaff(),
 			abc_api_client.GetIdentity(),
