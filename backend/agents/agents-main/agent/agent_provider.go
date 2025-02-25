@@ -20,6 +20,15 @@ const (
 	ToolNameSearch ToolName = "search"
 )
 
+type AgentProviderAgentConfig struct {
+	AbcApis      []string `json:"abc_apis"`
+	EmarkingApis []string `json:"emarking_apis"`
+	ToolNames    []string `json:"tool_names"`
+	Name         string   `json:"name"`
+	Prompt       string   `json:"prompt"`
+	Description  string   `json:"description"`
+}
+
 type AgentProvider struct {
 	storage            storage.Storage
 	llm                llm.LLM
@@ -65,6 +74,10 @@ func (ap *AgentProvider) GetAgents() []Agent {
 	ap.currentAgentsMu.RLock()
 	defer ap.currentAgentsMu.RUnlock()
 	return ap.currentAgents
+}
+
+func (ap *AgentProvider) SetAgentConfigs(configs []AgentProviderAgentConfig) error {
+	panic("not implemented")
 }
 
 func (ap *AgentProvider) newFastAgentFrom(config storage.AgentConfig) (*FastAgent, error) {

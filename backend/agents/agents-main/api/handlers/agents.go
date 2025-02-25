@@ -29,7 +29,7 @@ func GetAllAgents(store storage.Storage) http.HandlerFunc {
 	}
 }
 
-type ConfigOptionsResult struct {
+type ConfigOptionsResponse struct {
 	AbcEndpoints      []abc_api.AbcApiEndpoint           `json:"abc_endpoints"`
 	EmarkingEndpoints []emarking_api.EmarkingApiEndpoint `json:"emarking_endpoints"`
 	AllToolNames      []agent.ToolName                   `json:"all_tool_names"`
@@ -38,10 +38,28 @@ type ConfigOptionsResult struct {
 func GetConfigOptions() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		json.NewEncoder(w).Encode(ConfigOptionsResult{
+		json.NewEncoder(w).Encode(ConfigOptionsResponse{
 			AbcEndpoints:      abc_api_client.AllApiEndpoints(),
 			EmarkingEndpoints: emarking_api_client.AllApiEndpoints(),
 			AllToolNames:      agent.AllConfigToolNames(),
 		})
+	}
+}
+
+func SetConfigs(agentProvider *agent.AgentProvider) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req []agent.AgentProviderAgentConfig
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to decode request: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		if err = agentProvider.SetAgentConfigs(req); err != nil {
+			http.Error(w, fmt.Sprintf("failed to set agent configs: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
