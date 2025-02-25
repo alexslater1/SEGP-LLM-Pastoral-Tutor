@@ -25,20 +25,20 @@ func (h *ImperialApiHandler) AbcApis() []abc_api.AbcApiEndpoint {
 	return h.abcClient.AllApiEndpoints()
 }
 
-func (h *ImperialApiHandler) EmarkingEndpointsFor(endpoints ...emarking_api.EmarkingApiEndpoint) []func() any {
+func (h *ImperialApiHandler) EmarkingEndpointsFor(endpoints ...string) []func() any {
 	endpointMappings := h.emarkingClient.EndpointMappings()
 	results := make([]func() any, 0, len(endpoints))
 	for _, endpoint := range endpoints {
-		results = append(results, endpointMappings[endpoint])
+		results = append(results, endpointMappings[emarking_api.EmarkingApiEndpoint(endpoint)])
 	}
 	return results
 }
 
-func (h *ImperialApiHandler) AbcEndpointsFor(endpoints ...abc_api.AbcApiEndpoint) []func() any {
+func (h *ImperialApiHandler) AbcEndpointsFor(endpoints ...string) []func() any {
 	endpointMappings := h.abcClient.EndpointMappings()
 	results := make([]func() any, 0, len(endpoints))
 	for _, endpoint := range endpoints {
-		results = append(results, endpointMappings[endpoint])
+		results = append(results, endpointMappings[abc_api.AbcApiEndpoint(endpoint)])
 	}
 	return results
 }

@@ -149,3 +149,32 @@ func NewCompletionResult(requestID string, result *string, reason *string, err e
 		Error:     nil,
 	}
 }
+
+type Apis struct {
+	AbcApis      []string `json:"abc_apis"`
+	EmarkingApis []string `json:"emarking_apis"`
+}
+
+type AgentConfig struct {
+	ID          string     `json:"id,omitempty"`
+	CreatedAt   *time.Time `json:"created_at,omitempty"`
+	Name        string     `json:"name"`
+	Prompt      string     `json:"prompt"`
+	Description string     `json:"description"`
+	Tools       []string   `json:"tools"`
+	Apis        Apis       `json:"apis"`
+}
+
+func NewAgentConfig(name string, prompt string, description string, tools []string, abcApis []string, emarkingApis []string) AgentConfig {
+	return AgentConfig{
+		Name:        name,
+		Prompt:      prompt,
+		Description: description,
+		Tools:       tools,
+		Apis:        Apis{AbcApis: abcApis, EmarkingApis: emarkingApis},
+	}
+}
+
+func (ac AgentConfig) TableName() StorageTableName {
+	return StorageTableNameAgentConfigs
+}

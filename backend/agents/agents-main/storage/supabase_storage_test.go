@@ -91,3 +91,33 @@ func TestSupabaseStorageUpdate(t *testing.T) {
 
 	fmt.Printf("Updated: %+v\n", updated)
 }
+
+func TestSupabaseStorageCreateAgentConfig(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	created, err := Store[AgentConfig](storage, NewAgentConfig("test", "test", "test", []string{"test"}, []string{"test"}, []string{"test"}))
+	if err != nil {
+		t.Error("Error creating item in storage", err)
+	}
+
+	fmt.Printf("Created: %+v\n", created)
+}
+
+func TestSupabaseStorageGetAgentConfig(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := Get[AgentConfig](storage, "a7517604-2f29-47af-855d-81a3808ddf67")
+	if err != nil {
+		t.Error("Error getting item from storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
