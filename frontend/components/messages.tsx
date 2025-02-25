@@ -20,12 +20,6 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  useEffect(() => {
-    if (chatId) {
-      window.history.replaceState({}, "", `/chat/${chatId}`);
-    }
-  }, [chatId]);
-
   return (
     <div
       ref={messagesContainerRef}

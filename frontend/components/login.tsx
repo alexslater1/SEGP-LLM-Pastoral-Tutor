@@ -8,9 +8,11 @@ import { useState } from "react";
 import { getUserSession } from "@/lib/supabase/client";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { useSearchParams } from "next/navigation";
 
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const [error, setError] = useState("");
+  const searchParams = useSearchParams().toString();
 
   const formSignIn = async (formData: FormData) => {
     const { error } = await signIn(formData);
@@ -68,6 +70,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                 className="w-full bg-muted"
               />
             </div>
+            <input type="hidden" name="searchParams" value={searchParams} />
 
             {error && (
               <div className="text-sm text-destructive text-center">
@@ -88,7 +91,8 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
           <div className="text-sm text-muted-foreground text-center">
             {mode === "signin" ? "New to our platform? " : "Already have an account? "}
             <Link
-              href={mode === "signin" ? "/sign-up" : "/sign-in"}
+              href={searchParams ? mode === "signin" ? `/sign-in?${searchParams}` : `/sign-up?${searchParams}` : 
+                                   mode === "signin" ? "/sign-up" : "/sign-in"}
               className="font-medium text-primary hover:underline"
             >
               {mode === "signin" ? "Create an account" : "Sign in"}

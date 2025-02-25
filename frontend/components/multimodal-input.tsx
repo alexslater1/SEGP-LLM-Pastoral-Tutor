@@ -16,14 +16,18 @@ import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Message } from '@/types/message';
+import { User } from '@/lib/supabase/user';
+import { useRouter } from 'next/navigation';
 
 function PureMultimodalInput({
   chatId,
   isLoading,
   stop,
-  messages,
+  messages, // is being used in memo
   handleSubmit,
   className,
+  user,
+  query,
 }: {
   chatId: string | null;
   isLoading: boolean;
@@ -31,14 +35,23 @@ function PureMultimodalInput({
   handleSubmit: (input: string) => void;
   className?: string;
   messages: Message[];
+  user: User | null;
+  query: string | null;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState('');
   const { width } = useWindowSize();
+  const router = useRouter();
 
   useEffect(() => {
     if (textareaRef.current) {
       adjustHeight();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (query) {
+      setInput(query);
     }
   }, []);
 
@@ -86,8 +99,9 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = () => {
-    if (chatId) {
-      window.history.replaceState({}, '', `/chat/${chatId}`);
+    if (!user) {
+      router.push("/sign-in?query=" + input);
+      return;
     }
 
     handleSubmit(input);

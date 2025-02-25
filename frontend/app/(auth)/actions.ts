@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
   password: z.string().min(8).max(100),
+  searchParams: z.string().optional(),
 });
 
 export async function signIn(formData: FormData) {
@@ -14,12 +15,13 @@ export async function signIn(formData: FormData) {
   const validation = signInSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    searchParams: formData.get("searchParams"),
   });
   if (!validation.success) {
     return { error: validation.error.message };
   }
 
-  const { email, password } = validation.data;
+  const { email, password, searchParams } = validation.data;
 
   const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email,
@@ -48,13 +50,14 @@ export async function signIn(formData: FormData) {
   }
 
   // If sign-in is successful, redirect to dashboard
-  redirect("/");
+  searchParams ? redirect(`/?${searchParams}`) : redirect("/");
+  return { error: null };
 };
 
 const signUpSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  inviteId: z.string().optional(),
+  searchParams: z.string().optional(),
 });
 
 export async function signUp(formData: FormData) {
@@ -62,12 +65,13 @@ export async function signUp(formData: FormData) {
   const validation = signUpSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    searchParams: formData.get("searchParams"),
   });
   if (!validation.success) {
     return { error: validation.error.message };
   }
 
-  const { email, password } = validation.data;
+  const { email, password, searchParams } = validation.data;
 
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
@@ -86,11 +90,12 @@ export async function signUp(formData: FormData) {
     return { error: insertError.message };
   }
 
-  redirect("/");
+  searchParams ? redirect(`/?${searchParams}`) : redirect("/");
+  return { error: null };
 }
 
 export const signOut = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/sign-in");
+  redirect("/");
 };

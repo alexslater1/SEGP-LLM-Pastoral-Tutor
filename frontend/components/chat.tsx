@@ -9,7 +9,8 @@ import { MultimodalInput } from "./multimodal-input";
 import { Messages } from "./messages";
 import { VisibilityType } from "./visibility-selector";
 import { UserContext } from "@/lib/userContext";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 type MessageType = "initial" | "loading" | "error";
 
@@ -23,6 +24,7 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const user = useContext(UserContext);
+  const query = useSearchParams().get("query");
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
   const firstAgentMessage = `Hi ${capitalize(user?.name ?? "")}, I'm the Imperial College tutor agent. Ask me anything!`;
 
@@ -36,9 +38,14 @@ export function Chat({
     isInitialLoad,
   } = useChat({
     id,
-    firstAgentMessage: firstAgentMessage
+    firstAgentMessage
   });
 
+  useEffect(() => {
+    if (current_id) {
+      window.history.replaceState({}, "", `/chat/${current_id}`);
+    }
+  }, [current_id]);
 
   return isInitialLoad ? (
     <FullScreenMessage messageType="loading" />
@@ -52,7 +59,7 @@ export function Chat({
         isReadonly={isReadonly}
       />
 
-      {messages.length == 0 ? (
+      {messages.length == 0 || !user ? (
         <FullScreenMessage messageType="initial" />
       ) : (
         <Messages
@@ -71,6 +78,8 @@ export function Chat({
             handleSubmit={handleSubmit}
             isLoading={isLoading}
             stop={stop}
+            user={user}
+            query={query}
           />
         )}
       </form>
@@ -105,7 +114,7 @@ function FullScreenMessage({
           <div className="flex flex-col items-center justify-center p-16">
             <div className="text-center text-foreground">
               <p className="text-5xl font-bold">
-                Hi, I&apos;m the Imperial College tutor agent
+                Hi, I&apos;m Amanda, the Imperial College tutor agent!
               </p>
               <p className="text-4xl font-bold p-8">Ask me anything</p>
             </div>

@@ -144,7 +144,6 @@ export function useChat({
 
   const handleSubmit = (query: string) => {
     const id = generateUUID();
-    console.log("messages", messages);
     const newMessages = [
       ...messages,
       {
