@@ -199,7 +199,7 @@ export function AdminSidebar({ user }: { user: User | null }) {
               )}
             >
               <Link
-                href="/admin/agent-config"
+                href="/admin/agent-requests"
                 onClick={() => setOpenMobile(false)}
                 className="flex items-center gap-3"
               >
