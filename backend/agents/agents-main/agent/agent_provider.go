@@ -99,3 +99,7 @@ func (ap *AgentProvider) apiKnowledgeFrom(config storage.AgentConfig) *knowledge
 	}
 	return knowledge.NewExtraKnowledge(extraKnowledgeSources...)
 }
+
+func AllConfigToolNames() []ToolName {
+	return []ToolName{ToolNameSearch}
+}
