@@ -19,9 +19,25 @@ import {
 } from '@/components/ui/sidebar';
 import { useRouter } from 'next/navigation';
 
-export function SidebarUserNav({ user, adminPage=false }: { user: User, adminPage?: boolean }) {
+export function SidebarUserNav({ user, adminPage=false }: { user: User | null, adminPage?: boolean }) {
   const { setTheme, theme } = useTheme();
   const router = useRouter();
+
+  if (!user) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10"
+            onClick={() => router.push('/sign-in')}
+            size="lg"
+          >
+            <span className="truncate">Sign in</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>
