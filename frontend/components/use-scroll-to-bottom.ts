@@ -12,18 +12,28 @@ export function useScrollToBottom<T extends HTMLElement>(): [
     const end = endRef.current;
 
     if (container && end) {
+      // Scroll after short delay to ensure content is rendered before we scroll
+      const initialScroll = () => {
+        setTimeout(() => {
+          end.scrollIntoView({ behavior: 'instant', block: 'end' });
+        }, 50);
+      };
+
       const observer = new MutationObserver(() => {
         end.scrollIntoView({ behavior: 'instant', block: 'end' });
       });
 
       observer.observe(container, {
         childList: true,
-        subtree: true,
         attributes: true,
         characterData: true,
       });
 
-      return () => observer.disconnect();
+      initialScroll();
+
+      return () => {
+        observer.disconnect();
+      };
     }
   }, []);
 
