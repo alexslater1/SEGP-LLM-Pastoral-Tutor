@@ -77,10 +77,10 @@ const PurePreviewMessage = ({
               animate={{ y: 0, opacity: 1 }}
             >
               {message.content && mode === "view" && (
-                <div className="flex flex-row gap-2 items-start">
+                <div className="flex flex-row gap-2 items-start ">
                   <div
                     className={cn("flex flex-col gap-4", {
-                      "bg-card text-primary-foreground px-3 py-2 rounded-xl":
+                      "bg-primary text-primary-foreground px-3 py-2 rounded-xl":
                         message.role === "user",
                       "bg-muted text-foreground px-3 py-2 rounded-xl":
                         message.role === "assistant",
