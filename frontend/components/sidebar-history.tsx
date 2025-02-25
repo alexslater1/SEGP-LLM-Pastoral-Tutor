@@ -7,6 +7,7 @@ import type { User } from "@/lib/supabase/user";
 import { memo, useCallback, useEffect, useState } from "react";
 import { useChatSessionHistory } from "@/hooks/use-chat-history";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 import {
   CheckCircleFillIcon,
@@ -94,7 +95,11 @@ const PureChatItem = ({
       <DropdownMenu modal={true}>
         <DropdownMenuTrigger asChild>
           <SidebarMenuAction
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
+            className={cn(
+              "data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5",
+              isActive ? "text-primary" : "text-muted-foreground",
+              !isActive && "hover:text-primary"
+            )}
             showOnHover={!isActive}
           >
             <MoreHorizontalIcon />
@@ -104,14 +109,14 @@ const PureChatItem = ({
 
         <DropdownMenuContent side="bottom" align="end">
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="cursor-pointer">
+            <DropdownMenuSubTrigger className="cursor-pointer text-muted-foreground hover:text-primary">
               <ShareIcon />
               <span>Share</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuItem
-                  className="cursor-pointer flex-row justify-between"
+                  className="cursor-pointer flex-row justify-between text-muted-foreground focus:text-primary"
                   onClick={() => {
                     setVisibilityType("private");
                   }}
@@ -121,11 +126,13 @@ const PureChatItem = ({
                     <span>Private</span>
                   </div>
                   {visibilityType === "private" ? (
-                    <CheckCircleFillIcon />
+                    <div>
+                      <CheckCircleFillIcon />
+                    </div>
                   ) : null}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer flex-row justify-between"
+                  className="cursor-pointer flex-row justify-between text-muted-foreground focus:text-primary"
                   onClick={() => {
                     setVisibilityType("public");
                   }}
@@ -134,7 +141,11 @@ const PureChatItem = ({
                     <GlobeIcon />
                     <span>Public</span>
                   </div>
-                  {visibilityType === "public" ? <CheckCircleFillIcon /> : null}
+                  {visibilityType === "public" ? (
+                    <div>
+                      <CheckCircleFillIcon />
+                    </div>
+                  ) : null}
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

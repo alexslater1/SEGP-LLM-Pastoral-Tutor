@@ -26,15 +26,15 @@
     :root {
         --background: 0 0% 100%;
         --foreground: 240 10% 3.9%;
-        --card: 0 0% 100%;
+        --card: 240 100% 35%;
         --card-foreground: 240 10% 3.9%;
         --popover: 0 0% 100%;
         --popover-foreground: 240 10% 3.9%;
-        --primary: 240 5.9% 10%;
+        --primary: 240 100% 40%;
         --primary-foreground: 0 0% 98%;
         --secondary: 240 4.8% 95.9%;
         --secondary-foreground: 240 5.9% 10%;
-        --muted: 240 4.8% 95.9%;
+        --muted: 240 4.8% 91%;
         --muted-foreground: 240 3.8% 46.1%;
         --accent: 240 4.8% 95.9%;
         --accent-foreground: 240 5.9% 10%;
@@ -57,46 +57,51 @@
         --sidebar-accent-foreground: 240 5.9% 10%;
         --sidebar-border: 220 13% 91%;
         --sidebar-ring: 217.2 91.2% 59.8%;
-        --sidebar-selected: 221.2 83.2% 53.3%;    /* #3b82f6 - solid blue */
-        --sidebar-selected-bg: 221.2 83.2% 53.3%; /* #3b82f6 with transparency */
-        --sidebar-selected-foreground: 210 40% 98%; /* #f8fafc */
+        --sidebar-selected: 221.2 83.2% 53.3%;
+        --sidebar-selected-bg: 221.2 83.2% 53.3%;
+        --sidebar-selected-foreground: 210 40% 98%;
+        --success: 142 76% 36%;
+        --success-foreground: 144 70% 98%;
     }
     .dark {
-        --background: 240 10% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 240 10% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 240 10% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 240 5.9% 10%;
-        --secondary: 240 3.7% 15.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 240 3.7% 15.9%;
-        --muted-foreground: 240 5% 64.9%;
-        --accent: 240 3.7% 15.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 240 3.7% 15.9%;
-        --input: 240 3.7% 15.9%;
-        --ring: 240 4.9% 83.9%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
-        --sidebar-background: 240 5.9% 10%;
-        --sidebar-foreground: 240 4.8% 95.9%;
-        --sidebar-primary: 224.3 76.3% 48%;
+        --background: 225 6% 13%;
+        --foreground: 0 0% 100%;
+        --card: 205 100% 28%;
+        --card-foreground: 0 0% 100%;
+        --popover: 223 7% 21%;
+        --popover-foreground: 201 50% 65%;
+        --primary: 201 50% 65%;
+        --primary-foreground: 0 0% 100%; 
+        --secondary: 223 7% 21%;
+        --secondary-foreground: 220 13% 95%;
+        --muted: 223 7% 13%;
+        --muted-foreground: 217 8% 70%;
+        --accent: 223 7% 21%;
+        --accent-foreground: 220 13% 95%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 223 7% 21%;
+        --input: 223 7% 21%;
+        --ring: 224 7% 40%;
+        --chart-1: 0 85% 65%;
+        --chart-2: 145 65% 50%;
+        --chart-3: 45 95% 60%;
+        --chart-4: 270 70% 65%;
+        --chart-5: 320 80% 65%;
+        --radius: 0.5rem;
+        --sidebar-background: 225 6% 13%;
+        --sidebar-foreground: 220 13% 95%;
+        --sidebar-primary: 235 86% 65%;
         --sidebar-primary-foreground: 0 0% 100%;
-        --sidebar-accent: 240 3.7% 15.9%;
-        --sidebar-accent-foreground: 240 4.8% 95.9%;
-        --sidebar-border: 240 3.7% 15.9%;
-        --sidebar-ring: 217.2 91.2% 59.8%;
-        --sidebar-selected: 217.2 91.2% 59.8%;    /* #60a5fa - solid blue */
-        --sidebar-selected-bg: 217.2 91.2% 59.8%; /* #60a5fa with transparency */
-        --sidebar-selected-foreground: 210 40% 98%; /* #f8fafc */
+        --sidebar-accent: 223 7% 21%;
+        --sidebar-accent-foreground: 220 13% 95%;
+        --sidebar-border: 223 7% 21%;
+        --sidebar-ring: 235 86% 65%;
+        --sidebar-selected: 235 86% 65%;
+        --sidebar-selected-bg: 235 86% 65%;
+        --sidebar-selected-foreground: 0 0% 100%;
+        --success: 142 72% 29%;
+        --success-foreground: 144 70% 96%;
     }
 }
 
