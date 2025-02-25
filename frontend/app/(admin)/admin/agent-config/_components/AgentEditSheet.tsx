@@ -1,0 +1,262 @@
+import React, { useState, useEffect } from "react";
+import { Info } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// Import the Agent interface or define it here
+interface Agent {
+  id: string;
+  name: string;
+  description?: string;
+  routerDescription?: string;
+  prompt?: string;
+  tools?: string[];
+  apis?: string[];
+}
+
+interface AgentEditSheetProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  agent: Agent | null;
+  onSave: (agent: Agent) => void;
+  availableTools: string[];
+  availableApis: string[];
+}
+
+const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
+  isOpen,
+  setIsOpen,
+  agent,
+  onSave,
+  availableTools,
+  availableApis,
+}) => {
+  const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
+
+  // Update local state when the agent prop changes
+  useEffect(() => {
+    setEditedAgent(agent);
+  }, [agent]);
+
+  const handleInputChange = (field: keyof Agent, value: string) => {
+    if (editedAgent) {
+      setEditedAgent({
+        ...editedAgent,
+        [field]: value,
+      });
+    }
+  };
+
+  const handleToolToggle = (tool: string) => {
+    if (editedAgent) {
+      const updatedTools = editedAgent.tools || [];
+      if (updatedTools.includes(tool)) {
+        // Remove tool if already selected
+        setEditedAgent({
+          ...editedAgent,
+          tools: updatedTools.filter((t) => t !== tool),
+        });
+      } else {
+        // Add tool if not selected
+        setEditedAgent({
+          ...editedAgent,
+          tools: [...updatedTools, tool],
+        });
+      }
+    }
+  };
+
+  const handleApiToggle = (api: string) => {
+    if (editedAgent) {
+      const updatedApis = editedAgent.apis || [];
+      if (updatedApis.includes(api)) {
+        // Remove API if already selected
+        setEditedAgent({
+          ...editedAgent,
+          apis: updatedApis.filter((a) => a !== api),
+        });
+      } else {
+        // Add API if not selected
+        setEditedAgent({
+          ...editedAgent,
+          apis: [...updatedApis, api],
+        });
+      }
+    }
+  };
+
+  const handleSaveChanges = () => {
+    if (editedAgent) {
+      onSave(editedAgent);
+    }
+  };
+
+  if (!editedAgent) return null;
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Edit Agent</SheetTitle>
+          <SheetDescription>Modify the agent's configuration</SheetDescription>
+        </SheetHeader>
+
+        <div className="py-4 space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="agentName" className="text-sm font-medium">
+              Agent Name
+            </label>
+            <input
+              id="agentName"
+              className="w-full p-2 border rounded-md"
+              value={editedAgent.name || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="routerDescription"
+              className="text-sm font-medium flex items-center gap-1"
+            >
+              Router Description
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      This is the description of the agent which the router LLM
+                      uses to decide who to route the request to
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </label>
+            <input
+              id="routerDescription"
+              className="w-full p-2 border rounded-md"
+              value={editedAgent.routerDescription || ""}
+              onChange={(e) =>
+                handleInputChange("routerDescription", e.target.value)
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="agentPrompt" className="text-sm font-medium">
+              Agent Prompt
+            </label>
+            <textarea
+              id="agentPrompt"
+              className="w-full p-2 border rounded-md min-h-[150px]"
+              value={editedAgent.prompt || ""}
+              onChange={(e) => handleInputChange("prompt", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="agentDescription" className="text-sm font-medium">
+              Description
+            </label>
+            <textarea
+              id="agentDescription"
+              className="w-full p-2 border rounded-md"
+              value={editedAgent.description || ""}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Tools:</h3>
+            <div className="space-y-2">
+              {availableTools.map((tool) => (
+                <div key={tool} className="flex items-center">
+                  <div
+                    className={`w-full p-3 border rounded-md flex items-center gap-2 cursor-pointer ${
+                      editedAgent.tools?.includes(tool)
+                        ? "bg-blue-50 border-blue-500"
+                        : "bg-white"
+                    }`}
+                    onClick={() => handleToolToggle(tool)}
+                  >
+                    <div className="flex-shrink-0">
+                      <div
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                          editedAgent.tools?.includes(tool)
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {editedAgent.tools?.includes(tool) && (
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        )}
+                      </div>
+                    </div>
+                    <span>{tool}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">APIs:</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {availableApis.map((api) => (
+                <div key={api} className="flex items-center">
+                  <div
+                    className={`w-full p-2 border rounded-md flex items-center gap-2 cursor-pointer text-sm ${
+                      editedAgent.apis?.includes(api)
+                        ? "bg-blue-50 border-blue-500"
+                        : "bg-white"
+                    }`}
+                    onClick={() => handleApiToggle(api)}
+                  >
+                    <div className="flex-shrink-0">
+                      <div
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                          editedAgent.apis?.includes(api)
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {editedAgent.apis?.includes(api) && (
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        )}
+                      </div>
+                    </div>
+                    <span className="truncate">{api}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <SheetFooter className="pt-2">
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSaveChanges}>Save Changes</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default AgentEditSheet;
