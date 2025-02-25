@@ -305,6 +305,44 @@ func (m *MockAbcApiClient) GetStaff() []StaffPeopleResponse {
 				},
 			},
 		},
+		{
+			Login:                 "ad5518",
+			Year:                  "",
+			Email:                 "adam.dejl18@imperial.ac.uk",
+			Firstname:             "Adam",
+			Lastname:              "Dejl",
+			Salutation:            "",
+			RoleInDepartment:      "Tutorial Helper",
+			RolesInDepartment:     []string{"Tutorial Helper"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "60012",
+					Title: "Introduction to Machine Learning",
+					Roles: []string{"Tutorial Helper"},
+					Terms: []int{1},
+				},
+			},
+		},
+		{
+			Login:                 "rac101",
+			Year:                  "",
+			Email:                 "robert.craven@imperial.ac.uk",
+			Firstname:             "Robert",
+			Lastname:              "Craven",
+			Salutation:            "",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules: []ModuleHelpedResponse{
+				{
+					Code:  "70015",
+					Title: "Mathematics for Machine Learning",
+					Roles: []string{"staff"},
+					Terms: []int{1},
+				},
+			},
+		},
 	}
 
 }
