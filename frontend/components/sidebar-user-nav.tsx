@@ -4,6 +4,7 @@ import Image from 'next/image';
 import type { User } from '@/lib/supabase/user';
 import { useTheme } from 'next-themes';
 import { signOut } from '@/app/(auth)/actions';
+import { cn } from '@/lib/utils';
 
 import {
   DropdownMenu,
@@ -45,7 +46,12 @@ export function SidebarUserNav({ user, adminPage=false }: { user: User, adminPag
             className="w-[--radix-popper-anchor-width]"
           >
             <DropdownMenuItem
-              className="cursor-pointer"
+              className={cn(
+                "cursor-pointer text-muted-foreground font-semibold",
+                "transition-colors",
+                "focus:bg-zinc-200 dark:focus:bg-zinc-800",
+                "focus:text-primary active:text-primary"
+              )}
               onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             >
               {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
@@ -55,7 +61,12 @@ export function SidebarUserNav({ user, adminPage=false }: { user: User, adminPag
             {user.role === "admin" && (
               <>
                 <DropdownMenuItem
-                  className="cursor-pointer"
+                  className={cn(
+                    "cursor-pointer text-muted-foreground font-semibold",
+                    "transition-colors",
+                    "focus:bg-zinc-200 dark:focus:bg-zinc-800",
+                    "focus:text-primary active:text-primary"
+                  )}
                   onSelect={() => router.push(adminPage ? "/" : "/admin")}
                 >
                   {adminPage ? "Chat With Agent" : "Admin Panel"}
@@ -65,7 +76,12 @@ export function SidebarUserNav({ user, adminPage=false }: { user: User, adminPag
             )}
 
             <DropdownMenuItem
-              className="cursor-pointer"
+              className={cn(
+                "cursor-pointer text-muted-foreground font-semibold",
+                "transition-colors",
+                "focus:bg-zinc-200 dark:focus:bg-zinc-800",
+                "focus:text-primary active:text-primary"
+              )}
               onSelect={async () => {
                 await signOut();
               }}

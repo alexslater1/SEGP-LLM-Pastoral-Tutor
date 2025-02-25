@@ -38,7 +38,7 @@ export function AppSidebar() {
               }}
               className="flex flex-row gap-3 items-center"
             >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
+              <span className="text-lg text-primary font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
                 Imperial Agent
               </span>
             </Link>
@@ -47,7 +47,7 @@ export function AppSidebar() {
                 <Button
                   variant="ghost"
                   type="button"
-                  className="p-2 h-fit"
+                  className="p-2 h-fit hover:text-primary"
                   onClick={() => {
                     setOpenMobile(false);
                     router.push('/');
