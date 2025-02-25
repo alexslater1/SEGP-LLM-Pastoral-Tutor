@@ -23,6 +23,7 @@ import {
 import { memo, useState } from 'react';
 import equal from 'fast-deep-equal';
 import { InfoIcon } from 'lucide-react';
+import { downvote } from '@/lib/supabase/vote';
 
 export function PureMessageActions({
   chatId,
@@ -41,6 +42,8 @@ export function PureMessageActions({
   if (isLoading) return null;
   if (message.role === 'user') return null;
   if (!chatId) return null;
+
+  const [vote, setVote] = useState<boolean>(false);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -91,6 +94,28 @@ export function PureMessageActions({
             </DialogContent>
           </DialogPortal>
         </Dialog>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
+              variant="outline"
+              disabled={vote}
+              onClick={async () => {
+                toast.promise(downvote(message.requestID), {
+                  loading: 'Downvoting Response...',
+                  success: () => {
+                    return 'Downvoted Response!';
+                  },
+                  error: 'Failed to downvote response.',
+                });
+              }}
+            >
+              <ThumbDownIcon />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Downvote Response</TooltipContent>
+        </Tooltip>
       </div>
     </TooltipProvider>
   );
