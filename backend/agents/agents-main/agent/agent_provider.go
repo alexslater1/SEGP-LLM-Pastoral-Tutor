@@ -25,7 +25,7 @@ type AgentProvider struct {
 	llm                llm.LLM
 	clock              clock.Clock
 	history            history.History
-	imperialApiHandler imperial_apis.ImperialApiHandler
+	imperialApiHandler *imperial_apis.ImperialApiHandler
 
 	googleSearchClient googleSearch.GoogleSearchClient
 	searchKnowledge    knowledge.Knowledge
@@ -34,16 +34,13 @@ type AgentProvider struct {
 	currentAgentsMu sync.RWMutex
 }
 
-func NewAgentProvider(storage storage.Storage, llm llm.LLM, clock clock.Clock, history history.History, googleSearchClient googleSearch.GoogleSearchClient, searchKnowledge knowledge.Knowledge, imperialApiHandler imperial_apis.ImperialApiHandler) *AgentProvider {
+func NewAgentProvider(storage storage.Storage, llm llm.LLM, clock clock.Clock, history history.History, googleSearchClient googleSearch.GoogleSearchClient, searchKnowledge knowledge.Knowledge, imperialApiHandler *imperial_apis.ImperialApiHandler) *AgentProvider {
 	ap := &AgentProvider{storage: storage, llm: llm, clock: clock, history: history, googleSearchClient: googleSearchClient, imperialApiHandler: imperialApiHandler}
 	ap.RefreshAgents()
 	return ap
 }
 
 func (ap *AgentProvider) RefreshAgents() error {
-	ap.currentAgentsMu.Lock()
-	defer ap.currentAgentsMu.Unlock()
-
 	agentConfigs, err := storage.GetAll[storage.AgentConfig](ap.storage, nil)
 	if err != nil {
 		return err
