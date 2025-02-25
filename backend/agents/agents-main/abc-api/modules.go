@@ -50,6 +50,12 @@ type EnrolledStudentResponse struct {
 	Cohort    string `json:"cohort"`
 }
 
+type CreditRegistrationPeriodResponse struct {
+	Term      int    `json:"term"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+}
+
 // For first term modules
 func (m *MockAbcApiClient) GetModules() []ModuleResponse3 {
 	return []ModuleResponse3{
@@ -431,6 +437,21 @@ func (m *MockAbcApiClient) GetEnrolledStudents() []EnrolledStudentResponse {
 			Level:     3,
 			Status:    "Normal",
 			Cohort:    "c3",
+		},
+	}
+}
+
+func (m *MockAbcApiClient) GetCreditRegistrationPeriods() []CreditRegistrationPeriodResponse {
+	return []CreditRegistrationPeriodResponse{
+		{
+			Term:      1,
+			StartDate: "2024-09-30",
+			EndDate:   "2024-10-29",
+		},
+		{
+			Term:      2,
+			StartDate: "2025-01-05",
+			EndDate:   "2025-02-03",
 		},
 	}
 }

@@ -226,6 +226,8 @@ providing information.`
 			emarking_api_client.GetExercises(),
 			emarking_api_client.GetFeedback(),
 			emarking_api_client.GetSubmissionGroup(),
+
+			abc_api_client.GetCreditRegistrationPeriods(),
 		}
 
 		description = "Handles administrative and procedural questions, assisting students with processes such as registration, ID card replacement, and navigating university services."
@@ -383,7 +385,7 @@ func NewWellbeingMentalHealthPersonalDevelopmentAgent() Agent {
 			abc_api_client.GetEnrolledStudents(),
 
 			emarking_api_client.GetExercises(),
-			emarking_api_client.GetExerciseSummary(),
+			// emarking_api_client.GetExerciseSummary(),
 			emarking_api_client.GetSubmissionGroup(),
 		}
 
