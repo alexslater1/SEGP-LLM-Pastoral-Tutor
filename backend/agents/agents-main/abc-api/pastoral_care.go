@@ -66,7 +66,7 @@ func (m *MockAbcApiClient) GetPersonalTuteesForTutor() PersonalTuteesForTutorRes
 			},
 			Tutee: TuteeResponse{
 				Login:     "as4522",
-				Lastname:  "Kumar",
+				Lastname:  "Sendil",
 				Firstname: "Anshul",
 				Cohort:    "2023/24",
 			},

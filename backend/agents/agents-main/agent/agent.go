@@ -212,9 +212,9 @@ You should always engage in meaningful conversations rather than just providing 
 			abc_api_client.GetCohorts(),
 
 			abc_api_client.GetStudents(),
-			abc_api_client.GetAllStaffList(),
+			// abc_api_client.GetAllStaffList(),
 			abc_api_client.GetStaff(),
-			abc_api_client.GetPublicModuleTypes(),
+			// abc_api_client.GetPublicModuleTypes(),
 			abc_api_client.GetAllStudents(),
 			abc_api_client.GetTotalEnrolledStudents(),
 
@@ -294,10 +294,10 @@ End with a follow up question to guide the student on their next steps
 
 			abc_api_client.GetAcademicPeriods(),
 
-			abc_api_client.GetAllStaffList(),
+			// abc_api_client.GetAllStaffList(),
 			abc_api_client.GetStaff(),
 			abc_api_client.GetModules(),
-			abc_api_client.GetPublicModuleTypes(),
+			// abc_api_client.GetPublicModuleTypes(),
 		}
 
 		description = "Offers tailored career advice and professional development guidance, including CV tips, internship/job opportunities, and interview preparation based on the student’s academic profile."
@@ -369,7 +369,7 @@ func NewWellbeingMentalHealthPersonalDevelopmentAgent() Agent {
 			abc_api_client.GetStudentDetails(),
 			abc_api_client.GetStudents(),
 
-			abc_api_client.GetAllStaffList(),
+			// abc_api_client.GetAllStaffList(),
 			abc_api_client.GetStaff(),
 			abc_api_client.GetModules(),
 
@@ -415,7 +415,7 @@ If the user has a housing issue, this may be either private accommodation or stu
 			abc_api_client.GetCohorts(),
 			abc_api_client.GetAcademicPeriods(),
 			abc_api_client.GetStaff(),
-			abc_api_client.GetAllStaffList(),
+			// abc_api_client.GetAllStaffList(),
 		}
 	)
 
@@ -449,7 +449,7 @@ func NewCampusLifeSocialAgent() Agent {
 			abc_api_client.GetAcademicPeriods(),
 			abc_api_client.GetCohorts(),
 			abc_api_client.GetEnrolledStudents(),
-			abc_api_client.GetAllStaffList(),
+			// abc_api_client.GetAllStaffList(),
 			abc_api_client.GetAllStudents(),
 		}
 	)

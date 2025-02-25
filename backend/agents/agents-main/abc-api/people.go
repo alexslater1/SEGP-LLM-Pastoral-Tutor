@@ -62,34 +62,58 @@ func (m *MockAbcApiClient) GetStudents() StudentResponse {
 		Modules: []ModuleResponse{
 			{
 				Level: 3,
-				Code:  "50009",
-				Title: "Computer Vision",
-				Terms: []int{1, 2},
-			},
-			{
-				Level: 3,
-				Code:  "50010",
-				Title: "Network Security",
-				Terms: []int{1},
-			},
-			{
-				Level: 3,
-				Code:  "50002",
-				Title: "Software Engineering Group Project",
-				Terms: []int{2},
-			},
-			{
-				Level: 3,
 				Code:  "50011",
 				Title: "Japanese Language and Culture",
 				Terms: []int{1, 2},
 			},
+			{
+				Level: 3,
+				Code:  "60001",
+				Title: "Advanced Computer Architecture",
+				Terms: []int{1},
+			},
+			{
+				Level: 3,
+				Code:  "60005",
+				Title: "Graphics",
+				Terms: []int{2},
+			},
+			{
+				Level: 3,
+				Code:  "60006",
+				Title: "Computer Vision",
+				Terms: []int{2},
+			},
+			{
+				Level: 3,
+				Code:  "60007",
+				Title: "The Theory and Practice of Concurrent Programming",
+				Terms: []int{1},
+			},
+			{
+				Level: 3,
+				Code:  "60008",
+				Title: "Custom Computing",
+				Terms: []int{2},
+			},
+			{
+				Level: 3,
+				Code:  "60012",
+				Title: "Introduction to Machine Learning",
+				Terms: []int{1},
+			},
+			{
+				Level: 3,
+				Code:  "70015",
+				Title: "Mathematics for Machine Learning",
+				Terms: []int{1},
+			},
 		},
 		ModulesHelped: []ModuleHelpedResponse{}, // No modules helped as he's struggling with his own studies
 		PersonalTutor: PersonalTutorResponse{
-			Login:     "dsmith",
-			Firstname: "David",
-			Lastname:  "Smith",
+			Login:     "ad321",
+			Firstname: "Alistair",
+			Lastname:  "Donaldson",
 		},
 	}
 }
@@ -342,6 +366,17 @@ func (m *MockAbcApiClient) GetStaff() []StaffPeopleResponse {
 					Terms: []int{1},
 				},
 			},
+		},
+		{
+			Login:                 "ad321",
+			Email:                 "ad321@ic.ac.uk",
+			Firstname:             "Alastair",
+			Lastname:              "Donaldson",
+			Salutation:            "Prof",
+			RoleInDepartment:      "staff",
+			RolesInDepartment:     []string{"staff"},
+			HasExtensionClearance: false,
+			Modules:               []ModuleHelpedResponse{},
 		},
 	}
 
