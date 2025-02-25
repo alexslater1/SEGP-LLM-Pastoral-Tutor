@@ -13,8 +13,8 @@ import (
 	"github.com/segp/agents-main/tools"
 	"github.com/segp/agents-main/utils"
 
-	abc_api "github.com/segp/agents-main/abc-api"
-	emarking_api "github.com/segp/agents-main/emarking-api"
+	abc_api "github.com/segp/imperial_apis/abc-api"
+	emarking_api "github.com/segp/imperial_apis/emarking-api"
 )
 
 const (
