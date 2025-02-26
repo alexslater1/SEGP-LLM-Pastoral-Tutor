@@ -126,7 +126,9 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Edit Agent</SheetTitle>
-          <SheetDescription>Modify the agent's configuration</SheetDescription>
+          <SheetDescription>
+            Modify the agent&aposs configuration
+          </SheetDescription>
         </SheetHeader>
 
         <div className="py-4 space-y-4">
