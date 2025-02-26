@@ -3,8 +3,8 @@ package storage
 type OrderBy string
 
 const (
-	OrderByAsc  OrderBy = "asc"
-	OrderByDesc OrderBy = "desc"
+	OrderByAsc  OrderBy = "ASC"
+	OrderByDesc OrderBy = "DESC"
 )
 
 type queryBuilderOrderBy struct {
