@@ -46,16 +46,37 @@ func GetConfigOptions() http.HandlerFunc {
 	}
 }
 
+type SetConfigsRequest struct {
+	Configs []agent.AgentProviderAgentConfig `json:"configs"`
+}
+
 func SetConfigs(agentProvider *agent.AgentProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req []agent.AgentProviderAgentConfig
+		var req SetConfigsRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to decode request: %v", err), http.StatusBadRequest)
 			return
 		}
 
-		if err = agentProvider.SetAgentConfigs(req); err != nil {
+		for _, config := range req.Configs {
+			if config.Name == "" {
+				http.Error(w, "name is required", http.StatusBadRequest)
+				return
+			}
+
+			if config.Description == "" {
+				http.Error(w, "description is required", http.StatusBadRequest)
+				return
+			}
+
+			if config.Prompt == "" {
+				http.Error(w, "prompt is required", http.StatusBadRequest)
+				return
+			}
+		}
+
+		if err = agentProvider.SetAgentConfigs(req.Configs); err != nil {
 			http.Error(w, fmt.Sprintf("failed to set agent configs: %v", err), http.StatusInternalServerError)
 			return
 		}

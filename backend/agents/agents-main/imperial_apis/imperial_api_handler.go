@@ -10,6 +10,13 @@ type ImperialApiHandler struct {
 	emarkingClient *emarking_api.MockEmarkingApiClient
 }
 
+func NewDefaultImperialApiHandler() *ImperialApiHandler {
+	return &ImperialApiHandler{
+		abcClient:      abc_api.NewMockAbcApiClient(),
+		emarkingClient: emarking_api.NewMockEmarkingApiClient(),
+	}
+}
+
 func NewImperialApiHandler(abcClient *abc_api.MockAbcApiClient, emarkingClient *emarking_api.MockEmarkingApiClient) *ImperialApiHandler {
 	return &ImperialApiHandler{
 		abcClient:      abcClient,

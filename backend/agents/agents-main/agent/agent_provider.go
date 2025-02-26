@@ -101,7 +101,7 @@ func (ap *AgentProvider) newFastAgentFrom(config storage.AgentConfig) (*FastAgen
 
 func (ap *AgentProvider) toolHandlerFrom(config storage.AgentConfig) *tools.ToolHandler {
 	if len(config.Tools) == 0 {
-		return nil
+		return tools.NewToolHandler([]tools.Tool{})
 	}
 
 	ts := make([]tools.Tool, len(config.Tools))

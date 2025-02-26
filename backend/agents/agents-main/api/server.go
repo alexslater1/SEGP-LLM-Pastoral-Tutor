@@ -16,22 +16,24 @@ type Server struct {
 	listenAddr string
 	router     *http.ServeMux
 
-	storage    storage.Storage
-	history    history.History
-	agent      agent.Agent
-	jobManager *jobs.JobManager
-	llm        llm.LLM
+	storage       storage.Storage
+	history       history.History
+	agent         agent.Agent
+	jobManager    *jobs.JobManager
+	llm           llm.LLM
+	agentProvider *agent.AgentProvider
 }
 
-func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, history history.History, jobManager *jobs.JobManager, llm llm.LLM) *Server {
+func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, history history.History, jobManager *jobs.JobManager, llm llm.LLM, agentProvider *agent.AgentProvider) *Server {
 	s := &Server{
-		listenAddr: listenAddr,
-		router:     http.NewServeMux(),
-		storage:    storage,
-		agent:      agent,
-		history:    history,
-		jobManager: jobManager,
-		llm:        llm,
+		listenAddr:    listenAddr,
+		router:        http.NewServeMux(),
+		storage:       storage,
+		agent:         agent,
+		history:       history,
+		jobManager:    jobManager,
+		llm:           llm,
+		agentProvider: agentProvider,
 	}
 
 	s.routes()
@@ -39,12 +41,16 @@ func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, hi
 }
 
 func (s *Server) routes() {
-	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.agent, s.storage, s.history, s.llm))
+	s.router.HandleFunc("POST /completion/v2", handlers.ChatCompletionV2(s.agentProvider, s.storage, s.history, s.llm))
 	s.router.HandleFunc("GET /completion/v2/status/{request_id}", handlers.ChatCompletionV2Status(s.storage))
 
 	s.router.HandleFunc("GET /sessions/{session_id}/history", handlers.ChatHistory(s.history))
 	s.router.HandleFunc("GET /sessions", handlers.SessionIdsForUser(s.storage))
 	s.router.HandleFunc("GET /sessions/{session_id}", handlers.SessionFromId(s.storage))
+
+	s.router.HandleFunc("GET /agents", handlers.GetAllAgents(s.storage))
+	s.router.HandleFunc("GET /agents/config", handlers.GetConfigOptions())
+	s.router.HandleFunc("POST /agents", handlers.SetConfigs(s.agentProvider))
 }
 
 func (s *Server) Start() error {
