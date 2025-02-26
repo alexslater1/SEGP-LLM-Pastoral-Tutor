@@ -24,7 +24,7 @@ type Storage interface {
 	storeAll(table StorageTableName, data []interface{}) ([]interface{}, error)
 
 	get(table StorageTableName, id string) (interface{}, error)
-	getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error)
+	getAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error)
 
 	update(table StorageTableName, id string, updateFields map[string]interface{}) (interface{}, error)
 }
