@@ -153,7 +153,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <Info className="size-4 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="max-w-xs">
@@ -197,16 +197,16 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                     }`}
                     onClick={() => handleToolToggle(tool)}
                   >
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <div
-                        className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                        className={`size-5 rounded-full border flex items-center justify-center ${
                           editedAgent.tools?.includes(tool)
                             ? "border-blue-500 bg-blue-500"
                             : "border-gray-300"
                         }`}
                       >
                         {editedAgent.tools?.includes(tool) && (
-                          <div className="w-2 h-2 bg-white rounded-full" />
+                          <div className="size-2  bg-white rounded-full" />
                         )}
                       </div>
                     </div>
@@ -230,16 +230,16 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                     }`}
                     onClick={() => handleApiToggle(api, "abc_apis")}
                   >
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        className={`size-5 rounded-full border flex items-center justify-center ${
                           editedAgent.apis?.abc_apis?.includes(api)
                             ? "border-blue-500 bg-blue-500"
                             : "border-gray-300"
                         }`}
                       >
                         {editedAgent.apis?.abc_apis?.includes(api) && (
-                          <div className="w-2 h-2 bg-white rounded-full" />
+                          <div className="size-2  bg-white rounded-full" />
                         )}
                       </div>
                     </div>
@@ -263,16 +263,16 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                     }`}
                     onClick={() => handleApiToggle(api, "emarking_apis")}
                   >
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        className={`size-5 rounded-full border flex items-center justify-center ${
                           editedAgent.apis?.emarking_apis?.includes(api)
                             ? "border-blue-500 bg-blue-500"
                             : "border-gray-300"
                         }`}
                       >
                         {editedAgent.apis?.emarking_apis?.includes(api) && (
-                          <div className="w-2 h-2 bg-white rounded-full" />
+                          <div className="size-2 bg-white rounded-full" />
                         )}
                       </div>
                     </div>
