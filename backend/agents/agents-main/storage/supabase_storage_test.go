@@ -129,7 +129,7 @@ func TestSupabaseStorageGetAll(t *testing.T) {
 
 	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	data, err := storage.getAll(StorageTableNameAgentEvents, map[string]string{"request_id": "631c06da-6f31-4b5a-9239-62caa40d4c4e"})
+	data, err := storage.getAll(StorageTableNameAgentEvents, NewQueryBuilder().Eq("request_id", "631c06da-6f31-4b5a-9239-62caa40d4c4e"))
 	if err != nil {
 		t.Error("Error getting items from storage", err)
 	}

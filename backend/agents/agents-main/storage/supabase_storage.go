@@ -96,7 +96,7 @@ func (s *SupabaseStorage) delete(table StorageTableName, id string) (interface{}
 	return results[0], nil
 }
 
-func (s *SupabaseStorage) deleteAll(table StorageTableName, query *QueryBuilder) (interface{}, error) {
+func (s *SupabaseStorage) deleteAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error) {
 	return s.handleQuery(queryTypeDelete, table, query)
 }
 
