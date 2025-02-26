@@ -1,5 +1,6 @@
 "use client";
 
+import { getUserSession } from "@/lib/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface AgentsResponse {
@@ -66,8 +67,18 @@ export function useUpdateAgentConfig() {
 }
 
 async function fetchAgents(): Promise<AgentsResponse[]> {
+  const login_session = await getUserSession();
+  if (!login_session) {
+    return [];
+  }
+
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents`
+    `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents`,
+    {
+      headers: {
+        Authorization: `Bearer ${login_session.access_token}`,
+      },
+    }
   );
 
   if (!response.ok) {
@@ -78,8 +89,18 @@ async function fetchAgents(): Promise<AgentsResponse[]> {
 }
 
 async function fetchAgentConfigOptions(): Promise<AgentConfigOptionsResponse> {
+  const login_session = await getUserSession();
+  if (!login_session) {
+    throw new Error("User session not found");
+  }
+
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents/config`
+    `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents/config`,
+    {
+      headers: {
+        Authorization: `Bearer ${login_session.access_token}`,
+      },
+    }
   );
 
   if (!response.ok) {
@@ -94,12 +115,18 @@ async function fetchAgentConfigOptions(): Promise<AgentConfigOptionsResponse> {
 async function updateAgentConfig(
   configs: AgentProviderAgentConfig[]
 ): Promise<void> {
+  const login_session = await getUserSession();
+  if (!login_session) {
+    throw new Error("User session not found");
+  }
+
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${login_session.access_token}`,
       },
       body: JSON.stringify({ configs }),
     }
