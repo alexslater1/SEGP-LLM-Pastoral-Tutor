@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	supa "github.com/nedpals/supabase-go"
-	postgrest_go "github.com/nedpals/supabase-go/postgrest/pkg"
 	"github.com/segp/agents-main/utils"
 )
 
@@ -66,18 +65,8 @@ func (s *SupabaseStorage) getAll(table StorageTableName, matchingFields map[stri
 	var results []interface{}
 
 	query := s.client.DB.From(string(table)).Select("*")
-	var filterQuery *postgrest_go.FilterRequestBuilder
 	for k, v := range matchingFields {
-		if filterQuery == nil {
-			filterQuery = query.Filter(k, "eq", v)
-		} else {
-			filterQuery = filterQuery.Filter(k, "eq", v)
-		}
-	}
-
-	if filterQuery != nil {
-		err := filterQuery.Execute(&results)
-		return results, err
+		query.Filter(k, "eq", v)
 	}
 
 	err := query.Execute(&results)

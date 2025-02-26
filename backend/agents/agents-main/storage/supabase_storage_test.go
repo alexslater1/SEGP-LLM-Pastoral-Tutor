@@ -99,7 +99,7 @@ func TestSupabaseStorageCreateAgentConfig(t *testing.T) {
 
 	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	created, err := Store[AgentConfig](storage, NewAgentConfig("test", "test", "test", []string{"test"}, []string{"test"}, []string{"test"}))
+	created, err := Store(storage, NewAgentConfig("test", "test", "test", []string{"test"}, []string{"test"}, []string{"test"}))
 	if err != nil {
 		t.Error("Error creating item in storage", err)
 	}
@@ -117,6 +117,21 @@ func TestSupabaseStorageGetAgentConfig(t *testing.T) {
 	data, err := Get[AgentConfig](storage, "a7517604-2f29-47af-855d-81a3808ddf67")
 	if err != nil {
 		t.Error("Error getting item from storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
+
+func TestSupabaseStorageGetAll(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := storage.getAll(StorageTableNameAgentEvents, map[string]string{"request_id": "631c06da-6f31-4b5a-9239-62caa40d4c4e"})
+	if err != nil {
+		t.Error("Error getting items from storage", err)
 	}
 
 	fmt.Printf("Data: %+v\n", data)
