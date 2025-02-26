@@ -35,7 +35,7 @@ func (h *AgentEventHistory) GetMessageHistory(sessionId string) ([]string, error
 }
 
 func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesAndActions, error) {
-	agentRequestSessions, err := storage.GetAll[storage.RequestSession](h.store, map[string]string{"session_id": sessionId})
+	agentRequestSessions, err := storage.GetAll[storage.RequestSession](h.store, storage.NewQueryBuilder().Eq("session_id", sessionId))
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesA
 	})
 
 	requestEventsTasks := utils.DoAsyncList(agentRequestSessions, func(agentRequestSession storage.RequestSession) ([]storage.AgentEvent, error) {
-		agentEvents, err := storage.GetAll[storage.AgentEvent](h.store, map[string]string{"request_id": agentRequestSession.RequestID})
+		agentEvents, err := storage.GetAll[storage.AgentEvent](h.store, storage.NewQueryBuilder().Eq("request_id", agentRequestSession.RequestID))
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +58,7 @@ func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesA
 	})
 
 	completionResultsTasks := utils.DoAsyncList(agentRequestSessions, func(agentRequestSession storage.RequestSession) (*storage.CompletionResult, error) {
-		resp, err := storage.GetAll[storage.CompletionResult](h.store, map[string]string{"request_id": agentRequestSession.RequestID})
+		resp, err := storage.GetAll[storage.CompletionResult](h.store, storage.NewQueryBuilder().Eq("request_id", agentRequestSession.RequestID))
 		if err != nil {
 			return nil, err
 		}

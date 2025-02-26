@@ -72,7 +72,7 @@ func TestStorage_GetAll(t *testing.T) {
 	_, err := StoreAll(storage, reqs...)
 	assert.NoError(t, err)
 
-	res, err := GetAll[AgentRequest](storage, map[string]string{"endpoint": "endpoint1"})
+	res, err := GetAll[AgentRequest](storage, NewQueryBuilder().Eq("endpoint", "endpoint1"))
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(res))
 
