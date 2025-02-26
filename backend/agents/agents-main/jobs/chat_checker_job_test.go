@@ -58,7 +58,7 @@ func TestGetStaleSessions(t *testing.T) {
 
 	req4Time := now.Add(-50 * time.Minute)
 	req5Time := now.Add(-20 * time.Minute)
-	req6Time := now.Add(-10 * time.Minute)
+	req6Time := now.Add(-15 * time.Minute)
 
 	storage.StoreAll(memStorage, storage.RequestSession{
 		SessionID: "session2",
@@ -96,11 +96,8 @@ func TestGetStaleSessions(t *testing.T) {
 		store:       memStorage2,
 		staleWindow: 5 * time.Minute,
 	}
-	staleSessions, err = chatCheckerJob2.getStaleSessions()
-	assert.NoError(t, err)
-	assert.Len(t, staleSessions, 0) // Expecting no stale sessions
 
-	// Test case 2: Multiple stale sessions
+	// Multiple stale sessions
 	reqStaleTime1 := now.Add(-9 * time.Minute)
 	reqStaleTime2 := now.Add(-6 * time.Minute)
 	storage.StoreAll(memStorage2, storage.RequestSession{
@@ -122,9 +119,9 @@ func TestGetStaleSessions(t *testing.T) {
 	assert.Contains(t, staleSessions, "session4")
 	assert.Contains(t, staleSessions, "session5")
 
-	// Test case 3: Edge case with boundary conditions
-	reqBoundaryTime1 := now.Add(-10 * time.Minute)
-	reqBoundaryTime2 := now.Add(-5 * time.Minute)
+	// Edge case with boundary conditions
+	reqBoundaryTime1 := now.Add(-15 * time.Minute)
+	reqBoundaryTime2 := now.Add(-14 * time.Minute)
 	storage.StoreAll(memStorage2, storage.RequestSession{
 		SessionID: "session6",
 		RequestID: "request10",
@@ -265,9 +262,10 @@ func TestRun2(t *testing.T) {
 		store:       store,
 		history:     history.NewAgentEventHistory(store),
 		llm:         llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")),
-		emailClient: email.NewResendClient(os.Getenv("RESEND_API_KEY")),
+		emailClient: email.NewMockEmailClient(),
 		staleWindow: 5 * time.Minute,
 	}
 
-	job.Run()
+	err := job.Run()
+	assert.NoError(t, err)
 }

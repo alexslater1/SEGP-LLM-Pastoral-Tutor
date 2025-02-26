@@ -223,9 +223,7 @@ func TestMemoryStorage_GetAll(t *testing.T) {
 	}
 
 	t.Run("retrieves all matching records", func(t *testing.T) {
-		results, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{
-			"endpoint": "endpoint1",
-		})
+		results, err := storage.getAll(StorageTableNameAgentRequests, NewQueryBuilder().Eq("endpoint", "endpoint1"))
 		assert.NoError(t, err)
 		assert.Len(t, results, 2) // Should find two records with endpoint1
 
@@ -237,9 +235,7 @@ func TestMemoryStorage_GetAll(t *testing.T) {
 	})
 
 	t.Run("returns empty slice for no matches", func(t *testing.T) {
-		results, err := storage.getAll(StorageTableNameAgentRequests, map[string]string{
-			"endpoint": "non-existent",
-		})
+		results, err := storage.getAll(StorageTableNameAgentRequests, NewQueryBuilder().Eq("endpoint", "non-existent"))
 		assert.NoError(t, err)
 		assert.Empty(t, results)
 	})
@@ -268,3 +264,79 @@ func TestMemoryStorage_Update(t *testing.T) {
 		assert.Equal(t, "updated-endpoint", res.Endpoint)
 	})
 }
+
+func TestMemoryStorage_Delete(t *testing.T) {
+	storage := NewMemoryStorage()
+
+	t.Run("deletes existing item", func(t *testing.T) {
+		req := AgentRequest{
+			ID:       "test-id",
+			Endpoint: "test-endpoint",
+		}
+
+		// Store the data first
+		_, err := storage.store(req.TableName(), req)
+		assert.NoError(t, err)
+
+		// Delete the data
+		deletedItem, err := storage.delete(req.TableName(), req.ID)
+		assert.NoError(t, err)
+
+		// Verify the deleted item
+		res, err := parseResult[AgentRequest](deletedItem)
+		assert.NoError(t, err)
+		assert.Equal(t, req.ID, res.ID)
+		assert.Equal(t, req.Endpoint, res.Endpoint)
+
+		// Try to retrieve the deleted item
+		_, err = storage.get(req.TableName(), req.ID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "item not found")
+	})
+
+	t.Run("returns error for non-existent ID", func(t *testing.T) {
+		_, err := storage.delete(StorageTableNameAgentRequests, "non-existent-id")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "item not found")
+	})
+}
+
+func TestMemoryStorage_DeleteAll(t *testing.T) {
+	storage := NewMemoryStorage()
+
+	// Store some test data
+	reqs := []AgentRequest{
+		{ID: "id1", Endpoint: "endpoint1"},
+		{ID: "id2", Endpoint: "endpoint2"},
+		{ID: "id3", Endpoint: "endpoint1"},
+	}
+
+	for _, req := range reqs {
+		_, err := storage.store(req.TableName(), req)
+		assert.NoError(t, err)
+	}
+
+	t.Run("deletes multiple items matching query", func(t *testing.T) {
+		query := NewQueryBuilder().Eq("endpoint", "endpoint1")
+		deletedItems, err := storage.deleteAll(StorageTableNameAgentRequests, query)
+		assert.NoError(t, err)
+		assert.Len(t, deletedItems, 2) // Should delete two records
+
+		// Verify that the deleted items are no longer retrievable
+		for _, item := range deletedItems {
+			res, ok := item.(map[string]interface{})
+			assert.True(t, ok)
+			_, err := storage.get(StorageTableNameAgentRequests, res["id"].(string))
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "item not found")
+		}
+	})
+
+	t.Run("returns empty slice for no matches", func(t *testing.T) {
+		query := NewQueryBuilder().Eq("endpoint", "non-existent")
+		deletedItems, err := storage.deleteAll(StorageTableNameAgentRequests, query)
+		assert.NoError(t, err)
+		assert.Empty(t, deletedItems) // No items should be deleted
+	})
+}
+

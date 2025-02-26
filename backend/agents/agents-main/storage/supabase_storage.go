@@ -62,26 +62,8 @@ func (s *SupabaseStorage) get(table StorageTableName, id string) (interface{}, e
 	return result[0], nil
 }
 
-func (s *SupabaseStorage) getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error) {
-	var results []interface{}
-
-	query := s.client.DB.From(string(table)).Select("*")
-	var filterQuery *postgrest_go.FilterRequestBuilder
-	for k, v := range matchingFields {
-		if filterQuery == nil {
-			filterQuery = query.Filter(k, "eq", v)
-		} else {
-			filterQuery = filterQuery.Filter(k, "eq", v)
-		}
-	}
-
-	if filterQuery != nil {
-		err := filterQuery.Execute(&results)
-		return results, err
-	}
-
-	err := query.Execute(&results)
-	return results, err
+func (s *SupabaseStorage) getAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error) {
+	return s.handleQuery(queryTypeSelect, table, query)
 }
 
 func (s *SupabaseStorage) update(table StorageTableName, id string, updateFields map[string]interface{}) (interface{}, error) {
@@ -97,4 +79,91 @@ func (s *SupabaseStorage) update(table StorageTableName, id string, updateFields
 	}
 
 	return results[0], nil
+}
+
+func (s *SupabaseStorage) delete(table StorageTableName, id string) (interface{}, error) {
+	var results []interface{}
+	err := s.client.DB.From(string(table)).Delete().Eq("id", id).Execute(&results)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return nil, errors.New("no result returned from supabase")
+	}
+
+	return results[0], nil
+}
+
+func (s *SupabaseStorage) deleteAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error) {
+	return s.handleQuery(queryTypeDelete, table, query)
+}
+
+type queryType string
+
+const (
+	queryTypeSelect queryType = "select"
+	queryTypeDelete queryType = "delete"
+)
+
+func (s *SupabaseStorage) handleQuery(queryType queryType, table StorageTableName, query *QueryBuilder) ([]interface{}, error) {
+	queryBuilder := s.client.DB.From(string(table))
+
+	switch queryType {
+	case queryTypeSelect:
+		return s.handleSelectQuery(queryBuilder, query)
+	case queryTypeDelete:
+		return s.handleDeleteQuery(queryBuilder, query)
+	}
+
+	panic("invalid query type")
+}
+
+func (s *SupabaseStorage) handleSelectQuery(requestBuilder *postgrest_go.RequestBuilder, query *QueryBuilder) ([]interface{}, error) {
+	var results []interface{}
+	selectRequest := requestBuilder.Select("*")
+
+	if query == nil {
+		err := selectRequest.Execute(&results)
+		return results, err
+	}
+
+	for k, v := range query.matchingFields {
+		selectRequest.Filter(k, "eq", v)
+	}
+
+	if query.orderBy != nil {
+		selectRequest.OrderBy(query.orderBy.column, string(query.orderBy.order))
+	}
+
+	if query.limit != nil {
+		selectRequest.Limit(*query.limit)
+	}
+
+	err := selectRequest.Execute(&results)
+	return results, err
+}
+
+func (s *SupabaseStorage) handleDeleteQuery(requestBuilder *postgrest_go.RequestBuilder, query *QueryBuilder) ([]interface{}, error) {
+	var results []interface{}
+
+	if query == nil {
+		err := requestBuilder.Delete().Filter("id", "neq", "a7517604-2f29-47af-855d-81a3808ddf67").Execute(&results)
+		return results, err
+	}
+
+	deleteRequest := requestBuilder.Delete()
+
+	for k, v := range query.matchingFields {
+		deleteRequest.Filter(k, "eq", v)
+	}
+
+	err := deleteRequest.Execute(&results)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

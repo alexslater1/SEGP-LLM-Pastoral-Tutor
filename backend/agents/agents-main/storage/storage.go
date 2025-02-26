@@ -16,6 +16,7 @@ const (
 	StorageTableNameRequestSessions   StorageTableName = "request_sessions"
 	StorageTableNameChatChecks        StorageTableName = "chat_checks"
 	StorageTableNameCompletionResults StorageTableName = "completion_results"
+	StorageTableNameAgentConfigs      StorageTableName = "agent_configs"
 )
 
 type Storage interface {
@@ -23,7 +24,10 @@ type Storage interface {
 	storeAll(table StorageTableName, data []interface{}) ([]interface{}, error)
 
 	get(table StorageTableName, id string) (interface{}, error)
-	getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error)
+	getAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error)
+
+	delete(table StorageTableName, id string) (interface{}, error)
+	deleteAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error)
 
 	update(table StorageTableName, id string, updateFields map[string]interface{}) (interface{}, error)
 }
@@ -50,9 +54,9 @@ func Get[T StorageType](storage Storage, id string) (*T, error) {
 	return ret, nil
 }
 
-func GetAll[T StorageType](storage Storage, matchingFields map[string]string) ([]T, error) {
+func GetAll[T StorageType](storage Storage, queryBuilder *QueryBuilder) ([]T, error) {
 	var t T
-	data, err := storage.getAll(t.TableName(), matchingFields)
+	data, err := storage.getAll(t.TableName(), queryBuilder)
 	if err != nil {
 		return nil, err
 	}
@@ -144,6 +148,52 @@ func Update[T StorageType](storage Storage, id string, updateFields map[string]i
 	err = json.Unmarshal(jsonData, ret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
+	}
+
+	return ret, nil
+}
+
+func Delete[T StorageType](storage Storage, id string) (*T, error) {
+	var t T
+
+	d, err := storage.delete(t.TableName(), id)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData, err := json.Marshal(d)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal data to JSON: %v", err)
+	}
+
+	ret := new(T)
+	err = json.Unmarshal(jsonData, ret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
+	}
+
+	return ret, nil
+}
+
+func DeleteAll[T StorageType](storage Storage, queryBuilder *QueryBuilder) ([]T, error) {
+	var t T
+
+	d, err := storage.deleteAll(t.TableName(), queryBuilder)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]T, len(d))
+	for i, d := range d {
+		jsonData, err := json.Marshal(d)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal data to JSON: %v", err)
+		}
+
+		err = json.Unmarshal(jsonData, &ret[i])
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal data into type %v: %v", reflect.TypeOf(t), err)
+		}
 	}
 
 	return ret, nil

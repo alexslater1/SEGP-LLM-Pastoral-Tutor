@@ -46,7 +46,7 @@ type ChatCompletionV2Response struct {
 	SessionID string `json:"session_id"`
 }
 
-func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.History, llm llm.LLM) http.HandlerFunc {
+func ChatCompletionV2(agentProvider *agent.AgentProvider, store storage.Storage, history history.History, llm llm.LLM) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ChatCompletionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -72,8 +72,11 @@ func ChatCompletionV2(agent agent.Agent, store storage.Storage, history history.
 			return
 		}
 
+		agents := agentProvider.GetAgents()
+		router := agent.NewLoggingAgent(agent.NewEventStoringAgent(agent.NewRouter(llm, agents, history), store))
+
 		go func() {
-			resp, err := agent.Run(newCtx, req.Query)
+			resp, err := router.Run(newCtx, req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
 				rr := storage.NewCompletionResult(requestId, nil, nil, err)
@@ -116,7 +119,7 @@ func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		rr, err := storage.GetAll[storage.CompletionResult](store, map[string]string{"request_id": requestId})
+		rr, err := storage.GetAll[storage.CompletionResult](store, storage.NewQueryBuilder().Eq("request_id", requestId))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error getting request result %v", err.Error()), http.StatusInternalServerError)
 			return
@@ -133,7 +136,7 @@ func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		events, err := storage.GetAll[storage.AgentEvent](store, map[string]string{"request_id": requestId})
+		events, err := storage.GetAll[storage.AgentEvent](store, storage.NewQueryBuilder().Eq("request_id", requestId))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error getting events %v", err.Error()), http.StatusInternalServerError)
 			return

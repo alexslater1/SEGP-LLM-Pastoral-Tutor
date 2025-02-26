@@ -7,6 +7,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/api"
+	"github.com/segp/agents-main/clock"
+	googleSearch "github.com/segp/agents-main/google_search"
+	"github.com/segp/agents-main/imperial_apis"
+	"github.com/segp/agents-main/knowledge"
 
 	// "github.com/segp/agents-main/email"
 	"log"
@@ -33,22 +37,28 @@ func main() {
 
 		// TODO: why does this order matter??? -> does the go routine go out of scope...
 		routerAgent = agent.NewLoggingAgent(agent.NewEventStoringAgent(agent.NewRouter(llm, []agent.Agent{
-			agent.NewAcadmemicSupportStudyAgent(),
-			agent.NewAdminUniServicesAgent(),
-			agent.NewCareerProfessionalDevelopmentAgent(),
-			agent.NewWellbeingMentalHealthPersonalDevelopmentAgent(),
-			agent.NewFinancialAccomodationResourceAgent(),
-			agent.NewCampusLifeSocialAgent(),
-			agent.NewAccessibilityDisabilityAgent(),
-			agent.NewTransitionDiversityMiscAgent(),
-			agent.NewGeneralPurposeAgent(),
+			// agent.NewAcadmemicSupportStudyAgent(),
+			// agent.NewAdminUniServicesAgent(),
+			// agent.NewCareerProfessionalDevelopmentAgent(),
+			// agent.NewWellbeingMentalHealthPersonalDevelopmentAgent(),
+			// agent.NewFinancialAccomodationResourceAgent(),
+			// agent.NewCampusLifeSocialAgent(),
+			// agent.NewAccessibilityDisabilityAgent(),
+			// agent.NewTransitionDiversityMiscAgent(),
+			// agent.NewGeneralPurposeAgent(),
 		}, history), store))
 
 		js = []jobs.Job{
 			// jobs.NewChatCheckerJob(store, history, llm, email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),
 		}
 
-		jobManager = jobs.NewJobManager(js)
+		googleSearchClient = googleSearch.NewRodClient()
+		searchKnowledge    = knowledge.NewRAGKnowledge("http://localhost:8000")
+
+		imperialApiHandler = imperial_apis.NewDefaultImperialApiHandler()
+
+		jobManager    = jobs.NewJobManager(js)
+		agentProvider = agent.NewAgentProvider(store, llm, clock.NewRealClock(), history, googleSearchClient, searchKnowledge, imperialApiHandler)
 	)
 
 	port := os.Getenv("PORT")
@@ -59,7 +69,7 @@ func main() {
 	listenAddr := flag.String("listen", ":"+port, "HTTP server listen address")
 	flag.Parse()
 
-	server := api.NewServer(*listenAddr, store, routerAgent, history, jobManager, llm)
+	server := api.NewServer(*listenAddr, store, routerAgent, history, jobManager, llm, agentProvider)
 	log.Printf("Starting server on http://localhost%s", *listenAddr)
 	log.Fatal(server.Start())
 }

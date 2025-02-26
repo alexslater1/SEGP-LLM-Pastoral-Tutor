@@ -40,7 +40,7 @@ func SessionIdsForUser(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		sessions, err := storage.GetAll[storage.Session](store, map[string]string{"user_id": userID})
+		sessions, err := storage.GetAll[storage.Session](store, storage.NewQueryBuilder().Eq("user_id", userID))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to get sessions: %v", err), http.StatusInternalServerError)
 			return
