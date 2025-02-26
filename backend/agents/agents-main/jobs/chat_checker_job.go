@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"sort"
 	"time"
 
 	"github.com/segp/agents-main/email"
@@ -57,8 +56,6 @@ func (c *ChatCheckerJob) Run() error {
 	if err != nil {
 		return fmt.Errorf("error getting stale sessions: %v", err)
 	}
-
-	fmt.Printf("Processing session ids: %+v\n", staleSessionIDs)
 
 	staleChats := make(map[string][]string)
 	for _, sessionID := range staleSessionIDs {
@@ -125,13 +122,10 @@ func (c *ChatCheckerJob) getStaleSessions() ([]string, error) {
 		}
 	}
 
-	chatCheckData, err := storage.GetAll[storage.ChatCheck](c.store, nil)
+	chatCheckData, err := storage.GetAll[storage.ChatCheck](c.store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1))
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(chatCheckData, func(i, j int) bool {
-		return chatCheckData[i].CreatedAt.After(*chatCheckData[j].CreatedAt)
-	})
 
 	if len(chatCheckData) == 0 {
 		var sessionIDs []string

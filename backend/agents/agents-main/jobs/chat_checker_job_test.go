@@ -262,9 +262,10 @@ func TestRun2(t *testing.T) {
 		store:       store,
 		history:     history.NewAgentEventHistory(store),
 		llm:         llm.NewGeminiLLM(context.Background(), os.Getenv("GEMINI_API_KEY")),
-		emailClient: email.NewResendClient(os.Getenv("RESEND_API_KEY")),
+		emailClient: email.NewMockEmailClient(),
 		staleWindow: 5 * time.Minute,
 	}
 
-	job.Run()
+	err := job.Run()
+	assert.NoError(t, err)
 }
