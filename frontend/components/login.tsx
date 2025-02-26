@@ -35,12 +35,12 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-secondary">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold tracking-tight text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight text-center text-primary">
             {mode === "signin" ? "Welcome back" : "Create account"}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-foreground">
             {mode === "signin"
               ? "Sign in to continue to your account"
               : "Enter your details to create your account"}
@@ -49,18 +49,18 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
         <CardContent>
           <form className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-primary">Email</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder="Enter your email"
                 required
                 className="w-full bg-muted"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-primary">Password</Label>
               <Input
                 id="password"
                 name="password"
@@ -88,7 +88,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
+          <div className="text-sm text-foreground text-center">
             {mode === "signin" ? "New to our platform? " : "Already have an account? "}
             <Link
               href={searchParams ? mode === "signin" ? `/sign-in?${searchParams}` : `/sign-up?${searchParams}` : 

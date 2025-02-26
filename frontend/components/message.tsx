@@ -61,7 +61,7 @@ const PurePreviewMessage = ({
         >
           {message.role === "assistant" && (
             <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px">
+              <div className="translate-y-px text-primary">
                 <SparklesIcon size={14} />
               </div>
             </div>
@@ -69,16 +69,21 @@ const PurePreviewMessage = ({
 
           <div className="flex flex-col gap-2 w-full">
             <motion.div
-              className="w-full mx-auto max-w-3xl px-4 group/message"
+              className={cn("w-full mx-auto max-w-3xl group/message", {
+                "pl-4": message.role === "user",
+                "pr-4": message.role === "assistant",
+              })}
               initial={{ y: 5, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
             >
               {message.content && mode === "view" && (
-                <div className="flex flex-row gap-2 items-start">
+                <div className="flex flex-row gap-2 items-start ">
                   <div
                     className={cn("flex flex-col gap-4", {
-                      "bg-primary text-primary-foreground px-3 py-2 rounded-xl":
+                      "bg-chat-user text-chat-user-foreground px-3 py-2 rounded-xl":
                         message.role === "user",
+                      "bg-chat-assistant text-chat-assistant-foreground px-3 py-2 rounded-xl":
+                        message.role === "assistant",
                     })}
                   >
                     <Markdown>{getLastStatusOrMessage()}</Markdown>
@@ -138,7 +143,9 @@ export const ThinkingMessage = ({
           )}
         >
           <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-            <SparklesIcon size={14} />
+            <div className="text-primary">
+              <SparklesIcon size={14} />
+            </div>
           </div>
 
           <motion.div

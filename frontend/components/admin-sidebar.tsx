@@ -14,7 +14,14 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, FileUp, Library, Activity, MessageSquare } from "lucide-react";
+import {
+  Home,
+  FileUp,
+  Library,
+  Activity,
+  MessageSquare,
+  Settings,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AdminSidebar({ user }: { user: User | null }) {
@@ -182,9 +189,39 @@ export function AdminSidebar({ user }: { user: User | null }) {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className={cn(
+                "w-full px-5 py-5 rounded-lg transition-colors",
+                "hover:bg-muted/50",
+                getSelectedStyles("/admin/agent-requests")
+              )}
+            >
+              <Link
+                href="/admin/agent-config"
+                onClick={() => setOpenMobile(false)}
+                className="flex items-center gap-3"
+              >
+                <Settings size={24} />
+                <span
+                  className={cn(
+                    "text-base",
+                    getSelectedStyles("/admin/agent-config")
+                      ? "font-semibold"
+                      : "font-normal"
+                  )}
+                >
+                  Agent Config
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>{user && <SidebarUserNav user={user} adminPage/>}</SidebarFooter>
+      <SidebarFooter>
+        {user && <SidebarUserNav user={user} adminPage />}
+      </SidebarFooter>
     </Sidebar>
   );
 }

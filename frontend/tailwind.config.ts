@@ -21,6 +21,16 @@ const config: Config = {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        chat: {
+          user: {
+            DEFAULT: 'hsl(var(--chat-user))',
+            foreground: 'hsl(var(--chat-user-foreground))',
+          },
+          assistant: {
+            DEFAULT: 'hsl(var(--chat-assistant))',
+            foreground: 'hsl(var(--chat-assistant-foreground))',
+          }
+        },
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
@@ -48,6 +58,10 @@ const config: Config = {
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

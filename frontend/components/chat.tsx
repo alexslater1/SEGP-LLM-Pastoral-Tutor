@@ -125,7 +125,7 @@ function FullScreenMessage({
       return (
         <FadeInWrapper>
           <div className="flex flex-col items-center justify-center h-dvh p-16">
-            <div className="text-center text-foreground">
+            <div className="text-center text-primary">
               <p className="text-5xl font-bold">Loading...</p>
             </div>
           </div>
