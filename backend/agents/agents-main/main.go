@@ -53,7 +53,7 @@ func main() {
 		}
 
 		googleSearchClient = googleSearch.NewRodClient()
-		searchKnowledge    = knowledge.NewRAGKnowledge("http://localhost:8000")
+		searchKnowledge    = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
 
 		imperialApiHandler = imperial_apis.NewDefaultImperialApiHandler()
 

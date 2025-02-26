@@ -31,6 +31,7 @@ func (s *SearchTool) Definition() ToolDefinition {
 
 func (s *SearchTool) Search(query string) (*string, error) {
 	ragTask := utils.DoAsync(func() (*string, error) {
+
 		return s.knowledge.Get(query)
 	})
 
