@@ -66,7 +66,9 @@ export function useUpdateAgentConfig() {
 }
 
 async function fetchAgents(): Promise<AgentsResponse[]> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agents`);
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents`
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to fetch agent configs: ${response.statusText}`);
@@ -77,7 +79,7 @@ async function fetchAgents(): Promise<AgentsResponse[]> {
 
 async function fetchAgentConfigOptions(): Promise<AgentConfigOptionsResponse> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/agents/config`
+    `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents/config`
   );
 
   if (!response.ok) {
@@ -93,7 +95,7 @@ async function updateAgentConfig(
   configs: AgentProviderAgentConfig[]
 ): Promise<void> {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/agents`,
+    `${process.env.NEXT_PUBLIC_BACKEND_AGENT_URL}/agents`,
     {
       method: "POST",
       headers: {
