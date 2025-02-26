@@ -24,7 +24,7 @@ type Storage interface {
 	storeAll(table StorageTableName, data []interface{}) ([]interface{}, error)
 
 	get(table StorageTableName, id string) (interface{}, error)
-	getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error)
+	getAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error)
 
 	update(table StorageTableName, id string, updateFields map[string]interface{}) (interface{}, error)
 }
@@ -51,9 +51,9 @@ func Get[T StorageType](storage Storage, id string) (*T, error) {
 	return ret, nil
 }
 
-func GetAll[T StorageType](storage Storage, matchingFields map[string]string) ([]T, error) {
+func GetAll[T StorageType](storage Storage, queryBuilder *QueryBuilder) ([]T, error) {
 	var t T
-	data, err := storage.getAll(t.TableName(), matchingFields)
+	data, err := storage.getAll(t.TableName(), queryBuilder)
 	if err != nil {
 		return nil, err
 	}
