@@ -81,6 +81,25 @@ func (s *SupabaseStorage) update(table StorageTableName, id string, updateFields
 	return results[0], nil
 }
 
+func (s *SupabaseStorage) delete(table StorageTableName, id string) (interface{}, error) {
+	var results []interface{}
+	err := s.client.DB.From(string(table)).Delete().Eq("id", id).Execute(&results)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return nil, errors.New("no result returned from supabase")
+	}
+
+	return results[0], nil
+}
+
+func (s *SupabaseStorage) deleteAll(table StorageTableName, query *QueryBuilder) (interface{}, error) {
+	return s.handleQuery(queryTypeDelete, table, query)
+}
+
 type queryType string
 
 const (
