@@ -119,6 +119,7 @@ func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]i
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+
 	var result []interface{}
 	for _, item := range s.data[table] {
 		// Convert item to map[string]interface{}
@@ -129,23 +130,26 @@ func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]i
 
 		// Check if all matching fields match
 		matches := true
-		for field, value := range query.matchingFields {
-			itemValue, exists := itemMap[field]
-			if !exists {
-				matches = false
-				break
-			}
-			// Convert itemValue to string for comparison
-			itemValueStr, ok := itemValue.(string)
-			if !ok {
-				matches = false
-				break
-			}
-			if itemValueStr != value {
-				matches = false
-				break
+		if query != nil {
+			for field, value := range query.matchingFields {
+				itemValue, exists := itemMap[field]
+				if !exists {
+					matches = false
+					break
+				}
+				// Convert itemValue to string for comparison
+				itemValueStr, ok := itemValue.(string)
+				if !ok {
+					matches = false
+					break
+				}
+				if itemValueStr != value {
+					matches = false
+					break
+				}
 			}
 		}
+		
 
 		if matches {
 			result = append(result, item)
@@ -153,7 +157,7 @@ func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]i
 	}
 
 	// Sort the results based on query.orderBy
-	if query.orderBy != nil {
+	if query != nil && query.orderBy != nil {
 		sort.Slice(result, func(i, j int) bool {
 			item1, _ := result[i].(map[string]interface{})
 			item2, _ := result[j].(map[string]interface{})
@@ -164,7 +168,7 @@ func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]i
 		})
 	}
 
-	if query.limit != nil {
+	if query != nil && query.limit != nil {
 		return result[:*query.limit], nil
 	}
 
