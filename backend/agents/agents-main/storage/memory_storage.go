@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -114,7 +115,7 @@ func (s *MemoryStorage) get(table StorageTableName, id string) (interface{}, err
 	return item, nil
 }
 
-func (s *MemoryStorage) getAll(table StorageTableName, matchingFields map[string]string) ([]interface{}, error) {
+func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -128,7 +129,7 @@ func (s *MemoryStorage) getAll(table StorageTableName, matchingFields map[string
 
 		// Check if all matching fields match
 		matches := true
-		for field, value := range matchingFields {
+		for field, value := range query.matchingFields {
 			itemValue, exists := itemMap[field]
 			if !exists {
 				matches = false
@@ -150,6 +151,23 @@ func (s *MemoryStorage) getAll(table StorageTableName, matchingFields map[string
 			result = append(result, item)
 		}
 	}
+
+	// Sort the results based on query.orderBy
+	if query.orderBy != nil {
+		sort.Slice(result, func(i, j int) bool {
+			item1, _ := result[i].(map[string]interface{})
+			item2, _ := result[j].(map[string]interface{})
+			if query.orderBy.order == OrderByAsc {
+				return item1[query.orderBy.column].(string) < item2[query.orderBy.column].(string)
+			} 
+			return item1[query.orderBy.column].(string) > item2[query.orderBy.column].(string)
+		})
+	}
+
+	if query.limit != nil {
+		return result[:*query.limit], nil
+	}
+
 	return result, nil
 }
 
@@ -200,3 +218,36 @@ func (s *MemoryStorage) update(table StorageTableName, id string, updateFields m
 	s.data[table][id] = currentMap
 	return currentMap, nil
 }
+
+func (s *MemoryStorage) delete(table StorageTableName, id string) (interface{}, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	current, ok := s.data[table][id]
+	if !ok {
+		return nil, fmt.Errorf("item not found")
+	}
+
+	delete(s.data[table], id)
+
+	return current, nil
+}
+
+func (s *MemoryStorage) deleteAll(table StorageTableName, query *QueryBuilder) ([]interface{}, error) {
+	toDelete, err := s.getAll(table, query)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range toDelete {
+		itemMap, ok := item.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("error casting type to map string interface")
+		}
+		
+		s.delete(table, itemMap["id"].(string))	
+	}
+
+	return toDelete, err
+}
+
