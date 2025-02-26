@@ -124,6 +124,11 @@ func (s *SupabaseStorage) handleSelectQuery(requestBuilder *postgrest_go.Request
 	var results []interface{}
 	selectRequest := requestBuilder.Select("*")
 
+	if query == nil {
+		err := selectRequest.Execute(&results)
+		return results, err
+	}
+
 	for k, v := range query.matchingFields {
 		selectRequest.Filter(k, "eq", v)
 	}
@@ -142,6 +147,12 @@ func (s *SupabaseStorage) handleSelectQuery(requestBuilder *postgrest_go.Request
 
 func (s *SupabaseStorage) handleDeleteQuery(requestBuilder *postgrest_go.RequestBuilder, query *QueryBuilder) ([]interface{}, error) {
 	var results []interface{}
+
+	if query == nil {
+		err := requestBuilder.Delete().Filter("id", "neq", "a7517604-2f29-47af-855d-81a3808ddf67").Execute(&results)
+		return results, err
+	}
+
 	deleteRequest := requestBuilder.Delete()
 
 	for k, v := range query.matchingFields {

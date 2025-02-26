@@ -30,7 +30,7 @@ var (
 		Name:        "test",
 		Description: "test",
 		Prompt:      "test",
-		Apis: storage.Apis{
+		Apis: storage.AgentConfigApis{
 			AbcApis:      []string{"get-modules"},
 			EmarkingApis: []string{"get-exercises"},
 		},
@@ -57,4 +57,36 @@ func TestToolHandlerFrom(t *testing.T) {
 	ap := NewAgentProvider(store, agentLlm, c, h, googleSearchClient, searchKnowledge, imperialApiHandler)
 	toolHandler := ap.toolHandlerFrom(config)
 	assert.Equal(t, 2, len(toolHandler.Tools)) // as no_tool counts as tool
+}
+
+func TestAgentSetAgents(t *testing.T) {
+	ap := NewAgentProvider(store, agentLlm, c, h, googleSearchClient, searchKnowledge, imperialApiHandler)
+	storage.Store(ap.storage, config)
+
+	assert.Equal(t, 1, len(ap.currentAgents))
+
+	agentProviderConfigs := make([]AgentProviderAgentConfig, 2)
+	agentProviderConfigs[0] = AgentProviderAgentConfig{
+		Name:         "test",
+		Description:  "test",
+		Prompt:       "test",
+		ToolNames:    []string{string(ToolNameSearch)},
+		AbcApis:      []string{"get-modules"},
+		EmarkingApis: []string{"get-exercises"},
+	}
+
+	agentProviderConfigs[1] = AgentProviderAgentConfig{
+		Name:         "test2",
+		Description:  "test2",
+		Prompt:       "test2",
+		ToolNames:    []string{string(ToolNameSearch)},
+		AbcApis:      []string{"get-modules"},
+		EmarkingApis: []string{"get-exercises"},
+	}
+
+	ap.SetAgentConfigs(agentProviderConfigs)
+	assert.Equal(t, 2, len(ap.currentAgents))
+
+	ap.RefreshAgents()
+	assert.Equal(t, 2, len(ap.currentAgents))
 }

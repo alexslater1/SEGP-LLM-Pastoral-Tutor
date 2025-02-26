@@ -159,9 +159,24 @@ func TestSupabaseStorageDeleteAll(t *testing.T) {
 
 	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	data, err := DeleteAll[RequestSession](storage, NewQueryBuilder().Eq("request_id", "631c06da-6f31-4b5a-9239-62caa40d4c4e"))
+	data, err := DeleteAll[AgentConfig](storage, nil)
 	if err != nil {
 		t.Error("Error deleting items from storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
+
+func TestSupabaseStorageGetAllChatChecks(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := storage.getAll(StorageTableNameChatChecks, nil)
+	if err != nil {
+		t.Error("Error getting items from storage", err)
 	}
 
 	fmt.Printf("Data: %+v\n", data)

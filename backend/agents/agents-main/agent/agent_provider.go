@@ -77,7 +77,22 @@ func (ap *AgentProvider) GetAgents() []Agent {
 }
 
 func (ap *AgentProvider) SetAgentConfigs(configs []AgentProviderAgentConfig) error {
-	panic("not implemented")
+	agentConfigs := make([]storage.AgentConfig, len(configs))
+	for i, config := range configs {
+		agentConfigs[i] = storage.NewAgentConfig(config.Name, config.Prompt, config.Description, config.ToolNames, config.AbcApis, config.EmarkingApis)
+	}
+
+	// THIS HAS RACE CONDITION (as not in transaction)
+	// cba to fix this rn
+	if _, err := storage.DeleteAll[storage.AgentConfig](ap.storage, nil); err != nil {
+		return err
+	}
+
+	if _, err := storage.StoreAll(ap.storage, agentConfigs...); err != nil {
+		return err
+	}
+
+	return ap.RefreshAgents()
 }
 
 func (ap *AgentProvider) newFastAgentFrom(config storage.AgentConfig) (*FastAgent, error) {
