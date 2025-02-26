@@ -80,9 +80,9 @@ const PurePreviewMessage = ({
                 <div className="flex flex-row gap-2 items-start ">
                   <div
                     className={cn("flex flex-col gap-4", {
-                      "bg-primary text-primary-foreground px-3 py-2 rounded-xl":
+                      "bg-chat-user text-chat-user-foreground px-3 py-2 rounded-xl":
                         message.role === "user",
-                      "bg-muted text-foreground px-3 py-2 rounded-xl":
+                      "bg-chat-assistant text-chat-assistant-foreground px-3 py-2 rounded-xl":
                         message.role === "assistant",
                     })}
                   >

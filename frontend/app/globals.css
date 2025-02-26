@@ -43,6 +43,11 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 240 10% 3.9%;
+    --chat-user: 240 100% 35%;
+    --chat-user-foreground: 0 0% 98%;
+    --chat-assistant: 240 4.8% 91%;
+    --chat-assistant-foreground: 240 10% 3.9%;
+    --user-chat: 240 100% 35%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -64,7 +69,7 @@
     --success-foreground: 144 70% 98%;
   }
   .dark {
-    --background: 225 6% 13%;
+    --background: 225 6% 14.5%;
     --foreground: 0 0% 100%;
     --card: 224 71% 4%;
     --card-foreground: 0 0% 100%;
@@ -83,6 +88,10 @@
     --border: 223 7% 21%;
     --input: 223 7% 21%;
     --ring: 224 7% 40%;
+    --chat-user: 205 100% 28%;
+    --chat-user-foreground: 0 0% 100%;
+    --chat-assistant: 223 7% 12%;
+    --chat-assistant-foreground: 0 0% 100%;
     --chart-1: 0 85% 65%;
     --chart-2: 145 65% 50%;
     --chart-3: 45 95% 60%;
