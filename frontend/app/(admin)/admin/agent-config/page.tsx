@@ -13,24 +13,15 @@ import ReactFlow, {
   NodeMouseHandler,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Split, Info } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Split } from "lucide-react";
 import AgentEditSheet from "./_components/AgentEditSheet";
+import {
+  useAgentConfigs,
+  useAgentConfigOptions,
+  AgentsResponse,
+  useUpdateAgentConfig,
+  AgentProviderAgentConfig,
+} from "@/hooks/use-agent-config";
 
 // Define the agent type
 interface Agent {
@@ -40,37 +31,31 @@ interface Agent {
   routerDescription?: string;
   prompt?: string;
   tools?: string[];
-  apis?: string[];
+  apis?: {
+    abc_apis?: string[];
+    emarking_apis?: string[];
+  };
+  created_at?: string;
 }
 
-// Sample agents data - this could come from an API or props
-const agentsData: Agent[] = [
-  {
-    id: "agent1",
-    name: "Agent 1",
-    description: "A general-purpose assistant that can handle various tasks.",
-    routerDescription: "General purpose assistant",
-    prompt: "You are a helpful assistant that provides general information.",
-    tools: ["Google Search"],
-    apis: ["Weather API"],
-  },
-  {
-    id: "agent2",
-    name: "Agent 2",
-    description: "Specialized in technical support and troubleshooting.",
-  },
-  {
-    id: "agent3",
-    name: "Agent 3",
-    description: "Creative assistant focused on content generation.",
-  },
-  // Add more agents as needed
-];
-
 const AgentConfigPage = () => {
+  const {
+    agents,
+    isLoading: agentsLoading,
+    error: agentsError,
+  } = useAgentConfigs();
+  const {
+    configOptions,
+    isLoading: optionsLoading,
+    error: optionsError,
+  } = useAgentConfigOptions();
+
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
+
+  const { mutate: updateAgents, isPending: isUpdating } =
+    useUpdateAgentConfig();
 
   // Generate nodes and edges dynamically based on agents
   const { initialNodes, initialEdges } = useMemo(() => {
@@ -122,28 +107,31 @@ const AgentConfigPage = () => {
       },
     ];
 
-    // Create agent nodes dynamically
-    agentsData.forEach((agent, index) => {
-      nodes.push({
-        id: agent.id,
-        data: { label: agent.name },
-        position: { x: 200, y: 300 + index * 100 }, // Position agents vertically with spacing
-        style: {
-          background: "#e6f7ff",
-          border: "1px solid #91d5ff",
-          borderRadius: "5px",
-          padding: "10px",
-          width: 150,
-          height: 60,
-          textAlign: "center",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        },
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
+    // Create agent nodes dynamically from the fetched agents
+    if (agents && agents.length > 0) {
+      console.log("Creating nodes for agents:", agents);
+      agents.forEach((agent, index) => {
+        nodes.push({
+          id: agent.id,
+          data: { label: agent.name },
+          position: { x: 200, y: 300 + index * 100 }, // Position agents vertically with spacing
+          style: {
+            background: "#e6f7ff",
+            border: "1px solid #91d5ff",
+            borderRadius: "5px",
+            padding: "10px",
+            width: 150,
+            height: 60,
+            textAlign: "center",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          },
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left,
+        });
       });
-    });
+    }
 
     // Create the fixed edge from user to router
     const edges: Edge[] = [
@@ -158,85 +146,102 @@ const AgentConfigPage = () => {
     ];
 
     // Create edges from router to each agent and from each agent back to user
-    agentsData.forEach((agent) => {
-      edges.push({
-        id: `router-to-${agent.id}`,
-        source: "router",
-        target: agent.id,
-        animated: true,
-        style: { stroke: "#555" },
-        type: "smoothstep",
-        markerEnd: {
-          type: MarkerType.Arrow,
-        },
-      });
+    if (agents && agents.length > 0) {
+      agents.forEach((agent) => {
+        edges.push({
+          id: `router-to-${agent.id}`,
+          source: "router",
+          target: agent.id,
+          animated: true,
+          style: { stroke: "#555" },
+          type: "smoothstep",
+          markerEnd: {
+            type: MarkerType.Arrow,
+          },
+        });
 
-      edges.push({
-        id: `${agent.id}-to-user`,
-        source: agent.id,
-        target: "user",
-        animated: true,
-        style: { stroke: "#555" },
-        type: "smoothstep",
-        markerEnd: {
-          type: MarkerType.Arrow,
-        },
+        edges.push({
+          id: `${agent.id}-to-user`,
+          source: agent.id,
+          target: "user",
+          animated: true,
+          style: { stroke: "#555" },
+          type: "smoothstep",
+          markerEnd: {
+            type: MarkerType.Arrow,
+          },
+        });
       });
-    });
+    }
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [agentsData]);
+  }, [agents]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  // Update nodes and edges when agents change
+  useEffect(() => {
+    if (agents && agents.length > 0) {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+    }
+  }, [agents, initialNodes, initialEdges, setNodes, setEdges]);
+
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
       // Find if the clicked node is an agent
-      const agent = agentsData.find((a) => a.id === node.id);
-      if (agent) {
-        setSelectedAgent(agent);
-        setEditedAgent({ ...agent }); // Create a copy for editing
-        setIsSheetOpen(true);
+      if (agents) {
+        const agent = agents.find((a) => a.id === node.id);
+        if (agent) {
+          setSelectedAgent(agent);
+          setEditedAgent({ ...agent }); // Create a copy for editing
+          setIsSheetOpen(true);
+        }
       }
     },
-    [agentsData]
+    [agents]
   );
 
-  const handleSaveChanges = (updatedAgent: Agent) => {
-    // In a real app, you would save these changes to your backend
-    // For now, we'll just update the local state
-    console.log("Saving changes:", updatedAgent);
-    setSelectedAgent(updatedAgent);
-    setIsSheetOpen(false);
+  const handleSaveChanges = (updatedAgent: AgentsResponse) => {
+    // Find the current agent in the agents list and update it
+    const updatedAgents =
+      agents?.map((agent) =>
+        agent.id === updatedAgent.id ? updatedAgent : agent
+      ) || [];
+
+    // Convert each agent to AgentProviderAgentConfig format
+    const configsToUpdate: AgentProviderAgentConfig[] = updatedAgents.map(
+      (agent) => ({
+        name: agent.name,
+        prompt: agent.prompt,
+        description: agent.description,
+        tool_names: agent.tools || [],
+        abc_apis: agent.apis?.abc_apis || [],
+        emarking_apis: agent.apis?.emarking_apis || [],
+      })
+    );
+
+    // Call the mutation function with the entire updated list
+    updateAgents(configsToUpdate, {
+      onSuccess: () => {
+        console.log("Agent updated successfully");
+        setIsSheetOpen(false);
+      },
+      onError: (error) => {
+        console.error("Failed to update agent:", error);
+      },
+    });
   };
 
-  // Available tools options
-  const availableTools = ["Google Search", "Google Maps"];
+  // Use available tools from the API response
+  const availableTools = configOptions?.all_tool_names || [];
 
-  // Available API options
-  const availableApis = [
-    "Weather API",
-    "Stripe Payments",
-    "Twilio SMS",
-    "SendGrid Email",
-    "GitHub API",
-    "Slack API",
-    "Twitter API",
-    "Spotify API",
-    "Google Calendar",
-    "Salesforce CRM",
-    "Shopify API",
-    "Zoom API",
-    "LinkedIn API",
-    "OpenAI API",
-    "HubSpot API",
-    "Dropbox API",
-    "PayPal API",
-    "AWS S3",
-    "Azure Cognitive Services",
-    "Google Cloud Vision",
-  ];
+  // Use available APIs from the API response
+  const availableApis = {
+    abc_apis: configOptions?.abc_endpoints || [],
+    emarking_apis: configOptions?.emarking_endpoints || [],
+  };
 
   const handleToolToggle = (tool: string) => {
     if (editedAgent) {
@@ -257,24 +262,51 @@ const AgentConfigPage = () => {
     }
   };
 
-  const handleApiToggle = (api: string) => {
+  const handleApiToggle = (api: string, type: "abc_apis" | "emarking_apis") => {
     if (editedAgent) {
-      const updatedApis = editedAgent.apis || [];
-      if (updatedApis.includes(api)) {
+      const apis = editedAgent.apis || { abc_apis: [], emarking_apis: [] };
+      const currentTypeApis = apis[type] || [];
+
+      if (currentTypeApis.includes(api)) {
         // Remove API if already selected
         setEditedAgent({
           ...editedAgent,
-          apis: updatedApis.filter((a) => a !== api),
+          apis: {
+            ...apis,
+            [type]: currentTypeApis.filter((a) => a !== api),
+          },
         });
       } else {
         // Add API if not selected
         setEditedAgent({
           ...editedAgent,
-          apis: [...updatedApis, api],
+          apis: {
+            ...apis,
+            [type]: [...currentTypeApis, api],
+          },
         });
       }
     }
   };
+
+  // Show loading state
+  if (agentsLoading || optionsLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading agent configuration...
+      </div>
+    );
+  }
+
+  // Show error state
+  if (agentsError || optionsError) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        Error loading agent configuration:{" "}
+        {(agentsError || optionsError)?.toString()}
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
@@ -293,10 +325,14 @@ const AgentConfigPage = () => {
       <AgentEditSheet
         isOpen={isSheetOpen}
         setIsOpen={setIsSheetOpen}
-        agent={editedAgent}
+        agent={selectedAgent as AgentsResponse}
         onSave={handleSaveChanges}
         availableTools={availableTools}
-        availableApis={availableApis}
+        availableApis={[
+          ...availableApis.abc_apis,
+          ...availableApis.emarking_apis,
+        ]}
+        isSubmitting={isUpdating}
       />
     </div>
   );

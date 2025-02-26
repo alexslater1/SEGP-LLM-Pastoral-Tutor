@@ -15,25 +15,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AgentsResponse } from "@/hooks/use-agent-config";
 
 // Import the Agent interface or define it here
-interface Agent {
-  id: string;
-  name: string;
-  description?: string;
-  routerDescription?: string;
-  prompt?: string;
-  tools?: string[];
-  apis?: string[];
-}
 
 interface AgentEditSheetProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  agent: Agent | null;
-  onSave: (agent: Agent) => void;
+  agent: AgentsResponse | null;
+  onSave: (agent: AgentsResponse) => void;
   availableTools: string[];
   availableApis: string[];
+  isSubmitting?: boolean;
 }
 
 const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
@@ -43,15 +36,16 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
   onSave,
   availableTools,
   availableApis,
+  isSubmitting = false,
 }) => {
-  const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
+  const [editedAgent, setEditedAgent] = useState<AgentsResponse | null>(null);
 
   // Update local state when the agent prop changes
   useEffect(() => {
     setEditedAgent(agent);
   }, [agent]);
 
-  const handleInputChange = (field: keyof Agent, value: string) => {
+  const handleInputChange = (field: keyof AgentsResponse, value: string) => {
     if (editedAgent) {
       setEditedAgent({
         ...editedAgent,
@@ -82,17 +76,23 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
   const handleApiToggle = (api: string) => {
     if (editedAgent) {
       const updatedApis = editedAgent.apis || [];
-      if (updatedApis.includes(api)) {
+      if (updatedApis.abc_apis?.includes(api)) {
         // Remove API if already selected
         setEditedAgent({
           ...editedAgent,
-          apis: updatedApis.filter((a) => a !== api),
+          apis: {
+            ...updatedApis,
+            abc_apis: updatedApis.abc_apis?.filter((a) => a !== api),
+          },
         });
       } else {
         // Add API if not selected
         setEditedAgent({
           ...editedAgent,
-          apis: [...updatedApis, api],
+          apis: {
+            ...updatedApis,
+            abc_apis: [...(updatedApis.abc_apis || []), api],
+          },
         });
       }
     }
@@ -150,10 +150,8 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
             <input
               id="routerDescription"
               className="w-full p-2 border rounded-md"
-              value={editedAgent.routerDescription || ""}
-              onChange={(e) =>
-                handleInputChange("routerDescription", e.target.value)
-              }
+              value={editedAgent.description || ""}
+              onChange={(e) => handleInputChange("description", e.target.value)}
             />
           </div>
 
@@ -221,7 +219,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                 <div key={api} className="flex items-center">
                   <div
                     className={`w-full p-2 border rounded-md flex items-center gap-2 cursor-pointer text-sm ${
-                      editedAgent.apis?.includes(api)
+                      editedAgent.apis?.abc_apis?.includes(api)
                         ? "bg-blue-50 border-blue-500"
                         : "bg-white"
                     }`}
@@ -230,12 +228,12 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                     <div className="flex-shrink-0">
                       <div
                         className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          editedAgent.apis?.includes(api)
+                          editedAgent.apis?.abc_apis?.includes(api)
                             ? "border-blue-500 bg-blue-500"
                             : "border-gray-300"
                         }`}
                       >
-                        {editedAgent.apis?.includes(api) && (
+                        {editedAgent.apis?.abc_apis?.includes(api) && (
                           <div className="w-2 h-2 bg-white rounded-full" />
                         )}
                       </div>
@@ -249,10 +247,16 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
         </div>
 
         <SheetFooter className="pt-2">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+          <Button
+            variant="outline"
+            onClick={() => setIsOpen(false)}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSaveChanges}>Save Changes</Button>
+          <Button onClick={handleSaveChanges} disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
