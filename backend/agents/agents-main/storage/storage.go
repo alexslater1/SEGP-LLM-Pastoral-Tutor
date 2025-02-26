@@ -51,9 +51,9 @@ func Get[T StorageType](storage Storage, id string) (*T, error) {
 	return ret, nil
 }
 
-func GetAll[T StorageType](storage Storage, matchingFields map[string]string) ([]T, error) {
+func GetAll[T StorageType](storage Storage, queryBuilder *QueryBuilder) ([]T, error) {
 	var t T
-	data, err := storage.getAll(t.TableName(), matchingFields)
+	data, err := storage.getAll(t.TableName(), queryBuilder)
 	if err != nil {
 		return nil, err
 	}
