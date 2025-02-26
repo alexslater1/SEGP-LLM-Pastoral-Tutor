@@ -116,7 +116,7 @@ func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		rr, err := storage.GetAll[storage.CompletionResult](store, map[string]string{"request_id": requestId})
+		rr, err := storage.GetAll[storage.CompletionResult](store, storage.NewQueryBuilder().Eq("request_id", requestId))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error getting request result %v", err.Error()), http.StatusInternalServerError)
 			return
@@ -133,7 +133,7 @@ func ChatCompletionV2Status(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		events, err := storage.GetAll[storage.AgentEvent](store, map[string]string{"request_id": requestId})
+		events, err := storage.GetAll[storage.AgentEvent](store, storage.NewQueryBuilder().Eq("request_id", requestId))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error getting events %v", err.Error()), http.StatusInternalServerError)
 			return

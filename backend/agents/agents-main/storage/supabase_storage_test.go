@@ -129,9 +129,39 @@ func TestSupabaseStorageGetAll(t *testing.T) {
 
 	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	data, err := storage.getAll(StorageTableNameAgentEvents, map[string]string{"request_id": "631c06da-6f31-4b5a-9239-62caa40d4c4e"})
+	data, err := storage.getAll(StorageTableNameAgentEvents, NewQueryBuilder().Eq("request_id", "631c06da-6f31-4b5a-9239-62caa40d4c4e"))
 	if err != nil {
 		t.Error("Error getting items from storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
+
+func TestSupabaseStorageDelete(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := Delete[RequestSession](storage, "5db88b8f-6d92-4d05-8da2-37853d7d1079")
+	if err != nil {
+		t.Error("Error deleting item from storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
+
+func TestSupabaseStorageDeleteAll(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := DeleteAll[RequestSession](storage, NewQueryBuilder().Eq("request_id", "631c06da-6f31-4b5a-9239-62caa40d4c4e"))
+	if err != nil {
+		t.Error("Error deleting items from storage", err)
 	}
 
 	fmt.Printf("Data: %+v\n", data)
