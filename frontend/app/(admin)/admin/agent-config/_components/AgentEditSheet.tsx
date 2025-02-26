@@ -24,9 +24,14 @@ interface AgentEditSheetProps {
   setIsOpen: (open: boolean) => void;
   agent: AgentsResponse | null;
   onSave: (agent: AgentsResponse) => void;
+  onDelete?: (agentId: string) => void;
   availableTools: string[];
-  availableApis: string[];
+  availableApis: {
+    abc_apis: string[];
+    emarking_apis: string[];
+  };
   isSubmitting?: boolean;
+  isDeleting?: boolean;
 }
 
 const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
@@ -34,9 +39,11 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
   setIsOpen,
   agent,
   onSave,
+  onDelete,
   availableTools,
   availableApis,
   isSubmitting = false,
+  isDeleting = false,
 }) => {
   const [editedAgent, setEditedAgent] = useState<AgentsResponse | null>(null);
 
@@ -73,16 +80,18 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
     }
   };
 
-  const handleApiToggle = (api: string) => {
+  const handleApiToggle = (api: string, type: "abc_apis" | "emarking_apis") => {
     if (editedAgent) {
-      const updatedApis = editedAgent.apis || [];
-      if (updatedApis.abc_apis?.includes(api)) {
+      const apis = editedAgent.apis || { abc_apis: [], emarking_apis: [] };
+      const currentTypeApis = apis[type] || [];
+
+      if (currentTypeApis.includes(api)) {
         // Remove API if already selected
         setEditedAgent({
           ...editedAgent,
           apis: {
-            ...updatedApis,
-            abc_apis: updatedApis.abc_apis?.filter((a) => a !== api),
+            ...apis,
+            [type]: currentTypeApis.filter((a) => a !== api),
           },
         });
       } else {
@@ -90,8 +99,8 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
         setEditedAgent({
           ...editedAgent,
           apis: {
-            ...updatedApis,
-            abc_apis: [...(updatedApis.abc_apis || []), api],
+            ...apis,
+            [type]: [...currentTypeApis, api],
           },
         });
       }
@@ -101,6 +110,12 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
   const handleSaveChanges = () => {
     if (editedAgent) {
       onSave(editedAgent);
+    }
+  };
+
+  const handleDelete = () => {
+    if (editedAgent && onDelete) {
+      onDelete(editedAgent.id);
     }
   };
 
@@ -168,18 +183,6 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="agentDescription" className="text-sm font-medium">
-              Description
-            </label>
-            <textarea
-              id="agentDescription"
-              className="w-full p-2 border rounded-md"
-              value={editedAgent.description || ""}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
             <h3 className="text-sm font-medium">Tools:</h3>
             <div className="space-y-2">
               {availableTools.map((tool) => (
@@ -213,9 +216,9 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">APIs:</h3>
+            <h3 className="text-sm font-medium">ABC APIs:</h3>
             <div className="grid grid-cols-2 gap-2">
-              {availableApis.map((api) => (
+              {availableApis.abc_apis?.map((api) => (
                 <div key={api} className="flex items-center">
                   <div
                     className={`w-full p-2 border rounded-md flex items-center gap-2 cursor-pointer text-sm ${
@@ -223,7 +226,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                         ? "bg-blue-50 border-blue-500"
                         : "bg-white"
                     }`}
-                    onClick={() => handleApiToggle(api)}
+                    onClick={() => handleApiToggle(api, "abc_apis")}
                   >
                     <div className="flex-shrink-0">
                       <div
@@ -244,19 +247,68 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
               ))}
             </div>
           </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">eMarking APIs:</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {availableApis.emarking_apis?.map((api) => (
+                <div key={api} className="flex items-center">
+                  <div
+                    className={`w-full p-2 border rounded-md flex items-center gap-2 cursor-pointer text-sm ${
+                      editedAgent.apis?.emarking_apis?.includes(api)
+                        ? "bg-blue-50 border-blue-500"
+                        : "bg-white"
+                    }`}
+                    onClick={() => handleApiToggle(api, "emarking_apis")}
+                  >
+                    <div className="flex-shrink-0">
+                      <div
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                          editedAgent.apis?.emarking_apis?.includes(api)
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {editedAgent.apis?.emarking_apis?.includes(api) && (
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        )}
+                      </div>
+                    </div>
+                    <span className="truncate">{api}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <SheetFooter className="pt-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsOpen(false)}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSaveChanges} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Changes"}
-          </Button>
+        <SheetFooter className="pt-2 flex justify-between">
+          <div>
+            {onDelete && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isSubmitting || isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete Agent"}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={isSubmitting || isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveChanges}
+              disabled={isSubmitting || isDeleting}
+            >
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

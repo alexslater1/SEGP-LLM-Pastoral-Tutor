@@ -22,6 +22,7 @@ import {
   useUpdateAgentConfig,
   AgentProviderAgentConfig,
 } from "@/hooks/use-agent-config";
+import { Button } from "@/components/ui/button";
 
 // Define the agent type
 interface Agent {
@@ -53,6 +54,7 @@ const AgentConfigPage = () => {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { mutate: updateAgents, isPending: isUpdating } =
     useUpdateAgentConfig();
@@ -204,11 +206,28 @@ const AgentConfigPage = () => {
   );
 
   const handleSaveChanges = (updatedAgent: AgentsResponse) => {
-    // Find the current agent in the agents list and update it
-    const updatedAgents =
-      agents?.map((agent) =>
-        agent.id === updatedAgent.id ? updatedAgent : agent
-      ) || [];
+    // Create a new array with all agents, either updating an existing one or adding a new one
+    let updatedAgents: AgentsResponse[] = [];
+
+    if (agents) {
+      // Check if this is an existing agent (update) or a new one (add)
+      const existingAgentIndex = agents.findIndex(
+        (agent) => agent.id === updatedAgent.id
+      );
+
+      if (existingAgentIndex >= 0) {
+        // Update existing agent
+        updatedAgents = agents.map((agent) =>
+          agent.id === updatedAgent.id ? updatedAgent : agent
+        );
+      } else {
+        // Add new agent
+        updatedAgents = [...agents, updatedAgent];
+      }
+    } else {
+      // If agents is null/undefined, just use the updated agent
+      updatedAgents = [updatedAgent];
+    }
 
     // Convert each agent to AgentProviderAgentConfig format
     const configsToUpdate: AgentProviderAgentConfig[] = updatedAgents.map(
@@ -289,6 +308,62 @@ const AgentConfigPage = () => {
     }
   };
 
+  // Add this new function to handle creating a new agent
+  const handleAddAgent = () => {
+    // Create a new empty agent with a temporary ID
+    const newAgent: AgentsResponse = {
+      id: `temp-${Date.now()}`, // Temporary ID that will be replaced by the backend
+      created_at: new Date().toISOString(),
+      name: "New Agent",
+      prompt: "",
+      description: "",
+      tools: [],
+      apis: {
+        abc_apis: [],
+        emarking_apis: [],
+      },
+    };
+
+    setSelectedAgent(newAgent);
+    setEditedAgent(newAgent);
+    setIsSheetOpen(true);
+  };
+
+  // Add this new function to handle deleting an agent
+  const handleDeleteAgent = (agentId: string) => {
+    if (!agents) return;
+
+    setIsDeleting(true);
+
+    // Filter out the agent to delete
+    const updatedAgents = agents.filter((agent) => agent.id !== agentId);
+
+    // Convert each agent to AgentProviderAgentConfig format
+    const configsToUpdate: AgentProviderAgentConfig[] = updatedAgents.map(
+      (agent) => ({
+        name: agent.name,
+        prompt: agent.prompt,
+        description: agent.description,
+        tool_names: agent.tools || [],
+        abc_apis: agent.apis?.abc_apis || [],
+        emarking_apis: agent.apis?.emarking_apis || [],
+      })
+    );
+
+    // Call the mutation function with the updated list (minus the deleted agent)
+    updateAgents(configsToUpdate, {
+      onSuccess: () => {
+        console.log("Agent deleted successfully");
+        setIsSheetOpen(false);
+        setIsDeleting(false);
+      },
+      onError: (error) => {
+        console.error("Failed to delete agent:", error);
+        setIsDeleting(false);
+      },
+    });
+  };
+
   // Show loading state
   if (agentsLoading || optionsLoading) {
     return (
@@ -309,7 +384,12 @@ const AgentConfigPage = () => {
   }
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ flex: 1 }}>
+      {/* Add button for creating a new agent */}
+      <div className="absolute top-4 right-4 z-10">
+        <Button onClick={handleAddAgent}>Add New Agent</Button>
+      </div>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -327,12 +407,14 @@ const AgentConfigPage = () => {
         setIsOpen={setIsSheetOpen}
         agent={selectedAgent as AgentsResponse}
         onSave={handleSaveChanges}
+        onDelete={handleDeleteAgent}
         availableTools={availableTools}
-        availableApis={[
-          ...availableApis.abc_apis,
-          ...availableApis.emarking_apis,
-        ]}
+        availableApis={{
+          abc_apis: availableApis.abc_apis,
+          emarking_apis: availableApis.emarking_apis,
+        }}
         isSubmitting={isUpdating}
+        isDeleting={isDeleting}
       />
     </div>
   );
