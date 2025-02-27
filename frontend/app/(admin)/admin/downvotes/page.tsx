@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useAllDownvotes } from "@/hooks/use-all-downvotes";
 import { cn, getRelativeTimeString } from "@/lib/utils";
 import { Markdown } from "@/components/markdown";
@@ -60,7 +60,7 @@ export default function AgentRequestsPage() {
                     </thead>
                     <tbody>
                       {data?.downvotes.map((downvote) => (
-                        <>
+                        <React.Fragment key={downvote.downvoteID}>
                           <tr
                             key={downvote.downvoteID}
                             className="hover:bg-muted/50 cursor-pointer"
@@ -128,7 +128,7 @@ export default function AgentRequestsPage() {
                               </td>
                             </tr>
                           )}
-                        </>
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
