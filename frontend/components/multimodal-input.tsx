@@ -1,23 +1,17 @@
-'use client';
+"use client";
 
-import cx from 'classnames';
-import type React from 'react';
-import {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
-  memo,
-} from 'react';
-import { toast } from 'sonner';
-import { useLocalStorage, useWindowSize } from 'usehooks-ts';
+import cx from "classnames";
+import type React from "react";
+import { useRef, useEffect, useState, useCallback, memo } from "react";
+import { toast } from "sonner";
+import { useLocalStorage, useWindowSize } from "usehooks-ts";
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { Message } from '@/types/message';
-import { User } from '@/lib/supabase/user';
-import { useRouter } from 'next/navigation';
+import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import { Message } from "@/types/message";
+import { User } from "@/lib/supabase/user";
+import { useRouter } from "next/navigation";
 
 function PureMultimodalInput({
   chatId,
@@ -39,7 +33,7 @@ function PureMultimodalInput({
   query: string | null;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const { width } = useWindowSize();
   const router = useRouter();
 
@@ -50,45 +44,67 @@ function PureMultimodalInput({
   }, []);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
-    'input',
-    '',
+    "input",
+    ""
   );
 
   const resetHeight = useCallback(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = "98px";
     }
   }, [textareaRef]);
 
-  const submitForm = useCallback((queryParam?: string) => {
-    if (!user) {
-      router.push("/sign-in?query=" + input);
-      return;
-    }
+  const submitForm = useCallback(
+    (queryParam?: string) => {
+      if (!user) {
+        router.push("/sign-in?query=" + input);
+        return;
+      }
 
-    const messageToSend = queryParam || input;
-    
-    handleSubmit(messageToSend);
-    setInput('');
-    setLocalStorageInput('');
-    resetHeight();
+      console.log("Yeahhh");
 
-    if (width && width > 768) {
-      textareaRef.current?.focus();
-    }
-  }, [user, router, input, handleSubmit, width, textareaRef, setInput, setLocalStorageInput, resetHeight]);
+      const messageToSend = queryParam || input;
+
+      handleSubmit(messageToSend);
+      setInput("");
+      setLocalStorageInput("");
+      resetHeight();
+
+      if (width && width > 768) {
+        textareaRef.current?.focus();
+      }
+    },
+    [
+      user,
+      router,
+      input,
+      handleSubmit,
+      width,
+      textareaRef,
+      setInput,
+      setLocalStorageInput,
+      resetHeight,
+    ]
+  );
+
+  // Add a ref to track if we've already processed this query
+  const processedQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (query) {
+    // Only process the query if it exists and we haven't processed it before
+    if (query && query !== processedQueryRef.current) {
+      processedQueryRef.current = query;
       submitForm(query);
     }
   }, [query, submitForm]);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${
+        textareaRef.current.scrollHeight + 2
+      }px`;
     }
   };
 
@@ -96,7 +112,7 @@ function PureMultimodalInput({
     if (textareaRef.current) {
       const domValue = textareaRef.current.value;
       // Prefer DOM value over localStorage to handle hydration
-      const finalValue = domValue || localStorageInput || '';
+      const finalValue = domValue || localStorageInput || "";
       setInput(finalValue);
       adjustHeight();
     }
@@ -134,18 +150,18 @@ function PureMultimodalInput({
           handleInput(event);
         }}
         className={cx(
-          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10',
-          'bg-muted dark:bg-secondary',
-          className,
+          "min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10",
+          "bg-muted dark:bg-secondary",
+          className
         )}
         rows={2}
         autoFocus
         onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey) {
+          if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
 
             if (isLoading) {
-              toast.error('Please wait for the model to finish its response!');
+              toast.error("Please wait for the model to finish its response!");
             } else {
               submitForm();
             }
@@ -155,7 +171,7 @@ function PureMultimodalInput({
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {isLoading ? (
-          <StopButton stop={stop}/>
+          <StopButton stop={stop} />
         ) : (
           <SendButton
             input={input}
@@ -175,7 +191,7 @@ export const MultimodalInput = memo(
     if (prevProps.messages !== nextProps.messages) return false;
 
     return true;
-  },
+  }
 );
 
 function PureAttachmentsButton({
@@ -202,11 +218,7 @@ function PureAttachmentsButton({
 
 const AttachmentsButton = memo(PureAttachmentsButton);
 
-function PureStopButton({
-  stop,
-}: {
-  stop: () => void;
-}) {
+function PureStopButton({ stop }: { stop: () => void }) {
   return (
     <Button
       className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
