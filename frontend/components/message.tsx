@@ -3,31 +3,35 @@
 import { Message, Status } from "@/types/message";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useMemo, useState, useEffect } from "react";
+import { memo, useState } from "react";
 
-import type { Vote } from "@/lib/db/schema";
-
-import { CrossIcon, PencilEditIcon, SparklesIcon } from "./icons";
+import { CrossIcon, SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { MessageActions } from "./message-actions";
-import equal from "fast-deep-equal";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { MessageEditor } from "./message-editor";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { ArrowUpIcon } from "lucide-react";
 
 const PurePreviewMessage = ({
   chatId,
   message,
   isLoading,
   isReadonly,
+  downvoteMessage,
+  removeDownvoteMessage,
+  messageDownvoted,
 }: {
   chatId: string | null;
   message: Message;
   isLoading: boolean;
   isReadonly: boolean;
+  downvoteMessage: (messageId: string, reason?: string) => Promise<void>;
+  removeDownvoteMessage: (messageId: string) => Promise<void>;
+  messageDownvoted: boolean;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
+  const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
 
   function getLastStatusOrMessage(): string {
     if (
@@ -50,74 +54,104 @@ const PurePreviewMessage = ({
         animate={{ y: 0, opacity: 1 }}
         data-role={message.role}
       >
-        <div
-          className={cn(
-            "flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl",
-            {
-              "w-full": mode === "edit",
-              "group-data-[role=user]/message:w-fit": mode !== "edit",
-            }
-          )}
-        >
-          {message.role === "assistant" && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px text-primary">
-                <SparklesIcon size={14} />
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2 w-full">
-            <motion.div
-              className={cn("w-full mx-auto max-w-3xl group/message", {
-                "pl-4": message.role === "user",
-                "pr-4": message.role === "assistant",
-              })}
-              initial={{ y: 5, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-            >
-              {message.content && mode === "view" && (
-                <div className="flex flex-row gap-2 items-start ">
-                  <div
-                    className={cn("flex flex-col gap-4", {
-                      "bg-chat-user text-chat-user-foreground px-3 py-2 rounded-xl":
-                        message.role === "user",
-                      "bg-chat-assistant text-chat-assistant-foreground px-3 py-2 rounded-xl":
-                        message.role === "assistant",
-                    })}
-                  >
-                    <Markdown>{getLastStatusOrMessage()}</Markdown>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-
-            {!isReadonly && (
-              <MessageActions
-                key={`action-${message.id}`}
-                chatId={chatId}
-                message={message}
-                isLoading={isLoading}
-              />
+        <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen}>
+          <div
+            className={cn(
+              "flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl",
+              {
+                "w-full": mode === "edit",
+                "group-data-[role=user]/message:w-fit": mode !== "edit",
+              }
             )}
+          >
+
+            {message.role === "assistant" && (
+              <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
+                <div className="translate-y-px text-primary">
+                  <SparklesIcon size={14} />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div className="flex flex-col gap-2 w-full">
+                <motion.div
+                  className={cn("w-full mx-auto max-w-3xl group/message", {
+                    "pl-4": message.role === "user",
+                    "pr-4": message.role === "assistant",
+                  })}
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                >
+                  {message.content && mode === "view" && (
+                    <div className="flex flex-row gap-2 items-start ">
+                      <div
+                        className={cn("flex flex-col gap-4", {
+                          "bg-chat-user text-chat-user-foreground px-3 py-2 rounded-xl":
+                            message.role === "user",
+                          "bg-chat-assistant text-chat-assistant-foreground px-3 py-2 rounded-xl":
+                            message.role === "assistant",
+                        })}
+                      >
+                        <Markdown>{getLastStatusOrMessage()}</Markdown>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+
+                {!isReadonly && (
+                  <MessageActions
+                    key={`action-${message.id}`}
+                    chatId={chatId}
+                    message={message}
+                    isLoading={isLoading}
+                    isCollapsibleOpen={isCollapsibleOpen}
+                    setIsCollapsibleOpen={setIsCollapsibleOpen}
+                    downvoteMessage={downvoteMessage}
+                    removeDownvoteMessage={removeDownvoteMessage}
+                    messageDownvoted={messageDownvoted}
+                  />
+                )}
+              </div>
+
+              <CollapsibleContent className="py-2 pr-4">
+                <div className="bg-muted rounded-2xl p-4">
+                {message.actions.length > 0 ? (
+                  <div className="space-y-2">
+                    {message.actions.map((action, index) => (
+                      <div key={index} className="flex gap-2">
+                        <span className="text-primary font-medium">{index + 1}.</span>
+                        <span>{action}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  'No actions found'
+                )}
+
+                <div className="p-2"/>
+
+                <CollapsibleTrigger asChild>
+                  <div className="w-full">
+                    <Button
+                      className="py-1 px-2 h-fit w-full text-muted-foreground !pointer-events-auto"
+                      variant="outline"
+                    >
+                      <ArrowUpIcon />
+                    </Button>
+                  </div>
+                </CollapsibleTrigger>
+                </div>
+              </CollapsibleContent>
+            </div>
           </div>
-        </div>
+        </Collapsible>
       </motion.div>
     </AnimatePresence>
   );
 };
 
-export const PreviewMessage = memo(
-  PurePreviewMessage,
-  (prevProps, nextProps) => {
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.message.content !== nextProps.message.content) return false;
-    if (prevProps.message.status !== nextProps.message.status) return false;
-    if (prevProps.message.actions !== nextProps.message.actions) return false;
-
-    return true;
-  }
-);
+export const PreviewMessage = PurePreviewMessage;
 
 export const ThinkingMessage = ({
   message = "Thinking...",

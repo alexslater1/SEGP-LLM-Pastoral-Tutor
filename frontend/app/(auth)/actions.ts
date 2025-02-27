@@ -84,7 +84,7 @@ export async function signUp(formData: FormData) {
   // Create a new user_data entry
   const { error: insertError } = await supabase
     .from("user_data")
-    .insert({ id: signUpData?.user?.id, role: "student", name: email.split("@")[0] });
+    .insert({ id: signUpData?.user?.id, role: "student", name: email.split("@")[0], email: email });
 
   if (insertError) {
     return { error: insertError.message };

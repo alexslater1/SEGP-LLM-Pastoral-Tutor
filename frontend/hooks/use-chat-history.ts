@@ -73,7 +73,7 @@ export function useChatSessionHistory(): ChatHistoryItem {
       // Return something so TanStack doesn't complain
       return newSessionNames;
     },
-    enabled: !!chatIDPollingKeys,
+    enabled: chatIDPollingKeys.current.length !== 0,
     refetchInterval: chatIDPollingKeys
       ? STATUS_QUERY_INTERVAL_SECONDS * 1000
       : false,
@@ -132,7 +132,7 @@ export function useChatSessionHistory(): ChatHistoryItem {
   };
 }
 
-async function fetchChatHistory(session: Session) {
+async function fetchChatHistory(session: Session): Promise<BackendUserSessions> {
   try {
     const completionEndpoint = "/sessions";
     const response = await fetch(
@@ -152,7 +152,7 @@ async function fetchChatHistory(session: Session) {
     return (await response.json()) as BackendUserSessions;
   } catch (currentError) {
     console.error("Fetch Chat History Error:", currentError);
-    return [];
+    throw currentError;
   }
 }
 

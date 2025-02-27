@@ -232,6 +232,21 @@ export function SidebarHistory({ user }: { user: User | null }) {
     );
   }
 
+  if (error) {
+    return (
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <div className="px-2 text-red-500 w-full flex flex-row justify-center items-center text-sm gap-2">
+            Error loading chat history
+          </div>
+          <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-xs gap-2">
+            {error}
+          </div>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    );
+  }
+
   if (isLoading) {
     return (
       <SidebarGroup>

@@ -33,6 +33,22 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
     }
   }
 
+  const cardDescription = () => {
+    if (mode === "signin") {
+      if (useSearchParams().get("query")) {
+        return "Sign in to continue your conversation";
+      } else {
+        return "Sign in to continue to your account";
+      }
+    } else if (mode === "signup") {
+      if (useSearchParams().get("query")) {
+        return "Sign up to continue your conversation";
+      } else {
+        return "Enter your details to create your account"
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md bg-secondary">
@@ -41,9 +57,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
             {mode === "signin" ? "Welcome back" : "Create account"}
           </CardTitle>
           <CardDescription className="text-center text-foreground">
-            {mode === "signin"
-              ? "Sign in to continue to your account"
-              : "Enter your details to create your account"}
+            {cardDescription()}
           </CardDescription>
         </CardHeader>
         <CardContent>
