@@ -122,8 +122,8 @@ export default function AgentRequestsPage() {
                                 <div className="rounded-lg bg-background p-4">
                                   <h4 className="font-semibold">User Downvote Reason:</h4>
                                   <p className={cn("text-muted-foreground mt-1 whitespace-pre-wrap", 
-                                    downvote.reason ? "text-red-500" : "italic")}>
-                                    {downvote.reason ?? "User did not provide a reason"}
+                                    downvote.reason === "" ? "italic text-muted-foreground" : "text-red-500")}>
+                                    {downvote.reason === "" ? "User did not provide a reason" : downvote.reason}
                                   </p>
                                 </div>
                               </td>

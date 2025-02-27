@@ -32,9 +32,6 @@ function PureMessages({
     removeDownvoteMessage 
   } = useMessagesVotes({ chatId, user });
 
-  console.log(downvotedMessages);
-  console.log(messages);
-
   return (
     <div
       ref={messagesContainerRef}
