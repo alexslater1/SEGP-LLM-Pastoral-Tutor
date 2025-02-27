@@ -202,6 +202,7 @@ func (m *MockAbcApiClient) EndpointMappings() map[AbcApiEndpoint]func() any {
 		GetTotalEnrolledStudents:     func() any { return m.GetTotalEnrolledStudents() },
 		GetModulesEnrolledStudents:   func() any { return m.GetModulesEnrolledStudents() },
 		GetIdentity:                  func() any { return m.GetIdentity() },
+		GetStudent:                   func() any { return m.GetStudents() },
 		GetStudentDetails:            func() any { return m.GetStudentDetails() },
 		GetAllStudents:               func() any { return m.GetAllStudents() },
         GetStudent:                   func() any { return m.GetStudents() },
