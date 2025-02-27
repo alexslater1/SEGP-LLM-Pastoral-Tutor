@@ -102,10 +102,15 @@ export async function fetchAgentRequests(page: number) {
 export async function fetchDownvotes(page: number) {
   const downvotes = await getAllDownvotes();
 
+  // Sort downvotes by creation date in descending order
+  const sortedDownvotes = downvotes.sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
   const start = page * ITEMS_PER_PAGE;
   const end = start + ITEMS_PER_PAGE - 1;
 
-  const slicedDownvotes = downvotes.slice(start, end);
+  const slicedDownvotes = sortedDownvotes.slice(start, end);
 
   return {
     downvotes: slicedDownvotes,
