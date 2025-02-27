@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	flagging_prompt = `You are analyzing chat interactions between university students and an AI chatbot. The following chat you are reviewing recently went inactive, meaning the student has stopped responding. Your task is to assess whether the chat contains potential concerns that require follow-up from the pastoral care team. This should only happen in the case where the student is explicitly showing signs of distress or is in need of support. Examples include:
+	flagging_prompt = `You are analyzing chat interactions between university students and an AI chatbot. The following chat you are reviewing recently went inactive, meaning the student has stopped responding. Your task is to assess whether the chat contains potential concerns that require follow-up from the pastoral care team. This should only happen in the case where the student is explicitly showing signs of distress or is in need of support - do not make too many assumptions about their underlying feelings. Examples include:
 	-	Showing signs of distress
 	-	Showing signs of being overwhelmed
 	-	Showing signs of being stressed
@@ -29,8 +29,10 @@ const (
 	Notes:
 	-	The email should be sent from the perspective of the chatbot (called Amanda)
 	-	Do not include a subject
-	- The response must be in html format (so structure it correctly)
-	- After signing off, you must include the exact sent from the user and the agent in a structured manner`
+	-	The response must be in html format (so structure it correctly)
+	-	After signing off, you must include the exact sent from the user and the agent in a structured manner
+	-	If the conversation does not meet the criteria for flagging, do not generate an email.`
+
 )
 
 type ChatCheckerJob struct {

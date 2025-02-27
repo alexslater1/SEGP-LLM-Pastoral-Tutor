@@ -173,8 +173,8 @@ func TestProcessChat(t *testing.T) {
 	messages2 := []string{
 		`Query: Hi!
 	Response: Hello there! How are you?`,
-		`Query: Not great to be honest.
-	Response: Oh, that's not good. Anything I can do to help?`,
+		`Query: Meh. I'm okay.
+	Response: Just okay?. Is there anything I can help you with?`,
 	}
 
 	email2, sendEmail2, err2 := chatCheckerJob.processChat(messages2)
@@ -183,6 +183,24 @@ func TestProcessChat(t *testing.T) {
 	}
 
 	log.Printf("Sending Email: %t\nEmail %s", sendEmail2, email2)
+
+	messages3 := []string{
+		`Query: Hi!
+	Response: Hello there! How are you?`,
+		`Query: Meh. I'm okay.
+	Response: Just okay?. Is there anything I can help you with?`,
+		`Query: Not really, I'm just tired from last night.'.
+	Response: What happened last night?`,
+		`Query: I got quite drunk, it was my best friends birthday.`,
+	}
+
+	email3, sendEmail3, err3 := chatCheckerJob.processChat(messages3)
+	if err3 != nil {
+		log.Printf("Error processing chat: %v", err3)
+	}
+
+	log.Printf("Sending Email: %t\nEmail %s", sendEmail3, email3)
+
 }
 
 func TestRun(t *testing.T) {
@@ -268,4 +286,185 @@ func TestRun2(t *testing.T) {
 
 	err := job.Run()
 	assert.NoError(t, err)
+}
+
+var (
+	flaggedMessages = [][]string{
+		// 1
+		{
+			`Query: I've been feeling really down lately.`,
+			`Response: I'm sorry to hear that. Do you want to talk about what's been going on?`,
+			`Query: I don't know. I just can't seem to get out of bed most days. Even things I used to enjoy don't feel the same.`,
+			`Response: That sounds really tough. Have you spoken to anyone about this, like a personal tutor or counselor?`,
+		},
+		// 2
+		{
+			`Query: I've been having trouble concentrating in lectures.`,
+			`Response: That can be frustrating. Is there anything in particular that's distracting you?`,
+			`Query: I don't know. I just feel like my mind is always somewhere else, like I'm not really here.`,
+			`Response: That sounds concerning. Have you been feeling this way for a while? Maybe speaking with someone could help.`,
+		},
+		// 3
+		{
+			`Query: I've barely been eating lately.`,
+			`Response: Oh, I see. Do you feel like you've lost your appetite, or is something else stopping you from eating?`,
+			`Query: I just don't feel hungry anymore. Even when I try, I feel nauseous.`,
+			`Response: That sounds worrying. It might help to talk to a health professional or a support service at the university.`,
+		},
+		// 4
+		{
+			`Query: I got so drunk last night, I barely remember what happened.`,
+			`Response: That sounds like a rough night. Do you feel okay now?`,
+			`Query: Not really. I think I did something really stupid, and I feel horrible about it.`,
+			`Response: If it's weighing on you, it might help to talk to someone who can offer guidance. Do you want me to suggest someone?`,
+		},
+		// 5
+		{
+			`Query: My exams are coming up and I can't sleep.`,
+			`Response: Exam stress is tough. Have you tried any relaxation techniques?`,
+			`Query: Nothing works. My heart races all the time, and I feel sick just thinking about exams.`,
+			`Response: That sounds like more than just regular stress. Would you like to speak to someone about anxiety management?`,
+		},
+		// 6
+		{
+			`Query: I keep arguing with my flatmates.`,
+			`Response: That sounds stressful. What are the arguments about?`,
+			`Query: Everything. Noise, cleaning, even just existing in the same space. I'm sick of it.`,
+			`Response: That must be frustrating. If it's affecting your well-being, it might help to talk to someone about managing the situation.`,
+		},
+		// 7
+		{
+			`Query: I've missed so many lectures lately.`,
+			`Response: Oh, is everything okay? Are you struggling with something?`,
+			`Query: I just can't bring myself to go. Some days, I can't even leave my room.`,
+			`Response: That sounds difficult. Would you like help finding someone who can support you?`,
+		},
+		// 8
+		{
+			`Query: I feel so alone here.`,
+			`Response: That's really tough. Have you been able to meet new people?`,
+			`Query: Not really. I don't have any real friends, and I just feel like I don't belong.`,
+			`Response: That must be really isolating. There are people you can talk to who understand. Would you like me to help connect you?`,
+		},
+		// 9
+		{
+			`Query: Sometimes, I just feel like disappearing.`,
+			`Response: I'm really sorry you're feeling this way. You're not alone, and there are people who care about you. Have you spoken to anyone about this?`,
+			`Query: No, I don't want to bother anyone.`,
+			`Response: You're not a burden. Please consider reaching out to a professional. Would you like me to help you find someone to talk to?`,
+		},
+		// 10
+		{
+			`Query: I just want to cry all the time.`,
+			`Response: That sounds overwhelming. Have you been under a lot of stress lately?`,
+			`Query: Yeah, with coursework, deadlines, and everything else, I just feel like I'm drowning.`,
+			`Response: That's really tough. You don't have to go through this alone. Would you like to speak to someone about how you're feeling?`,
+		},
+	}
+
+	unflaggedMessages = [][]string{
+		// 1
+		{
+			`Query: I don't understand recursion at all.`,
+			`Response: That's a tricky concept! Have you checked the lecture notes or any additional resources?`,
+			`Query: Yeah, but it still doesn't make sense. I just get lost in the loops.`,
+			`Response: You might find it helpful to go over some example problems step by step. Would you like some recommendations?`,
+		},
+		// 2
+		{
+			`Query: I need a part-time job. Any suggestions?`,
+			`Response: There are usually some listings on the university's job board. Have you checked there?`,
+			`Query: Not yet. Where can I find it?`,
+			`Response: You can access it through the student portal. Let me send you the link!`,
+		},
+		// 3
+		{
+			`Query: I want to join the debate club.`,
+			`Response: That's great! They usually meet on Wednesdays at the Student Union.`,
+			`Query: Do I need to sign up?`,
+			`Response: You can usually just show up, but I can get you their contact details if you'd like.`,
+		},
+		// 4
+		{
+			`Query: I can't access the library's online database.`,
+			`Response: That sounds annoying. Are you getting an error message?`,
+			`Query: Yeah, it says "access denied."`,
+			`Response: That might be a login issue. You could try resetting your password or contacting IT support.`,
+		},
+		// 5
+		{
+			`Query: I need to change my course registration.`,
+			`Response: You'll want to speak to your academic advisor about that.`,
+			`Query: Do I need to book an appointment?`,
+			`Response: Yes, you can usually do that through the student portal. Let me send you the link.`,
+		},
+		// 6
+		{
+			`Query: I want to start a study group for my physics class.`,
+			`Response: That's a great idea! Have you asked your classmates if they'd be interested?`,
+			`Query: Not yet. I was thinking of posting something online.`,
+			`Response: That's a good plan! You could use the course forum or social media to find people.`,
+		},
+		// 7
+		{
+			`Query: Where's the best quiet place to study on campus?`,
+			`Response: The library has some great quiet zones. Have you tried the upper floors?`,
+			`Query: No, I usually stay in the common area. Maybe I'll try that.`,
+			`Response: That's a good idea! The postgraduate study room is also usually quiet.`,
+		},
+		// 8
+		{
+			`Query: I missed an assignment deadline.`,
+			`Response: That happens. Have you contacted your professor?`,
+			`Query: Yes, they didn't give me an extension`,
+			`Response: That's unfortunate, it is proabbly to do with the course policy.`,
+		},
+		// 9
+		{
+			`Query: Hi!
+			Response: Hello there! How are you?`,
+			`Query: I'm okay, I guess..
+			Response: Just okay? Anything I can help with?`,
+		},
+		// 10
+		{
+			`Query: I'm thinking of changing my major.
+			Response: That's a big decision! Have you spoken to your academic advisor?`,
+			`Query: Not yet. I just want to explore my options first.
+			Response: That makes sense. I can help you find resources on different programs if you'd like.`,
+		},
+	}
+)
+
+func TestDetection(t *testing.T) {
+	job := &ChatCheckerJob{
+		llm: llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set")),
+	}
+
+	t.Run("Flagged", func(t *testing.T) {
+		for i, messages := range flaggedMessages {
+			t.Run(fmt.Sprintf("Test case %d", i+1), func(t *testing.T) {
+				_, sendEmail, err := job.processChat(messages)
+				if err != nil {
+					log.Printf("Error processing chat: %v", err)
+				}
+
+				assert.True(t, sendEmail)
+			})
+		}
+	})
+
+	t.Run("Not Flagged", func(t *testing.T) {
+		for i, messages := range unflaggedMessages {
+			t.Run(fmt.Sprintf("Test case %d", i+1), func(t *testing.T) {
+				email, sendEmail, err := job.processChat(messages)
+				if err != nil {
+					log.Printf("Error processing chat: %v", err)
+				}
+
+				assert.False(t, sendEmail)
+				log.Printf("Email:\n%s", email)
+			})
+		}
+	})
 }
