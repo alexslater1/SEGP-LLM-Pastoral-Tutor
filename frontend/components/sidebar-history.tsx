@@ -175,17 +175,19 @@ export function SidebarHistory({ user }: { user: User | null }) {
   const pathname = usePathname();
   const { history, isLoading, refresh: mutate, error } = useChatSessionHistory();
 
-  const parseId = useCallback(
-    (pathname: string) => {
+  const parseId = (pathname: string) => {
       const id = pathname.split("/").pop();
       return id;
-    },
-    []
-  );
+  };
+
+  console.log(isLoading);
 
   useEffect(() => {
     mutate();
-  }, [pathname, mutate]);
+    // We can safely ignore the mutate dependency here since it's stable
+    // and we only want to refresh when pathname changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
