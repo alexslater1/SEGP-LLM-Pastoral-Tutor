@@ -180,12 +180,12 @@ export function SidebarHistory({ user }: { user: User | null }) {
       const id = pathname.split("/").pop();
       return id;
     },
-    [pathname]
+    []
   );
 
   useEffect(() => {
     mutate();
-  }, [pathname]);
+  }, [pathname, mutate]);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);

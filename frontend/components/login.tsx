@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const [error, setError] = useState("");
   const searchParams = useSearchParams().toString();
+  const querySearchParams = useSearchParams().get("query");
 
   const formSignIn = async (formData: FormData) => {
     const { error } = await signIn(formData);
@@ -35,13 +36,13 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
 
   const cardDescription = () => {
     if (mode === "signin") {
-      if (useSearchParams().get("query")) {
+      if (querySearchParams) {
         return "Sign in to continue your conversation";
       } else {
         return "Sign in to continue to your account";
       }
     } else if (mode === "signup") {
-      if (useSearchParams().get("query")) {
+      if (querySearchParams) {
         return "Sign up to continue your conversation";
       } else {
         return "Enter your details to create your account"

@@ -49,11 +49,40 @@ function PureMultimodalInput({
     }
   }, []);
 
+  const [localStorageInput, setLocalStorageInput] = useLocalStorage(
+    'input',
+    '',
+  );
+
+  const resetHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = '98px';
+    }
+  }, [textareaRef]);
+
+  const submitForm = useCallback((query = "") => {
+    if (!user) {
+      router.push("/sign-in?query=" + input);
+      return;
+    }
+
+    handleSubmit(query ?? input);
+    setInput('');
+
+    setLocalStorageInput('');
+    resetHeight();
+
+    if (width && width > 768) {
+      textareaRef.current?.focus();
+    }
+  }, [user, router, input, handleSubmit, width, textareaRef, setInput, setLocalStorageInput, resetHeight]);
+
   useEffect(() => {
     if (query) {
       submitForm(query);
     }
-  }, []);
+  }, [query, submitForm]);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -61,18 +90,6 @@ function PureMultimodalInput({
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
     }
   };
-
-  const resetHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px';
-    }
-  };
-
-  const [localStorageInput, setLocalStorageInput] = useLocalStorage(
-    'input',
-    '',
-  );
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -97,23 +114,6 @@ function PureMultimodalInput({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
-
-  const submitForm = (query = "") => {
-    if (!user) {
-      router.push("/sign-in?query=" + input);
-      return;
-    }
-
-    handleSubmit(query ?? input);
-    setInput('');
-
-    setLocalStorageInput('');
-    resetHeight();
-
-    if (width && width > 768) {
-      textareaRef.current?.focus();
-    }
-  };
 
   return (
     <div className="relative w-full flex flex-col gap-4">

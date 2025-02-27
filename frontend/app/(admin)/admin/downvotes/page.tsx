@@ -1,9 +1,8 @@
 "use client";
 
-import { getRelativeTimeString } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAllDownvotes } from "@/hooks/use-all-downvotes";
-import { cn } from "@/lib/utils";
+import { cn, getRelativeTimeString } from "@/lib/utils";
 import { Markdown } from "@/components/markdown";
 
 export default function AgentRequestsPage() {
