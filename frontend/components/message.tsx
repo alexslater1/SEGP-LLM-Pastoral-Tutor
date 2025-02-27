@@ -99,19 +99,18 @@ const PurePreviewMessage = ({
                   )}
                 </motion.div>
 
-                {!isReadonly && (
-                  <MessageActions
-                    key={`action-${message.id}`}
-                    chatId={chatId}
-                    message={message}
-                    isLoading={isLoading}
-                    isCollapsibleOpen={isCollapsibleOpen}
-                    setIsCollapsibleOpen={setIsCollapsibleOpen}
-                    downvoteMessage={downvoteMessage}
-                    removeDownvoteMessage={removeDownvoteMessage}
-                    messageDownvoted={messageDownvoted}
-                  />
-                )}
+                <MessageActions
+                  key={`action-${message.id}`}
+                  chatId={chatId}
+                  message={message}
+                  isLoading={isLoading}
+                  isReadonly={isReadonly}
+                  isCollapsibleOpen={isCollapsibleOpen}
+                  setIsCollapsibleOpen={setIsCollapsibleOpen}
+                  downvoteMessage={downvoteMessage}
+                  removeDownvoteMessage={removeDownvoteMessage}
+                  messageDownvoted={messageDownvoted}
+                />
               </div>
 
               <CollapsibleContent className="py-2 pr-4">

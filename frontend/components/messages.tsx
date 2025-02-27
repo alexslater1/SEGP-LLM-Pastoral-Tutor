@@ -44,7 +44,7 @@ function PureMessages({
             chatId={chatId}
             message={message}
             isLoading={isLoading && messages.length - 1 === index}
-            isReadonly={isReadonly}
+            isReadonly={isReadonly || index == 0}
             downvoteMessage={downvoteMessage}
             removeDownvoteMessage={removeDownvoteMessage}
             messageDownvoted={downvotedMessages.some((downvotedMessage) => downvotedMessage.request_id === message.requestID)}
