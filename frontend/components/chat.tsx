@@ -26,7 +26,7 @@ export function Chat({
   const user = useContext(UserContext);
   const query = useSearchParams().get("query");
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
-  const firstAgentMessage = `Hi ${capitalize(user?.name ?? "")}, I'm the Imperial College tutor agent. Ask me anything!`;
+  const firstAgentMessage = `Hi${user ? (" " + capitalize(user.name)) : ""}, I'm the Imperial College tutor agent. Ask me anything!`;
 
   const {
     messages,
@@ -59,7 +59,7 @@ export function Chat({
         isReadonly={isReadonly}
       />
 
-      {messages.length == 0 || !user ? (
+      {messages.length == 0 ? (
         <FullScreenMessage messageType="initial" />
       ) : (
         <Messages

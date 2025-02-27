@@ -51,7 +51,7 @@ function PureMultimodalInput({
 
   useEffect(() => {
     if (query) {
-      setInput(query);
+      submitForm(query);
     }
   }, []);
 
@@ -98,13 +98,13 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
-  const submitForm = () => {
+  const submitForm = (query = "") => {
     if (!user) {
       router.push("/sign-in?query=" + input);
       return;
     }
 
-    handleSubmit(input);
+    handleSubmit(query ?? input);
     setInput('');
 
     setLocalStorageInput('');
@@ -151,10 +151,6 @@ function PureMultimodalInput({
           }
         }}
       />
-
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
-      </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {isLoading ? (
