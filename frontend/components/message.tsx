@@ -105,7 +105,7 @@ const PurePreviewMessage = ({
             </div>
 
             <CollapsibleContent className="py-2 pr-4">
-              <div className="bg-muted rounded-[15px] p-4">
+              <div className="bg-muted rounded-2xl p-4">
               {message.actions.length > 0 ? (
                 <div className="space-y-2">
                   {message.actions.map((action, index) => (
