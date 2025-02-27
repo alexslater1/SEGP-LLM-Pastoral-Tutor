@@ -83,6 +83,18 @@ const config: Config = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        table: {
+          header: 'hsl(var(--table-header))',
+          footer: 'hsl(var(--table-footer))',
+          row: {
+            odd: 'hsl(var(--table-row-odd))',
+            even: 'hsl(var(--table-row-even))',
+          }
+        },
+        button: {
+          DEFAULT: 'hsl(var(--button))',
+          foreground: 'hsl(var(--button-foreground))',
+        },
       },
     },
   },

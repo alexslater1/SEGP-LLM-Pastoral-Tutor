@@ -4,8 +4,8 @@ import { Download, Trash2 } from 'lucide-react';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { getRelativeTimeString } from "@/lib/utils";
 import { RagDocument } from "@/lib/db/schema";
+import { cn, getRelativeTimeString } from "@/lib/utils";
 
 export default function LibraryPage() {
   const [documents] = useState<RagDocument[]>([
@@ -54,46 +54,54 @@ export default function LibraryPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Document Library</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl text-primary font-bold tracking-tight">Document Library</h2>
+        <p className="text-foreground">
           View and manage uploaded documents.
         </p>
       </div>
 
-      <div className="border rounded-lg">
-        <div className="min-w-full">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="border rounded-xl bg-card">
+        <div className="overflow-hidden rounded-xl">
+          <table className="w-full">
             <thead>
-              <tr className="bg-muted/50">
-                <th scope="col" className="px-6 py-3 text-left text-sm font-semibold">
+              <tr className="border-b bg-table-header">
+                <th scope="col" className="h-12 px-4 text-left align-middle font-semibold text-primary first:rounded-tl-xl">
                   Document Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-sm font-semibold">
+                <th scope="col" className="h-12 px-4 text-left align-middle font-semibold text-primary">
                   Size
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-sm font-semibold">
+                <th scope="col" className="h-12 px-4 text-left align-middle font-semibold text-primary">
                   Upload Date
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-sm font-semibold">
+                <th scope="col" className="h-12 px-4 text-right align-middle font-semibold text-primary last:rounded-tr-xl">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {documents.map((doc) => (
-                <tr key={doc.id} className="hover:bg-muted/50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+            <tbody className="divide-y divide-border">
+              {documents.map((doc, index) => (
+                <tr
+                  key={doc.id}
+                  className={cn(
+                    "transition-colors hover:bg-muted/50",
+                    index % 2 === 0 
+                      ? "bg-table-row-odd" 
+                      : "bg-table-row-even"
+                  )}
+                >
+                  <td className="p-4 align-middle">
                     <div className="flex items-center">
                       <span>{doc.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="p-4 align-middle">
                     {doc.size}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="p-4 align-middle">
                     {getRelativeTimeString(doc.uploadedAt)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                  <td className="p-4 align-middle text-right">
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost"

@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { File, CloudUpload } from 'lucide-react';
 import { useState } from "react";
 import { toast } from "sonner";
-import { getRelativeTimeString } from "@/lib/utils";
 import { RagDocument } from "@/lib/db/schema";
+import { cn, getRelativeTimeString } from "@/lib/utils";
 
 const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
@@ -120,8 +120,8 @@ export default function UploadPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Document Upload</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl font-bold text-primary tracking-tight">Document Upload</h2>
+        <p className="text-foreground">
           Upload documents for the AI pastoral tutor to learn from.
         </p>
       </div>
@@ -140,7 +140,7 @@ export default function UploadPage() {
           <CloudUpload className={`size-12 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
           <p className="text-lg">Drag and drop files here</p>
           <p className="text-muted-foreground">or</p>
-          <Button>
+          <Button className="bg-button text-button-foreground hover:bg-button/50 disabled:opacity-50 disabled:cursor-not-allowed">
             <label className="cursor-pointer">
               <input
                 type="file"
@@ -158,36 +158,46 @@ export default function UploadPage() {
         </div>
       </div>
 
-      <div className="border rounded-lg">
-        <div className="p-4">
-          <h3 className="font-semibold">Recent Documents (last 7 days)</h3>
-        </div>
+      <div className="border rounded-xl bg-card">
+        <div className="overflow-hidden rounded-xl">
+          <div className="border-b bg-table-header">
+            <h3 className="p-4 font-semibold text-primary">
+              Recently Uploaded Documents (last 7 days)
+            </h3>
+          </div>
 
-        <div className="border-t">
-          {recentDocuments.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              No documents uploaded in the last 7 days
-            </div>
-          ) : (
-            <div className="divide-y">
-              {recentDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-4 flex items-center hover:bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <File className="size-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{doc.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {doc.size} • {getRelativeTimeString(doc.uploadedAt)}
-                      </p>
+          <div className="divide-y divide-border">
+            {recentDocuments.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                No documents uploaded in the last 7 days
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {recentDocuments.map((doc, index) => (
+                  <div
+                    key={doc.id}
+                    className={cn(
+                      "p-4 flex items-center transition-colors",
+                      index % 2 === 0 
+                        ? "bg-table-row-odd" 
+                        : "bg-table-row-even",
+                      "hover:bg-muted/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <File className="size-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-foreground">{doc.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {doc.size} • {getRelativeTimeString(doc.uploadedAt)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

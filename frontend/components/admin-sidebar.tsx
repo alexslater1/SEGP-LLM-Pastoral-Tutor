@@ -42,7 +42,7 @@ export function AdminSidebar({ user }: { user: User | null }) {
       <SidebarHeader>
         <SidebarMenu>
           <div className="flex flex-row justify-between items-center">
-            <span className="text-lg font-semibold px-2">Admin Dashboard</span>
+            <span className="text-lg text-primary font-semibold px-2">Admin Dashboard</span>
           </div>
         </SidebarMenu>
       </SidebarHeader>

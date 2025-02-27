@@ -368,7 +368,7 @@ const AgentConfigPage = () => {
   // Show loading state
   if (agentsLoading || optionsLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen font-bold text-5xl text-primary">
         Loading agent configuration...
       </div>
     );
@@ -388,7 +388,11 @@ const AgentConfigPage = () => {
     <div style={{ flex: 1 }}>
       {/* Add button for creating a new agent */}
       <div className="absolute top-4 right-4 z-10">
-        <Button onClick={handleAddAgent}>Add New Agent</Button>
+        <Button
+          className="bg-button text-button-foreground hover:bg-button/50 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleAddAgent}>
+            Add New Agent
+        </Button>
       </div>
 
       <ReactFlow

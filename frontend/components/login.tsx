@@ -81,7 +81,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
             <Button
               formAction={mode === "signin" ? formSignIn : formSignUp}
               type="submit"
-              className="w-full"
+              className="w-full bg-button text-button-foreground hover:bg-button/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {mode === "signin" ? "Sign In" : "Create Account"}
             </Button>

@@ -27,7 +27,7 @@ export function AdminSidebarMenuButton({
         asChild
         className={cn(
           "w-full px-5 py-5 rounded-lg transition-colors",
-          "hover:bg-muted/50",
+          "!hover:bg-muted/50 !hover:text-foreground",
           isSelected && "bg-[hsl(var(--sidebar-selected-bg)_/_0.15)] text-[hsl(var(--sidebar-selected))]"
         )}
       >
