@@ -24,7 +24,7 @@ interface AgentEditSheetProps {
   setIsOpen: (open: boolean) => void;
   agent: AgentsResponse | null;
   onSave: (agent: AgentsResponse) => void;
-  onDelete?: (agentId: string) => void;
+  setIsDeleteDialogOpen: (open: boolean) => void;
   availableTools: string[];
   availableApis: {
     abc_apis: string[];
@@ -39,7 +39,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
   setIsOpen,
   agent,
   onSave,
-  onDelete,
+  setIsDeleteDialogOpen,
   availableTools,
   availableApis,
   isSubmitting = false,
@@ -114,8 +114,8 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
   };
 
   const handleDelete = () => {
-    if (editedAgent && onDelete) {
-      onDelete(editedAgent.id);
+    if (editedAgent) {
+      setIsDeleteDialogOpen(true);
     }
   };
 
@@ -286,15 +286,13 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
 
         <SheetFooter className="pt-2 flex justify-between">
           <div>
-            {onDelete && (
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isSubmitting || isDeleting}
-              >
-                {isDeleting ? "Deleting..." : "Delete Agent"}
-              </Button>
-            )}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isSubmitting || isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Agent"}
+            </Button>
           </div>
           <div className="flex gap-2">
             <Button

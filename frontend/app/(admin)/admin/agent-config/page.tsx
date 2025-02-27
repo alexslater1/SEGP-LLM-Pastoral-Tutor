@@ -24,6 +24,13 @@ import {
   AgentProviderAgentConfig,
 } from "@/hooks/use-agent-config";
 import { Button } from "@/components/ui/button";
+import { Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogPortal,
+  DialogOverlay,
+} from "@/components/ui/dialog";
 
 // Define the agent type
 interface Agent {
@@ -56,6 +63,7 @@ const AgentConfigPage = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editedAgent, setEditedAgent] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { mutate: updateAgents, isPending: isUpdating } =
     useUpdateAgentConfig();
@@ -412,7 +420,7 @@ const AgentConfigPage = () => {
         setIsOpen={setIsSheetOpen}
         agent={selectedAgent as AgentsResponse}
         onSave={handleSaveChanges}
-        onDelete={handleDeleteAgent}
+        setIsDeleteDialogOpen={setIsDialogOpen}
         availableTools={availableTools}
         availableApis={{
           abc_apis: availableApis.abc_apis,
@@ -421,6 +429,27 @@ const AgentConfigPage = () => {
         isSubmitting={isUpdating}
         isDeleting={isDeleting}
       />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogContent>
+            <DialogTitle>Delete Agent</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this agent? This action cannot be undone.
+            </DialogDescription>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => {
+                  handleDeleteAgent(selectedAgent?.id || "");
+                  setIsDialogOpen(false);
+              }}>
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
     </div>
   );
 };
