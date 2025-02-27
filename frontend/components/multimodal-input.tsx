@@ -61,15 +61,16 @@ function PureMultimodalInput({
     }
   }, [textareaRef]);
 
-  const submitForm = useCallback((query = "") => {
+  const submitForm = useCallback((queryParam?: string) => {
     if (!user) {
       router.push("/sign-in?query=" + input);
       return;
     }
 
-    handleSubmit(query ?? input);
+    const messageToSend = queryParam || input;
+    
+    handleSubmit(messageToSend);
     setInput('');
-
     setLocalStorageInput('');
     resetHeight();
 
