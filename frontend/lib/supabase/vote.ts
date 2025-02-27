@@ -11,6 +11,17 @@ export type Downvote = {
   reason: string;
 }
 
+export type DownvoteAndMessage = {
+  downvoteID: string;
+  createdAt: string;
+  requestID: string;
+  userEmail: string;
+  agent: string;
+  reason: string;
+  query: string;
+  answer: string;
+}
+
 export async function downvote(messageId: string, reason: string, user: User): Promise<Downvote> {
   const supabase = await createClient();
 
@@ -79,7 +90,7 @@ export async function removeDownvote(messageId: string): Promise<Downvote> {
   return existingDownvote;
 }
 
-export async function getDownvotes(chatId: string): Promise<Downvote[]> {
+export async function getDownvotesByChatID(chatId: string): Promise<Downvote[]> {
   const supabase = await createClient();
 
   const { data: sessionData, error: sessionError } = await supabase
@@ -105,4 +116,61 @@ export async function getDownvotes(chatId: string): Promise<Downvote[]> {
   console.log(data);
 
   return data;
+}
+
+export async function getAllDownvotes(): Promise<DownvoteAndMessage[]> {
+  const supabase = await createClient();
+  let downvotesArray: DownvoteAndMessage[] = [];
+
+  const { data: downvotes, error: downvotesError } = await supabase
+    .from('downvoted_responses')
+    .select(`
+      *,
+      agent_requests (
+        metadata
+      )
+    `);
+
+  if (downvotesError) {
+    console.error('Error fetching downvotes:', downvotesError);
+    throw downvotesError;
+  }
+
+  for (const downvote of downvotes) {
+    const { data: events, error: eventsError } = await supabase
+      .from('agent_events')
+      .select('type, metadata')
+      .eq('request_id', downvote.request_id)
+
+    if (eventsError) {
+      console.error('Error fetching events:', eventsError);
+      throw eventsError;
+    }
+
+    const answerEvent = events.find(event => event.type === 'answer_success');
+
+    const { data: user, error: userError } = await supabase
+      .from('user_data')
+      .select('email')
+      .eq('id', downvote.user_id)
+      .single();
+      
+    if (userError) {
+      console.error('Error fetching user:', userError);
+      throw userError;
+    }
+
+    downvotesArray.push({
+      downvoteID: downvote.id,
+      createdAt: downvote.created_at,
+      requestID: downvote.request_id,
+      userEmail: user.email,
+      agent: (answerEvent?.metadata).agentID,
+      reason: downvote.reason,
+      query: (downvote.agent_requests.metadata).query,
+      answer: (answerEvent?.metadata).answer
+    });
+  }
+
+  return downvotesArray;
 }

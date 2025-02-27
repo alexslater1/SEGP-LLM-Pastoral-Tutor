@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDownvotes, downvote, removeDownvote, Downvote } from "@/lib/supabase/vote";
+import { getDownvotesByChatID, downvote, removeDownvote, Downvote } from "@/lib/supabase/vote";
 import { useEffect, useState } from "react";
 import { User } from "@/lib/supabase/user";
 
@@ -21,7 +21,7 @@ export function useMessagesVotes({chatId, user}: {chatId: string | null, user: U
       if (!chatId) {
         return [];
       }
-      const databaseDownvotes = await getDownvotes(chatId);
+      const databaseDownvotes = await getDownvotesByChatID(chatId);
       setDownvotedMessages(mapDownvotedMessages(databaseDownvotes));
 
       return databaseDownvotes;

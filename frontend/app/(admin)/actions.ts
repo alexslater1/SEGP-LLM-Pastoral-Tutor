@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAllDownvotes } from "@/lib/supabase/vote";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -97,3 +98,18 @@ export async function fetchAgentRequests(page: number) {
     totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
   };
 }
+
+export async function fetchDownvotes(page: number) {
+  const downvotes = await getAllDownvotes();
+
+  const start = page * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE - 1;
+
+  const slicedDownvotes = downvotes.slice(start, end);
+
+  return {
+    downvotes: slicedDownvotes,
+    totalPages: Math.ceil((downvotes.length || 0) / ITEMS_PER_PAGE),
+  }
+}
+

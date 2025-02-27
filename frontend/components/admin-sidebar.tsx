@@ -21,6 +21,7 @@ import {
   Activity,
   MessageSquare,
   Settings,
+  ThumbsDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -213,6 +214,34 @@ export function AdminSidebar({ user }: { user: User | null }) {
                   )}
                 >
                   Agent Config
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className={cn(
+                "w-full px-5 py-5 rounded-lg transition-colors",
+                "hover:bg-muted/50",
+                getSelectedStyles("/admin/downvotes")
+              )}
+            >
+              <Link
+                href="/admin/downvotes"
+                onClick={() => setOpenMobile(false)}
+                className="flex items-center gap-3"
+              >
+                <ThumbsDown size={24} />
+                <span
+                  className={cn(
+                    "text-base",
+                    getSelectedStyles("/admin/downvotes")
+                      ? "font-semibold"
+                      : "font-normal"
+                  )}
+                >
+                  Downvoted Responses
                 </span>
               </Link>
             </SidebarMenuButton>

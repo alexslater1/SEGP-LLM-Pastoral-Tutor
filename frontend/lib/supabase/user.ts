@@ -23,9 +23,9 @@ export async function getUser(): Promise<User | null> {
   return await getUserData(user?.id);
 };
 
-async function getUserData(id: string): Promise<User | null> {
+export async function getUserData(id: string): Promise<User | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("user_data").select("*").eq("id", id);
+  const { data, error } = await supabase.from("user_data").select("*").eq("id", id).single()
 
   if (error) {
     console.error("Error fetching user_data:", error.message);
@@ -33,10 +33,10 @@ async function getUserData(id: string): Promise<User | null> {
   }
 
   return {
-    id: data[0].id,
-    role: data[0].role,
-    name: data[0].name,
-    email: data[0].email,
+    id: data.id,
+    role: data.role,
+    name: data.name,
+    email: data.email,
   };
 };
 
