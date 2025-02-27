@@ -180,8 +180,6 @@ export function SidebarHistory({ user }: { user: User | null }) {
       return id;
   };
 
-  console.log(isLoading);
-
   useEffect(() => {
     mutate();
     // We can safely ignore the mutate dependency here since it's stable
