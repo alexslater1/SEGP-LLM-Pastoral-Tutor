@@ -1,8 +1,10 @@
 import { Message, Status } from "@/types/message";
 import { ErrorMessage, PreviewMessage, ThinkingMessage } from "./message";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useContext } from "react";
 import equal from "fast-deep-equal/es6/react";
+import { useMessagesVotes } from "@/hooks/use-messages-votes";
+import { UserContext } from "@/lib/userContext";
 
 interface MessagesProps {
   chatId: string | null;
@@ -20,6 +22,19 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
+  const user = useContext(UserContext);
+
+  const { 
+    downvotedMessages, 
+    isLoading: isLoadingVotes, 
+    error,
+    downvoteMessage, 
+    removeDownvoteMessage 
+  } = useMessagesVotes({ chatId, user });
+
+  console.log(downvotedMessages);
+  console.log(messages);
+
   return (
     <div
       ref={messagesContainerRef}
@@ -33,6 +48,9 @@ function PureMessages({
             message={message}
             isLoading={isLoading && messages.length - 1 === index}
             isReadonly={isReadonly}
+            downvoteMessage={downvoteMessage}
+            removeDownvoteMessage={removeDownvoteMessage}
+            messageDownvoted={downvotedMessages.some((downvotedMessage) => downvotedMessage.request_id === message.requestID)}
           />
         ) : message.status === Status.PENDING &&
           message.actions.length !== 0 ? (

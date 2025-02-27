@@ -1,6 +1,5 @@
 import { Message } from '@/types/message';
 import { toast } from 'sonner';
-import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 
 import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
@@ -21,10 +20,10 @@ import {
 } from './ui/popover';
 import { memo, useContext, useState } from 'react';
 import { InfoIcon, XIcon } from 'lucide-react';
-import { downvote } from '@/lib/supabase/vote';
 import { cx } from 'class-variance-authority';
 import { Textarea } from './ui/textarea';
 import { UserContext } from '@/lib/userContext';
+import { cn } from '@/lib/utils';
 
 export function PureMessageActions({
   chatId,
@@ -32,19 +31,23 @@ export function PureMessageActions({
   isLoading,
   isCollapsibleOpen,
   setIsCollapsibleOpen,
+  downvoteMessage,
+  removeDownvoteMessage,
+  messageDownvoted,
 }: {
   chatId: string | null;
   message: Message;
   isLoading: boolean;
   isCollapsibleOpen: boolean;
   setIsCollapsibleOpen: (open: boolean) => void;
+  downvoteMessage: (messageId: string, reason?: string) => Promise<void>;
+  removeDownvoteMessage: (messageId: string) => Promise<void>;
+  messageDownvoted: boolean;
 }) {
-  const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
   const [isDownvotePopoverOpen, setIsDownvotePopoverOpen] = useState(false);
   const [isDownvoteHover, setIsDownvoteHover] = useState(false);
   const [input, setInput] = useState('');
-  const [vote, setVote] = useState<boolean>(false);
 
   const user = useContext(UserContext);
 
@@ -54,17 +57,23 @@ export function PureMessageActions({
 
 
   const changePopoverState = (state: boolean) => {
-    if (state) {
+    if (state && !messageDownvoted) {
       setIsDownvotePopoverOpen(state);
-    } else {
+    } else if (!state) {
       setIsDownvotePopoverOpen(state);
       if (user) {
-        toast.promise(downvote(message.requestID, input, user), {
+        toast.promise(downvoteMessage(message.requestID, input), {
           loading: 'Downvoting Response...',
           success: () => {
             return 'Downvoted Response!';
           },
-          error: 'Failed to downvote response',
+          error: (error) => {
+            if (error instanceof Error && error.message === 'Message already downvoted') {
+              return 'Response already downvoted';
+            } else {
+              return 'Failed to downvote response';
+            }
+          },
         });
       } else {
         toast.error('Please login to downvote responses');
@@ -114,10 +123,26 @@ export function PureMessageActions({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <Button
-                  className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
+                  className={cn(
+                    "py-1 px-2 h-fit text-muted-foreground !pointer-events-auto",
+                    messageDownvoted && "bg-zinc-300"
+                  )}
                   variant="outline"
-                  disabled={vote}
-                  onClick={() => changePopoverState(!isDownvotePopoverOpen)}
+                  onClick={() => {
+                    if (messageDownvoted) {
+                      toast.promise(removeDownvoteMessage(message.requestID), {
+                        loading: 'Removing downvote...',
+                        success: () => {
+                          return 'Downvote removed!';
+                        },
+                        error: (error) => {
+                          return 'Failed to remove downvote';
+                        },
+                      });
+                    } else {
+                      changePopoverState(!isDownvotePopoverOpen);
+                    }
+                  }}
                   onMouseEnter={() => setIsDownvoteHover(true)}
                   onMouseLeave={() => setIsDownvoteHover(false)}
                 >
@@ -125,7 +150,7 @@ export function PureMessageActions({
                 </Button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <TooltipContent>Downvote Response</TooltipContent>
+            <TooltipContent>{messageDownvoted ? 'Remove Downvote' : 'Downvote Response'}</TooltipContent>
             <PopoverPortal>
               <PopoverContent className="rounded-2xl">
                 <div className="flex gap-2">
@@ -170,7 +195,45 @@ export const MessageActions = memo(
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.isCollapsibleOpen !== nextProps.isCollapsibleOpen) return false;
+    if (prevProps.messageDownvoted !== nextProps.messageDownvoted) return false;
 
     return true;
   },
 );
+
+const DownVoteButton = ({
+  messageDownvoted,
+  removeDownvoteMessage,
+  message,
+  isDownvotePopoverOpen,
+  setIsDownvoteHover,
+  changePopoverState,
+}: {
+  messageDownvoted: boolean;
+  removeDownvoteMessage: (messageId: string) => Promise<void>;
+  message: Message;
+  isDownvotePopoverOpen: boolean;
+  setIsDownvoteHover: (hover: boolean) => void;
+  changePopoverState: (open: boolean) => void;
+}) => {
+  return (
+    <Button
+      className={cn(
+        "py-1 px-2 h-fit text-muted-foreground !pointer-events-auto",
+        messageDownvoted && "bg-muted"
+      )}
+      variant="outline"
+        onClick={() => {
+        if (messageDownvoted) {
+          removeDownvoteMessage(message.requestID);
+        } else {
+          changePopoverState(!isDownvotePopoverOpen);
+        }
+      }}
+      onMouseEnter={() => setIsDownvoteHover(true)}
+      onMouseLeave={() => setIsDownvoteHover(false)}
+    >
+      <ThumbDownIcon />
+    </Button>
+  )
+}
