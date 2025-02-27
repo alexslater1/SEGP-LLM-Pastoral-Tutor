@@ -30,7 +30,7 @@ export default function AgentRequestsPage() {
     <div className="space-y-6 p-6">
       <div>
         <h2 className="text-2xl text-primary font-bold tracking-tight">Downvotes</h2>
-        <p className="text-foreground">View all downvotes</p>
+        <p className="text-foreground">View all downvoted responses.</p>
       </div>
       <div>
         <div className="bg-background">
@@ -58,7 +58,7 @@ export default function AgentRequestsPage() {
                   {isLoading ? (
                     <tr>
                       <td colSpan={5} className="p-0">
-                        <div className="h-[569px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
+                        <div className="h-[512px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
                           Loading...
                         </div>
                       </td>
@@ -118,23 +118,23 @@ export default function AgentRequestsPage() {
                                   className="overflow-hidden"
                                 >
                                   <div className="p-4 space-y-4">
-                                    <div className="rounded-lg bg-background/50 p-4">
+                                    <div>
                                       <h4 className="font-semibold text-primary">Agent Name:</h4>
                                       <p className="text-foreground mt-1 whitespace-pre-wrap">
                                         {downvote.agent}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg bg-background/50 p-4">
+                                    <div>
                                       <h4 className="font-semibold text-primary">Full Query:</h4>
                                       <Markdown>{downvote.query}</Markdown>
                                     </div>
-                                    <div className="rounded-lg bg-background/50 p-4">
+                                    <div>
                                       <h4 className="font-semibold text-primary">Agent Answer:</h4>
                                       <p className="text-foreground mt-1 whitespace-pre-wrap">
                                         {downvote.answer}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg bg-background/50 p-4">
+                                    <div>
                                       <h4 className="font-semibold text-primary">User Downvote Reason:</h4>
                                       <p className={cn(
                                         "mt-1 whitespace-pre-wrap",
