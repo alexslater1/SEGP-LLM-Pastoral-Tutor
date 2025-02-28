@@ -463,7 +463,7 @@ function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
         </p>
       </div>
       <div>
-        <h4 className="font-semibold text-primary">User Downvote Reason:</h4>
+        <h4 className="font-semibold text-primary">{data.type === 'downvote' ? "User Downvote Reason:" : "User Upvote Reason:"}</h4>
         <p className={cn(
           "mt-1 whitespace-pre-wrap",
           data.reason === "" 
