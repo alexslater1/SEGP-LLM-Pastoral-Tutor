@@ -3,15 +3,15 @@
 import { Message, Status } from "@/types/message";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useState } from "react";
+import { useState } from "react";
 
 import { CrossIcon, SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { MessageActions } from "./message-actions";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { ArrowUpIcon } from "lucide-react";
+import { Collapsible, CollapsibleContent } from "./ui/collapsible";
+
+const IGNORED_ACTIONS: string[] = ["Thinking", "Thinking..."]
 
 const PurePreviewMessage = ({
   chatId,
@@ -127,7 +127,9 @@ const PurePreviewMessage = ({
             <div className="bg-muted rounded-2xl p-4 ml-11">
               {message.actions.length > 0 ? (
                 <div className="space-y-2">
-                  {message.actions.map((action, index) => (
+                  {message.actions
+                    .filter(action => !IGNORED_ACTIONS.includes(action))
+                    .map((action, index) => (
                     <div key={index} className="flex gap-2">
                       <span className="text-primary font-medium">{index + 1}.</span>
                       <span>{action}</span>

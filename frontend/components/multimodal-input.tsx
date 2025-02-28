@@ -62,8 +62,6 @@ function PureMultimodalInput({
         return;
       }
 
-      console.log("Yeahhh");
-
       const messageToSend = queryParam || input;
 
       handleSubmit(messageToSend);

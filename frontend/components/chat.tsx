@@ -43,7 +43,8 @@ export function Chat({
 
   useEffect(() => {
     if (current_id) {
-      window.history.replaceState({}, "", `/chat/${current_id}`);
+      const newUrl = `/chat/${current_id}`;
+      window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
     }
   }, [current_id]);
 

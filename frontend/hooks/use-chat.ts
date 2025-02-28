@@ -46,6 +46,9 @@ export function useChat({
     queryFn: async () => {
       const allMessages = await loadAllMessages();
       setMessages(allMessages);
+      if (allMessages[allMessages.length - 1].status === Status.PENDING) {
+        setRequestIDPollingKey(allMessages[allMessages.length - 1].requestID);
+      }
       return allMessages;
     },
     staleTime: Infinity,
