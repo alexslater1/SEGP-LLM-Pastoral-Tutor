@@ -67,12 +67,22 @@
     --sidebar-selected-foreground: 0 0% 98%;
     --success: 142 76% 36%;
     --success-foreground: 144 70% 98%;
+    --error: 0 84.2% 60.2%;
+    --error-foreground: 0 0% 98%;
     --table-header: 240 4.8% 91%;
     --table-footer: 240 4.8% 91%;
     --table-row-odd: 0 0% 100%;
     --table-row-even: 240 4.8% 96%;
     --button: 240 100% 35%;
     --button-foreground: 0 0% 98%;
+    --flow-background: 0 0% 100%;
+    --flow-node-user: 0 0% 96%;
+    --flow-node-user-border: 240 5.9% 90%;
+    --flow-node-router: 0 0% 100%;
+    --flow-node-router-border: 240 5.9% 90%;
+    --flow-node-agent: 206 100% 97%;
+    --flow-node-agent-border: 201 90% 78%;
+    --flow-edge: 240 10% 34%;
   }
   .dark {
     --background: 225 6% 14.5%;
@@ -117,12 +127,22 @@
     --sidebar-selected-foreground: 0 0% 100%;
     --success: 142 72% 29%;
     --success-foreground: 144 70% 96%;
+    --error: 0 84% 60%;
+    --error-foreground: 210 40% 98%;
     --table-header: 223 7% 21%;
     --table-footer: 223 7% 21%;
     --table-row-odd: 225 6% 14.5%;
     --table-row-even: 223 7% 13%;
     --button: 205 100% 28%;
     --button-foreground: 0 0% 100%;
+    --flow-background: 225 6% 13%;
+    --flow-node-user: 224 7% 21%;
+    --flow-node-user-border: 224 7% 40%;
+    --flow-node-router: 224 7% 21%;
+    --flow-node-router-border: 224 7% 40%;
+    --flow-node-agent: 205 70% 15%;
+    --flow-node-agent-border: 205 70% 33%;
+    --flow-edge: 0 0% 70%;
   }
 }
 

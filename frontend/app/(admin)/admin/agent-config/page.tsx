@@ -31,6 +31,7 @@ import { Dialog,
   DialogPortal,
   DialogOverlay,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 // Define the agent type
 interface Agent {
@@ -77,8 +78,8 @@ const AgentConfigPage = () => {
         data: { label: "User" },
         position: { x: 100, y: 50 },
         style: {
-          background: "#f5f5f5",
-          border: "1px solid #ddd",
+          background: "hsl(var(--flow-node-user))",
+          border: "1px solid hsl(var(--flow-node-user-border))",
           borderRadius: "5px",
           padding: "10px",
           width: 150,
@@ -87,6 +88,7 @@ const AgentConfigPage = () => {
           justifyContent: "center",
           alignItems: "center",
           display: "flex",
+          color: "hsl(var(--foreground))",
         },
         sourcePosition: Position.Left,
         targetPosition: Position.Right,
@@ -102,8 +104,8 @@ const AgentConfigPage = () => {
         },
         position: { x: 0, y: 350 },
         style: {
-          background: "#ffffff",
-          border: "1px solid #ddd",
+          background: "hsl(var(--flow-node-router))",
+          border: "1px solid hsl(var(--flow-node-router-border))",
           borderRadius: "50%",
           padding: "10px",
           width: 80,
@@ -112,6 +114,7 @@ const AgentConfigPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          color: "hsl(var(--foreground))",
         },
         sourcePosition: Position.Right,
         targetPosition: Position.Top,
@@ -127,8 +130,8 @@ const AgentConfigPage = () => {
           data: { label: agent.name },
           position: { x: 200, y: 300 + index * 100 }, // Position agents vertically with spacing
           style: {
-            background: "#e6f7ff",
-            border: "1px solid #91d5ff",
+            background: "hsl(var(--flow-node-agent))",
+            border: "1px solid hsl(var(--flow-node-agent-border))",
             borderRadius: "5px",
             padding: "10px",
             width: 150,
@@ -137,6 +140,7 @@ const AgentConfigPage = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            color: "hsl(var(--foreground))",
           },
           sourcePosition: Position.Right,
           targetPosition: Position.Left,
@@ -151,7 +155,7 @@ const AgentConfigPage = () => {
         source: "user",
         target: "router",
         animated: true,
-        style: { stroke: "#555" },
+        style: { stroke: "hsl(var(--flow-edge))" },
         type: "smoothstep",
       },
     ];
@@ -164,7 +168,7 @@ const AgentConfigPage = () => {
           source: "router",
           target: agent.id,
           animated: true,
-          style: { stroke: "#555" },
+          style: { stroke: "hsl(var(--flow-edge))" },
           type: "smoothstep",
           markerEnd: {
             type: MarkerType.Arrow,
@@ -176,7 +180,7 @@ const AgentConfigPage = () => {
           source: agent.id,
           target: "user",
           animated: true,
-          style: { stroke: "#555" },
+          style: { stroke: "hsl(var(--flow-edge))" },
           type: "smoothstep",
           markerEnd: {
             type: MarkerType.Arrow,
@@ -363,11 +367,19 @@ const AgentConfigPage = () => {
     updateAgents(configsToUpdate, {
       onSuccess: () => {
         console.log("Agent deleted successfully");
+        toast.success("Agent Deleted", {
+          description: "The agent has been successfully deleted",
+          className: "bg-success text-success-foreground",
+        });
         setIsSheetOpen(false);
         setIsDeleting(false);
       },
       onError: (error) => {
         console.error("Failed to delete agent:", error);
+        toast.error("Delete Failed", {
+          description: "Failed to delete the agent. Please try again.",
+          className: "bg-error text-error-foreground",
+        });
         setIsDeleting(false);
       },
     });
@@ -410,6 +422,7 @@ const AgentConfigPage = () => {
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         fitView
+        style={{ background: "hsl(var(--flow-background))" }}
       >
         <Background />
         <Controls />
@@ -428,22 +441,31 @@ const AgentConfigPage = () => {
         }}
         isSubmitting={isUpdating}
         isDeleting={isDeleting}
+        mode={selectedAgent?.id?.startsWith('temp-') ? 'create' : 'edit'}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
-            <DialogTitle>Delete Agent</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-destructive">Delete Agent</DialogTitle>
+            <DialogDescription className="text-foreground">
               Are you sure you want to delete this agent? This action cannot be undone.
             </DialogDescription>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={() => {
+              <Button
+                className="bg-muted hover:bg-muted/50"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+              </Button>
+              <Button
+                className="bg-destructive hover:bg-destructive/50"
+                variant="destructive"
+                onClick={() => {
                   handleDeleteAgent(selectedAgent?.id || "");
                   setIsDialogOpen(false);
-              }}>
+                }}>
                 Delete
               </Button>
             </div>
