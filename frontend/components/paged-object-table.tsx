@@ -4,9 +4,9 @@ import { ChevronRight } from "lucide-react";
 import { cn, getRelativeTimeString } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAgentEvents, useAgentRequests } from "@/hooks/use-agent-data";
-import { useAllDownvotes } from "@/hooks/use-all-downvotes";
+import { useAllDownvotes, useAllUpvotes } from "@/hooks/use-all-downvotes";
 import { UseQueryResult } from "@tanstack/react-query";
-import { DownvoteAndMessage } from "@/lib/supabase/vote";
+import { VoteAndMessage, VoteType } from "@/lib/supabase/vote";
 import { Markdown } from "@/components/markdown";
 
 export function PagedAgentRequestsTable() {
@@ -37,10 +37,22 @@ export function PagedDownvotesTable() {
   return (
     <PagedObjectTable
       dataHook={useAllDownvotes}
-      idField="downvoteID"
-      TableHeadings={DownvotesTableHeadings}
-      RowContents={DownvotesTableContents}
-      ExpandedRowContents={DownvotesExpandedTableContents}
+      idField="id"
+      TableHeadings={VotesTableHeadings('downvote')}
+      RowContents={VotesTableContents}
+      ExpandedRowContents={VotesExpandedTableContents}
+    />
+  )
+}
+
+export function PagedUpvotesTable() {
+  return (
+    <PagedObjectTable
+      dataHook={useAllUpvotes}
+      idField="id"
+      TableHeadings={VotesTableHeadings('upvote')}
+      RowContents={VotesTableContents}
+      ExpandedRowContents={VotesExpandedTableContents}
     />
   )
 }
@@ -137,7 +149,7 @@ function PagedObjectTable<T>({
                                   : "bg-table-row-even"
                               )}
                             >
-                              <td colSpan={4} className="p-0">
+                              <td colSpan={5} className="p-0">
                                 <motion.div
                                   initial={{ height: 0 }}
                                   animate={{ height: "auto" }}
@@ -371,30 +383,32 @@ function AgentEventsExpandedTableContents({data, index}: {data: AgentEvent, inde
   )
 }
 
-function DownvotesTableHeadings() {
-  return (
-    <>
-      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-        Downvote ID
-      </th>
-      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-        Request ID
-      </th>
-      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-        User Email
-      </th>
-      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
-        Time
-      </th>
-    </>
-  )
+function VotesTableHeadings(type: VoteType) {
+  return () => {
+    return (
+      <>
+        <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+          {type === 'downvote' ? 'Downvote ID' : 'Upvote ID'}
+        </th>
+        <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+          Request ID
+        </th>
+        <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
+          User Email
+        </th>
+        <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
+          Time
+        </th>
+      </>
+    )
+  }
 }
 
-function DownvotesTableContents<T>({data}: {data: DownvoteAndMessage}) {
+function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
   return (
     <>
       <td className="p-4 align-middle font-mono text-sm text-foreground">
-        {data.downvoteID}
+        {data.id}
       </td>
       <td className="p-4 align-middle font-mono text-sm text-foreground">
         {data.requestID}
@@ -412,7 +426,7 @@ function DownvotesTableContents<T>({data}: {data: DownvoteAndMessage}) {
   )
 }
 
-function DownvotesExpandedTableContents({data}: {data: DownvoteAndMessage}) {
+function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
   return (
     <>
       <div>
@@ -437,7 +451,7 @@ function DownvotesExpandedTableContents({data}: {data: DownvoteAndMessage}) {
           "mt-1 whitespace-pre-wrap",
           data.reason === "" 
             ? "italic text-muted-foreground" 
-            : "text-red-500"
+            : (data.type === 'downvote' ? "text-red-500" : "text-green-500")
         )}>
           {data.reason === "" ? "User did not provide a reason" : data.reason}
         </p>

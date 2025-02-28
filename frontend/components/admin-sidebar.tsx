@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Settings,
   ThumbsDown,
+  ThumbsUp,
 } from "lucide-react";
 import { AdminSidebarMenuButton } from "@/components/admin-sidebar-menu-button";
 
@@ -37,7 +38,8 @@ export function AdminSidebar({ user }: { user: User | null }) {
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
     { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },
-    { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvoted Responses" },
+    { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvotes" },
+    { href: "/admin/upvotes", icon: ThumbsUp, label: "Upvotes" },
   ];
 
   return (

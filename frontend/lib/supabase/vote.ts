@@ -3,7 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { User } from "@/lib/supabase/user";
 
-export type Downvote = {
+export type VoteType = 'downvote' | 'upvote';
+
+export type Vote = {
+  type: VoteType;
   id: string;
   created_at: string;
   request_id: string;
@@ -11,8 +14,9 @@ export type Downvote = {
   reason: string;
 }
 
-export type DownvoteAndMessage = {
-  downvoteID: string;
+export type VoteAndMessage = {
+  type: VoteType;
+  id: string;
   createdAt: string;
   requestID: string;
   userEmail: string;
@@ -22,23 +26,23 @@ export type DownvoteAndMessage = {
   answer: string;
 }
 
-export async function downvote(messageId: string, reason: string, user: User): Promise<Downvote> {
+export async function vote(type: VoteType, messageId: string, reason: string, user: User): Promise<Vote> {
   const supabase = await createClient();
 
-  const { data: existingDownvote, error: fetchError } = await supabase
-    .from('downvoted_responses')
+  const { data: existingVote, error: fetchError } = await supabase
+    .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
     .select('*')
     .eq('request_id', messageId)
 
-  if (existingDownvote?.length && existingDownvote.length > 0) {
-    throw new Error('Message already downvoted');
+  if (existingVote?.length && existingVote.length > 0) {
+    throw new Error('Message already ' + (type === 'downvote' ? 'downvoted' : 'upvoted'));
   } else if (fetchError) {
-    console.error('Error fetching downvoted message:', fetchError);
+    console.error('Error fetching ' + (type === 'downvote' ? 'downvoted' : 'upvoted') + ' message:', fetchError);
     throw fetchError;
   }
 
   const { data, error } = await supabase
-    .from('downvoted_responses')
+    .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
     .insert({
       request_id: messageId,
       reason: reason,
@@ -46,51 +50,51 @@ export async function downvote(messageId: string, reason: string, user: User): P
     })
 
   if (error) {
-    console.error('Error downvoting message:', error);
+    console.error('Error ' + (type === 'downvote' ? 'downvoting' : 'upvoting') + ' message:', error);
     throw error;
   } else {
-    const { data: downvoteData, error: downvoteError } = await supabase
-      .from('downvoted_responses')
+    const { data: voteData, error: voteError } = await supabase
+      .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
       .select('*')
       .eq('request_id', messageId)
       .single();
 
-    if (downvoteError) {
-      console.error('Error fetching downvoted message:', downvoteError);
-      throw downvoteError;
+    if (voteError) {
+      console.error('Error fetching ' + (type === 'downvote' ? 'downvoted' : 'upvoted') + ' message:', voteError);
+      throw voteError;
     }
 
-    return downvoteData;
+    return { ...voteData, type: type };
   }
 }
 
-export async function removeDownvote(messageId: string): Promise<Downvote> {
+export async function removeVote(type: VoteType, messageId: string): Promise<Vote> {
   const supabase = await createClient();
 
-  const { data: existingDownvote, error: fetchError } = await supabase
-    .from('downvoted_responses')
+  const { data: existingVote, error: fetchError } = await supabase
+    .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
     .select('*')
     .eq('request_id', messageId)
     .single();
 
-  if (!existingDownvote) {
-    throw new Error('Message not downvoted');
+  if (!existingVote) {
+    throw new Error('Message not ' + (type === 'downvote' ? 'downvoted' : 'upvoted'));
   }
 
   const { data, error } = await supabase
-    .from('downvoted_responses')
+    .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
     .delete()
     .eq('request_id', messageId)
 
   if (error) {
-    console.error('Error removing downvote:', error);
+    console.error('Error removing ' + (type === 'downvote' ? 'downvote' : 'upvote') + ':', error);
     throw error;
   }
 
-  return existingDownvote;
+  return { ...existingVote, type: type };
 }
 
-export async function getDownvotesByChatID(chatId: string): Promise<Downvote[]> {
+export async function getVotesByChatID(type: VoteType, chatId: string): Promise<Vote[]> {
   const supabase = await createClient();
 
   const { data: sessionData, error: sessionError } = await supabase
@@ -104,26 +108,24 @@ export async function getDownvotesByChatID(chatId: string): Promise<Downvote[]> 
   }
 
   const { data, error } = await supabase
-    .from('downvoted_responses')
+    .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
     .select('*')
     .in('request_id', sessionData.map(row => row.request_id));
 
   if (error) {
-    console.error('Error fetching downvotes:', error);
+    console.error('Error fetching ' + (type === 'downvote' ? 'downvotes' : 'upvotes') + ':', error);
     throw error;
   }
 
-  console.log(data);
-
-  return data;
+  return data.map((vote) => ({ ...vote, type: type }));
 }
 
-export async function getAllDownvotes(): Promise<DownvoteAndMessage[]> {
+export async function getAllVotes(type: VoteType): Promise<VoteAndMessage[]> {
   const supabase = await createClient();
-  let downvotesArray: DownvoteAndMessage[] = [];
+  let votesArray: VoteAndMessage[] = [];
 
-  const { data: downvotes, error: downvotesError } = await supabase
-    .from('downvoted_responses')
+  const { data: votes, error: votesError } = await supabase
+    .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
     .select(`
       *,
       agent_requests (
@@ -131,16 +133,16 @@ export async function getAllDownvotes(): Promise<DownvoteAndMessage[]> {
       )
     `);
 
-  if (downvotesError) {
-    console.error('Error fetching downvotes:', downvotesError);
-    throw downvotesError;
+  if (votesError) {
+    console.error('Error fetching ' + (type === 'downvote' ? 'downvotes' : 'upvotes') + ':', votesError);
+    throw votesError;
   }
 
-  for (const downvote of downvotes) {
+  for (const vote of votes) {
     const { data: events, error: eventsError } = await supabase
       .from('agent_events')
       .select('type, metadata')
-      .eq('request_id', downvote.request_id)
+      .eq('request_id', vote.request_id)
 
     if (eventsError) {
       console.error('Error fetching events:', eventsError);
@@ -152,7 +154,7 @@ export async function getAllDownvotes(): Promise<DownvoteAndMessage[]> {
     const { data: user, error: userError } = await supabase
       .from('user_data')
       .select('email')
-      .eq('id', downvote.user_id)
+      .eq('id', vote.user_id)
       .single();
       
     if (userError) {
@@ -160,17 +162,18 @@ export async function getAllDownvotes(): Promise<DownvoteAndMessage[]> {
       throw userError;
     }
 
-    downvotesArray.push({
-      downvoteID: downvote.id,
-      createdAt: downvote.created_at,
-      requestID: downvote.request_id,
+    votesArray.push({
+      type: type,
+      id: vote.id,
+      createdAt: vote.created_at,
+      requestID: vote.request_id,
       userEmail: user.email,
       agent: (answerEvent?.metadata).agentID,
-      reason: downvote.reason,
-      query: (downvote.agent_requests.metadata).query,
+      reason: vote.reason,
+      query: (vote.agent_requests.metadata).query,
       answer: (answerEvent?.metadata).answer
     });
   }
 
-  return downvotesArray;
+  return votesArray;
 }

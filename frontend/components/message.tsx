@@ -20,7 +20,10 @@ const PurePreviewMessage = ({
   isReadonly,
   downvoteMessage,
   removeDownvoteMessage,
+  upvoteMessage,
+  removeUpvoteMessage,
   messageDownvoted,
+  messageUpvoted,
 }: {
   chatId: string | null;
   message: Message;
@@ -28,7 +31,10 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
   downvoteMessage: (messageId: string, reason?: string) => Promise<void>;
   removeDownvoteMessage: (messageId: string) => Promise<void>;
+  upvoteMessage: (messageId: string, reason?: string) => Promise<void>;
+  removeUpvoteMessage: (messageId: string) => Promise<void>;
   messageDownvoted: boolean;
+  messageUpvoted: boolean;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
@@ -109,7 +115,10 @@ const PurePreviewMessage = ({
                   setIsCollapsibleOpen={setIsCollapsibleOpen}
                   downvoteMessage={downvoteMessage}
                   removeDownvoteMessage={removeDownvoteMessage}
+                  upvoteMessage={upvoteMessage}
+                  removeUpvoteMessage={removeUpvoteMessage}
                   messageDownvoted={messageDownvoted}
+                  messageUpvoted={messageUpvoted}
                 />
               </div>
             </div>

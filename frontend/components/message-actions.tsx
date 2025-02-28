@@ -24,6 +24,7 @@ import { cx } from 'class-variance-authority';
 import { Textarea } from './ui/textarea';
 import { UserContext } from '@/lib/userContext';
 import { cn } from '@/lib/utils';
+import { VoteType } from '@/lib/supabase/vote';
 
 export function PureMessageActions({
   chatId,
@@ -34,7 +35,10 @@ export function PureMessageActions({
   isReadonly,
   downvoteMessage,
   removeDownvoteMessage,
+  upvoteMessage,
+  removeUpvoteMessage,
   messageDownvoted,
+  messageUpvoted,
 }: {
   chatId: string | null;
   message: Message;
@@ -44,12 +48,17 @@ export function PureMessageActions({
   setIsCollapsibleOpen: (open: boolean) => void;
   downvoteMessage: (messageId: string, reason?: string) => Promise<void>;
   removeDownvoteMessage: (messageId: string) => Promise<void>;
+  upvoteMessage: (messageId: string, reason?: string) => Promise<void>;
+  removeUpvoteMessage: (messageId: string) => Promise<void>;
   messageDownvoted: boolean;
+  messageUpvoted: boolean;
 }) {
   const [_, copyToClipboard] = useCopyToClipboard();
   const [isDownvotePopoverOpen, setIsDownvotePopoverOpen] = useState(false);
   const [isDownvoteHover, setIsDownvoteHover] = useState(false);
   const [input, setInput] = useState('');
+  const [isUpvotePopoverOpen, setIsUpvotePopoverOpen] = useState(false);
+  const [isUpvoteHover, setIsUpvoteHover] = useState(false);
 
   const user = useContext(UserContext);
 
@@ -57,12 +66,13 @@ export function PureMessageActions({
   if (message.role === 'user') return null;
   if (!chatId) return null;
 
-
-  const changePopoverState = (state: boolean) => {
-    if (state && !messageDownvoted) {
+  const setPopoverState = (type: VoteType, state: boolean) => {
+    if (state && !messageDownvoted && type === 'downvote') {
       setIsDownvotePopoverOpen(state);
+    } else if (state && !messageUpvoted && type === 'upvote') {
+      setIsUpvotePopoverOpen(state);
     } else if (!state) {
-      setIsDownvotePopoverOpen(state);
+      type === 'downvote' ? setIsDownvotePopoverOpen(state) : setIsUpvotePopoverOpen(state);
     }
   }
 
@@ -102,92 +112,33 @@ export function PureMessageActions({
               <TooltipContent>Message Actions</TooltipContent>
             </Tooltip>
 
-            <Popover open={isDownvotePopoverOpen} onOpenChange={changePopoverState}>
-              {/* Separate state for hover to avoid tooltip opening when pressing enter on popover input */}
-              <Tooltip open={isDownvoteHover} onOpenChange={() => {}}>
-                <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                    <Button
-                      className={cn(
-                        "py-1 px-2 h-fit text-muted-foreground !pointer-events-auto",
-                        messageDownvoted && "bg-zinc-300"
-                      )}
-                      variant="outline"
-                      onClick={() => {
-                        if (messageDownvoted) {
-                          toast.promise(removeDownvoteMessage(message.requestID), {
-                            loading: 'Removing downvote...',
-                            success: () => {
-                              return 'Downvote removed!';
-                            },
-                            error: (error) => {
-                              return 'Failed to remove downvote';
-                            },
-                          });
-                        } else {
-                          changePopoverState(!isDownvotePopoverOpen);
-                        }
-                      }}
-                      onMouseEnter={() => setIsDownvoteHover(true)}
-                      onMouseLeave={() => setIsDownvoteHover(false)}
-                    >
-                      <ThumbDownIcon />
-                    </Button>
-                  </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent>{messageDownvoted ? 'Remove Downvote' : 'Downvote Response'}</TooltipContent>
-                <PopoverPortal>
-                  <PopoverContent className="rounded-2xl">
-                    <div className="flex gap-2">
-                      <p className="text-base p-1">Downvote Reason</p>
-                      <PopoverClose className="ml-auto">
-                        <XIcon />
-                      </PopoverClose>
-                    </div>
-                    <div className="flex flex-col gap-2 px-1 py-3">
-                      <Textarea
-                        placeholder="(Optional) Reason for downvote..."
-                        value={input}
-                        onChange={(event) => {
-                          setInput(event.target.value);
-                        }}
-                        className={cx(
-                          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-sm pb-10',
-                          'bg-muted dark:bg-background',
-                        )}
-                        rows={2}
-                        autoFocus
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' && !event.shiftKey) {
-                            event.preventDefault();
-                            changePopoverState(false);
-                            if (user) {
-                              toast.promise(downvoteMessage(message.requestID, input), {
-                                loading: 'Downvoting Response...',
-                                success: () => {
-                                  return 'Downvoted Response!';
-                                },
-                                error: (error) => {
-                                  if (error instanceof Error && error.message === 'Message already downvoted') {
-                                    return 'Response already downvoted';
-                                  } else {
-                                    return 'Failed to downvote response';
-                                  }
-                                },
-                              });
-                            } else {
-                              toast.error('Please login to downvote responses');
-                            }
-                            setInput('');
-                          }
-                        }}
-                      />
-                    </div>
-                    <PopoverArrow />
-                  </PopoverContent>
-                </PopoverPortal>
-              </Tooltip>
-            </Popover>
+            <VotePopover
+              type="downvote"
+              messageVoted={messageDownvoted}
+              removeVoteMessage={removeDownvoteMessage}
+              voteMessage={downvoteMessage}
+              isVotePopoverOpen={isDownvotePopoverOpen}
+              changePopoverState={setPopoverState}
+              isVoteHover={isDownvoteHover}
+              setIsVoteHover={setIsDownvoteHover}
+              input={input}
+              setInput={setInput}
+              message={message}
+            />
+
+            <VotePopover
+              type="upvote"
+              messageVoted={messageUpvoted}
+              removeVoteMessage={removeUpvoteMessage}
+              voteMessage={upvoteMessage}
+              isVotePopoverOpen={isUpvotePopoverOpen}
+              changePopoverState={setPopoverState}
+              isVoteHover={isUpvoteHover}
+              setIsVoteHover={setIsUpvoteHover}
+              input={input}
+              setInput={setInput}
+              message={message}
+            />
           </>
         )}
       </div>
@@ -201,44 +152,119 @@ export const MessageActions = memo(
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.isCollapsibleOpen !== nextProps.isCollapsibleOpen) return false;
     if (prevProps.messageDownvoted !== nextProps.messageDownvoted) return false;
+    if (prevProps.messageUpvoted !== nextProps.messageUpvoted) return false;
 
     return true;
   },
 );
 
-const DownVoteButton = ({
-  messageDownvoted,
-  removeDownvoteMessage,
-  message,
-  isDownvotePopoverOpen,
-  setIsDownvoteHover,
+const capitalize = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+type VotePopoverProps = {
+  type: VoteType,
+  messageVoted: boolean,
+  removeVoteMessage: (messageId: string) => Promise<void>,
+  voteMessage: (messageId: string, reason?: string) => Promise<void>
+  isVotePopoverOpen: boolean,
+  changePopoverState: (type: VoteType, state: boolean) => void,
+  isVoteHover: boolean,
+  setIsVoteHover: (state: boolean) => void,
+  input: string,
+  setInput: (input: string) => void,
+  message: Message
+}
+
+const VotePopover = ({
+  type, 
+  messageVoted, 
+  removeVoteMessage, 
+  voteMessage,
+  isVotePopoverOpen,
   changePopoverState,
-}: {
-  messageDownvoted: boolean;
-  removeDownvoteMessage: (messageId: string) => Promise<void>;
-  message: Message;
-  isDownvotePopoverOpen: boolean;
-  setIsDownvoteHover: (hover: boolean) => void;
-  changePopoverState: (open: boolean) => void;
-}) => {
+  isVoteHover,
+  setIsVoteHover,
+  input,
+  setInput,
+  message
+}: VotePopoverProps) => {
   return (
-    <Button
-      className={cn(
-        "py-1 px-2 h-fit text-muted-foreground !pointer-events-auto",
-        messageDownvoted && "bg-muted"
-      )}
-      variant="outline"
-        onClick={() => {
-        if (messageDownvoted) {
-          removeDownvoteMessage(message.requestID);
-        } else {
-          changePopoverState(!isDownvotePopoverOpen);
-        }
-      }}
-      onMouseEnter={() => setIsDownvoteHover(true)}
-      onMouseLeave={() => setIsDownvoteHover(false)}
-    >
-      <ThumbDownIcon />
-    </Button>
+    <Popover open={isVotePopoverOpen} onOpenChange={(state) => changePopoverState(type, state)}>
+      {/* Separate state for hover to avoid tooltip opening when pressing enter on popover input */} 
+      <Tooltip open={isVoteHover} onOpenChange={() => {}}> 
+        <TooltipTrigger asChild> 
+          <PopoverTrigger asChild> 
+            <Button 
+              className={cn( "py-1 px-2 h-fit text-muted-foreground !pointer-events-auto", 
+                             messageVoted && "bg-zinc-300")} 
+              variant="outline" 
+              onClick={() => { 
+                if (messageVoted) { 
+                  toast.promise(removeVoteMessage(message.requestID), 
+                  { loading: 'Removing ' + type + '...', 
+                    success: () => { return capitalize(type) + ' removed!'; }, 
+                    error: (error) => { return 'Failed to remove ' + capitalize(type); }, 
+                  }); 
+                } else { 
+                  changePopoverState(type, !isVotePopoverOpen); 
+                } 
+              }}
+              onMouseEnter={() => setIsVoteHover(true)}
+              onMouseLeave={() => setIsVoteHover(false)}
+            >
+              {type === 'downvote' ? <ThumbDownIcon /> : <ThumbUpIcon />}
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent>{messageVoted ? 'Remove ' + capitalize(type) : capitalize(type) + ' Response'}</TooltipContent>
+        <PopoverPortal>
+          <PopoverContent className="rounded-2xl">
+            <div className="flex gap-2">
+              <p className="text-base p-1">{capitalize(type) + ' Reason'}</p>
+              <PopoverClose className="ml-auto">
+                <XIcon />
+              </PopoverClose>
+            </div>
+            <div className="flex flex-col gap-2 px-1 py-3">
+              <Textarea
+                placeholder={'(Optional) Reason for ' + type + '...'}
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                }}
+                className={cx(
+                  'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-sm pb-10',
+                  'bg-muted dark:bg-background',
+                )}
+                rows={2}
+                autoFocus
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    changePopoverState(type, false);
+                    toast.promise(voteMessage(message.requestID, input), {
+                      loading: type === 'downvote' ? 'Downvoting Response...' : 'Upvoting Response...',
+                      success: () => {
+                        return type === 'downvote' ? 'Downvoted Response!' : 'Upvoted Response!';
+                      },
+                      error: (error) => {
+                        if (error instanceof Error && error.message === 'Message already ' + (type === 'downvote' ? 'downvoted' : 'upvoted')) {
+                          return 'Response already ' + (type === 'downvote' ? 'downvoted' : 'upvoted');
+                        } else {
+                          return 'Failed to ' + type + ' response';
+                        }
+                      },
+                    });
+                    setInput('');
+                  }
+                }}
+              />
+            </div>
+            <PopoverArrow />
+          </PopoverContent>
+        </PopoverPortal>
+      </Tooltip>
+    </Popover>
   )
 }

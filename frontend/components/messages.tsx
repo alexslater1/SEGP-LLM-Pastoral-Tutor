@@ -26,10 +26,13 @@ function PureMessages({
 
   const { 
     downvotedMessages, 
+    upvotedMessages,
     isLoading: isLoadingVotes, 
     error,
     downvoteMessage, 
-    removeDownvoteMessage 
+    removeDownvoteMessage,
+    upvoteMessage,
+    removeUpvoteMessage
   } = useMessagesVotes({ chatId, user });
 
   return (
@@ -48,6 +51,9 @@ function PureMessages({
             downvoteMessage={downvoteMessage}
             removeDownvoteMessage={removeDownvoteMessage}
             messageDownvoted={downvotedMessages.some((downvotedMessage) => downvotedMessage.request_id === message.requestID)}
+            upvoteMessage={upvoteMessage}
+            removeUpvoteMessage={removeUpvoteMessage}
+            messageUpvoted={upvotedMessages.some((upvotedMessage) => upvotedMessage.request_id === message.requestID)}
           />
         ) : message.status === Status.PENDING &&
           message.actions.length !== 0 ? (
