@@ -12,6 +12,8 @@ import { Markdown } from "@/components/markdown";
 export function PagedAgentRequestsTable() {
   return (
     <PagedObjectTable
+      title="Agent Requests"
+      description="View incoming agent requests."
       dataHook={useAgentRequests}
       idField="id"
       TableHeadings={AgentRequestTableHeadings}
@@ -24,6 +26,8 @@ export function PagedAgentRequestsTable() {
 export function PagedAgentEventsTable() {
   return (
     <PagedObjectTable
+      title="Agent Events"
+      description="View agent events."
       dataHook={useAgentEvents}
       idField="id"
       TableHeadings={AgentEventsTableHeadings}
@@ -36,6 +40,8 @@ export function PagedAgentEventsTable() {
 export function PagedDownvotesTable() {
   return (
     <PagedObjectTable
+      title="Downvotes"
+      description="View all downvotes."
       dataHook={useAllDownvotes}
       idField="id"
       TableHeadings={DownvotesTableHeadings}
@@ -48,6 +54,8 @@ export function PagedDownvotesTable() {
 export function PagedUpvotesTable() {
   return (
     <PagedObjectTable
+      title="Upvotes"
+      description="View all upvotes."
       dataHook={useAllUpvotes}
       idField="id"
       TableHeadings={UpvotesTableHeadings}
@@ -58,6 +66,8 @@ export function PagedUpvotesTable() {
 }
 
 type props<T> = {
+  title: string;
+  description: string;
   dataHook: (page: number) => UseQueryResult<{ data: T[]; totalPages: number; }, Error>;
   idField: string;
   TableHeadings: () => React.ReactNode;
@@ -66,6 +76,8 @@ type props<T> = {
 }
 
 function PagedObjectTable<T>({
+  title,
+  description,
   dataHook,
   idField,
   TableHeadings,
@@ -93,8 +105,8 @@ function PagedObjectTable<T>({
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-2xl text-primary font-bold tracking-tight">Agent Requests</h2>
-        <p className="text-foreground">View incoming agent requests.</p>
+        <h2 className="text-2xl text-primary font-bold tracking-tight">{title}</h2>
+        <p className="text-foreground">{description}</p>
       </div>
       <div>
         <div className="bg-background">
