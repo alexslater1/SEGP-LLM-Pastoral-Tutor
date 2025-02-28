@@ -38,7 +38,7 @@ export function PagedDownvotesTable() {
     <PagedObjectTable
       dataHook={useAllDownvotes}
       idField="id"
-      TableHeadings={VotesTableHeadings('downvote')}
+      TableHeadings={DownvotesTableHeadings}
       RowContents={VotesTableContents}
       ExpandedRowContents={VotesExpandedTableContents}
     />
@@ -50,7 +50,7 @@ export function PagedUpvotesTable() {
     <PagedObjectTable
       dataHook={useAllUpvotes}
       idField="id"
-      TableHeadings={VotesTableHeadings('upvote')}
+      TableHeadings={UpvotesTableHeadings}
       RowContents={VotesTableContents}
       ExpandedRowContents={VotesExpandedTableContents}
     />
@@ -383,25 +383,42 @@ function AgentEventsExpandedTableContents({data, index}: {data: AgentEvent, inde
   )
 }
 
-function VotesTableHeadings(type: VoteType) {
-  return () => {
-    return (
-      <>
-        <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-          {type === 'downvote' ? 'Downvote ID' : 'Upvote ID'}
-        </th>
-        <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-          Request ID
-        </th>
-        <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-          User Email
-        </th>
-        <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
-          Time
-        </th>
-      </>
-    )
-  }
+function DownvotesTableHeadings() {
+  return (
+    <>
+      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+        Downvote ID
+      </th>
+      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+        Request ID
+      </th>
+      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
+        User Email
+      </th>
+      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
+        Time
+      </th>
+    </>
+  )
+}
+
+function UpvotesTableHeadings() {
+  return (
+    <>
+      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+        Upvote ID
+      </th>
+      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+        Request ID
+      </th>
+      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
+        User Email
+      </th>
+      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
+        Time
+      </th>
+    </>
+  )
 }
 
 function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
