@@ -88,7 +88,7 @@ const PureChatItem = ({
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
         <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <span>{chat.title}</span>
+          <span className={cn(chat.sessionNameFetchStatus === "error" ? "text-red-500" : "")}>{chat.title}</span>
         </Link>
       </SidebarMenuButton>
 

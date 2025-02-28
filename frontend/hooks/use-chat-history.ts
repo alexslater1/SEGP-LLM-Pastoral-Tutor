@@ -5,11 +5,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type ChatVisibility = "public" | "private";
 
-const STATUS_QUERY_INTERVAL_SECONDS = 0.5;
+const STATUS_QUERY_INTERVAL_SECONDS = 1;
+const MAX_FETCH_ATTEMPTS = 3;
+
+export type SessionNameFetchStatus = "success" | "error";
 
 export type Chat = {
   id: string;
   title: string;
+  sessionNameFetchStatus: SessionNameFetchStatus;
   createdAt: Date;
   userId: string;
   visibility: ChatVisibility;
@@ -35,7 +39,7 @@ type BackendUserSessions = BackendUserSession[];
 export function useChatSessionHistory(): ChatHistoryItem {
   const queryClient = useQueryClient();
   const [history, setHistory] = useState<Chat[]>([]);
-  const chatIDPollingKeys = useRef<string[]>([]);
+  const chatIDPollingKeys = useRef<{id: string, fetchAttempt: number}[]>([]);
 
   const { isPending, error, fetchStatus } = useQuery({
     queryKey: ["chat-history"],
@@ -60,12 +64,18 @@ export function useChatSessionHistory(): ChatHistoryItem {
   } = useQuery({
     queryKey: ["session-status", chatIDPollingKeys],
     queryFn: async () => {
-      let newSessionNames = []
+      let newSessionNames: {id: string, name: string, type: SessionNameFetchStatus}[] = []
       for (let chatIDPollingKey of chatIDPollingKeys.current) {
-        let sessionName = await fetchUIChatName(chatIDPollingKey);
+        let sessionName = await fetchUIChatName(chatIDPollingKey.id);
         if (sessionName) {
-          newSessionNames.push({id: chatIDPollingKey, name: sessionName});
-          chatIDPollingKeys.current = chatIDPollingKeys.current.filter(key => key !== chatIDPollingKey);
+          newSessionNames.push({id: chatIDPollingKey.id, name: sessionName, type: "success"});
+          chatIDPollingKeys.current = chatIDPollingKeys.current.filter(key => key.id !== chatIDPollingKey.id);
+        } else if (chatIDPollingKey.fetchAttempt >= MAX_FETCH_ATTEMPTS) {
+          newSessionNames.push({id: chatIDPollingKey.id, name: "Failed to fetch title", type: "error"});
+          chatIDPollingKeys.current = chatIDPollingKeys.current.filter(key => key.id !== chatIDPollingKey.id);
+        } else {
+          chatIDPollingKeys.current = 
+            chatIDPollingKeys.current.map(key => key.id === chatIDPollingKey.id ? {...key, fetchAttempt: key.fetchAttempt + 1} : key);
         }
       }
       setSessionIDNames(newSessionNames);
@@ -80,15 +90,15 @@ export function useChatSessionHistory(): ChatHistoryItem {
     refetchIntervalInBackground: false,
   });
 
-  const setSessionIDNames = (sessionNames: {id: string, name: string}[]) => {
+  const setSessionIDNames = (sessionNames: {id: string, name: string, type: SessionNameFetchStatus}[]) => {
     setHistory(prev => prev.map(chat => {
       const session = sessionNames.find(sessionName => sessionName.id === chat.id)
-      return session ? {...chat, title: session.name} : chat;
+      return session ? {...chat, title: session.name, sessionNameFetchStatus: session.type} : chat;
     }));
   }
 
   const getSessionsWithNoNames = (history: Chat[]) => {
-    return history.filter(chat => chat.title === "Loading...").map(chat => chat.id);
+    return history.filter(chat => chat.title === "Loading...").map(chat => ({id: chat.id, fetchAttempt: 0}));
   }
 
   const fetchUIChatHistory = async () => {
