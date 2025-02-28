@@ -50,6 +50,12 @@ func (a *LoggingAgent) Unsubscribe(ch <-chan AgentEvent) {
 	}
 }
 
+func (a *LoggingAgent) close() {
+	for _, subscriber := range a.subscribers {
+		close(subscriber)
+	}
+}
+
 func (a *LoggingAgent) loggingLoop(ch <-chan AgentEvent) {
 	for event := range ch {
 		a.handleLoggingEvent(event)
@@ -57,6 +63,9 @@ func (a *LoggingAgent) loggingLoop(ch <-chan AgentEvent) {
 			subscriber <- event
 		}
 	}
+
+	a.close()
+	a.Agent.Unsubscribe(ch)
 }
 
 func (a *LoggingAgent) handleLoggingEvent(event AgentEvent) {

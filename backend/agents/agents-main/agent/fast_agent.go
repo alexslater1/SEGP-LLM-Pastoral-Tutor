@@ -75,6 +75,8 @@ func (a *FastAgent) Run(ctx context.Context, query string) (*AgentResponse, erro
 	if err != nil {
 		a.publish(NewAnswerErrorEvent(ctx, err.Error()))
 	}
+
+	a.close()
 	return response, err
 }
 
@@ -92,6 +94,13 @@ func (a *FastAgent) Unsubscribe(ch <-chan AgentEvent) {
 			break
 		}
 	}
+}
+
+func (a *FastAgent) close() {
+	for _, subscriber := range a.subscribers {
+		close(subscriber)
+	}
+	a.subscribers = []chan AgentEvent{}
 }
 
 func (a *FastAgent) publish(event AgentEvent) {

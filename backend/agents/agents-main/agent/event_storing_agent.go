@@ -48,6 +48,12 @@ func (a *EventStoringAgent) Unsubscribe(ch <-chan AgentEvent) {
 	}
 }
 
+func (a *EventStoringAgent) close() {
+	for _, subscriber := range a.subscribers {
+		close(subscriber)
+	}
+}
+
 func (a *EventStoringAgent) storageLoop(ch <-chan AgentEvent) {
 	for event := range ch {
 		a.handleStoreEvent(event)
@@ -55,6 +61,9 @@ func (a *EventStoringAgent) storageLoop(ch <-chan AgentEvent) {
 			subscriber <- event
 		}
 	}
+
+	a.close()
+	a.Agent.Unsubscribe(ch)
 }
 
 func (a *EventStoringAgent) handleStoreEvent(event AgentEvent) {
