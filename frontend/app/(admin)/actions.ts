@@ -21,7 +21,7 @@ export interface AgentEvent {
   };
 }
 
-interface AgentRequest {
+export interface AgentRequest {
   id?: string;
   created_at?: string;
   endpoint: string;
@@ -52,7 +52,7 @@ export async function fetchAgentEvents(page: number) {
   if (error) throw error;
 
   return {
-    events: data.map((event: any) => ({
+    data: data.map((event: any) => ({
       id: event.id,
       created_at: event.created_at,
       type: event.type,
@@ -89,7 +89,7 @@ export async function fetchAgentRequests(page: number) {
   if (error) throw error;
 
   return {
-    requests: data.map((request: any) => ({
+    data: data.map((request: any) => ({
       id: request.id,
       created_at: request.created_at,
       endpoint: request.endpoint,
@@ -113,7 +113,7 @@ export async function fetchDownvotes(page: number) {
   const slicedDownvotes = sortedDownvotes.slice(start, end);
 
   return {
-    downvotes: slicedDownvotes,
+    data: slicedDownvotes,
     totalPages: Math.ceil((downvotes.length || 0) / ITEMS_PER_PAGE),
   }
 }
