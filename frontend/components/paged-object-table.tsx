@@ -275,10 +275,12 @@ function AgentRequestsTableContents<T>({data}: {data: AgentRequest}) {
 function AgentRequestsExpandedTableContents({data}: {data: AgentRequest, index: number}) {
   return (
     <>
-      <h4 className="font-semibold text-primary">Full Query:</h4>
-      <p className="text-foreground mt-1 whitespace-pre-wrap">
-        {data.metadata.query}
-      </p>
+      <div>
+        <h4 className="font-semibold text-primary">Full Query:</h4>
+        <div className="text-foreground mt-1">
+          <Markdown>{data.metadata.query}</Markdown>
+        </div>
+      </div>
     </>
   )
 }
@@ -339,23 +341,23 @@ function AgentEventsTableContents<T>({data}: {data: AgentEvent}) {
   )
 }
 
-function AgentEventsExpandedTableContents({data, index}: {data: AgentEvent, index: number}) {
+export function AgentEventsExpandedTableContents({data, index}: {data: AgentEvent, index: number}) {
   return (
     <>
       {data.metadata.answer && (
         <div>
           <h4 className="font-semibold text-primary">Answer:</h4>
-          <p className="text-foreground mt-1 whitespace-pre-wrap">
-            {data.metadata.answer}
-          </p>
+          <div className="text-foreground mt-1">
+            <Markdown>{data.metadata.answer}</Markdown>
+          </div>
         </div>
       )}
       {data.metadata.reason && (
         <div>
           <h4 className="font-semibold text-primary">Reason:</h4>
-          <p className="text-foreground mt-1 whitespace-pre-wrap">
-            {data.metadata.reason}
-          </p>
+          <div className="text-foreground mt-1">
+            <Markdown>{data.metadata.reason}</Markdown>
+          </div>
         </div>
       )}
       {data.metadata.toolCallChoice && (
@@ -466,13 +468,13 @@ function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
       </div>
       <div>
         <h4 className="font-semibold text-primary">Full Query:</h4>
-        <Markdown>{data.query}</Markdown>
+        {data.query}
       </div>
       <div>
         <h4 className="font-semibold text-primary">Agent Answer:</h4>
-        <p className="text-foreground mt-1 whitespace-pre-wrap">
-          {data.answer}
-        </p>
+        <div className="text-foreground mt-1">
+          <Markdown>{data.answer}</Markdown>
+        </div>
       </div>
       <div>
         <h4 className="font-semibold text-primary">{data.type === 'downvote' ? "User Downvote Reason:" : "User Upvote Reason:"}</h4>
@@ -480,7 +482,7 @@ function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
           "mt-1 whitespace-pre-wrap",
           data.reason === "" 
             ? "italic text-muted-foreground" 
-            : (data.type === 'downvote' ? "text-red-500" : "text-green-500")
+            : (data.type === 'downvote' ? "text-error" : "text-success")
         )}>
           {data.reason === "" ? "User did not provide a reason" : data.reason}
         </p>
