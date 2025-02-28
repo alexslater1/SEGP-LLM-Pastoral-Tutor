@@ -112,38 +112,24 @@ const PurePreviewMessage = ({
                   messageDownvoted={messageDownvoted}
                 />
               </div>
-
-              <CollapsibleContent className="py-2 pr-4">
-                <div className="bg-muted rounded-2xl p-4">
-                {message.actions.length > 0 ? (
-                  <div className="space-y-2">
-                    {message.actions.map((action, index) => (
-                      <div key={index} className="flex gap-2">
-                        <span className="text-primary font-medium">{index + 1}.</span>
-                        <span>{action}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  'No actions found'
-                )}
-
-                <div className="p-2"/>
-
-                <CollapsibleTrigger asChild>
-                  <div className="w-full">
-                    <Button
-                      className="py-1 px-2 h-fit w-full text-muted-foreground !pointer-events-auto"
-                      variant="outline"
-                    >
-                      <ArrowUpIcon />
-                    </Button>
-                  </div>
-                </CollapsibleTrigger>
-                </div>
-              </CollapsibleContent>
             </div>
           </div>
+          <CollapsibleContent className="py-3 pr-4">
+            <div className="bg-muted rounded-2xl p-4 ml-11">
+              {message.actions.length > 0 ? (
+                <div className="space-y-2">
+                  {message.actions.map((action, index) => (
+                    <div key={index} className="flex gap-2">
+                      <span className="text-primary font-medium">{index + 1}.</span>
+                      <span>{action}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                'No actions found'
+              )}
+            </div>
+          </CollapsibleContent>
         </Collapsible>
       </motion.div>
     </AnimatePresence>
