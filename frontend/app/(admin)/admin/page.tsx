@@ -3,9 +3,9 @@ export default function AdminPage() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Admin Dashboard</h2>
-        <p className="text-muted-foreground">
-          Welcome to the admin dashboard
+        <h2 className="text-2xl font-bold text-primary tracking-tight">Admin Dashboard</h2>
+        <p className="text-foreground">
+          Welcome to the admin dashboard.
         </p>
       </div>
       <div className="border-t">

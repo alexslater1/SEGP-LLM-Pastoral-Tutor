@@ -1,6 +1,6 @@
 'use client';
 
-import type { User } from 'next-auth';
+import type { User } from '@/lib/supabase/user';
 import { useRouter } from 'next/navigation';
 
 import { PlusIcon } from '@/components/icons';
@@ -17,10 +17,14 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { UserContext } from '@/lib/userContext';
+import { useContext } from 'react';
 
-export function AppSidebar({ user }: { user: User | undefined }) {
+
+export function AppSidebar() {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
+  const user = useContext(UserContext);
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -34,8 +38,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               }}
               className="flex flex-row gap-3 items-center"
             >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
-                Chatbot
+              <span className="text-lg text-primary font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
+                Imperial Agent
               </span>
             </Link>
             <Tooltip>
@@ -43,7 +47,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 <Button
                   variant="ghost"
                   type="button"
-                  className="p-2 h-fit"
+                  className="p-2 h-fit hover:text-primary"
                   onClick={() => {
                     setOpenMobile(false);
                     router.push('/');
@@ -61,7 +65,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       <SidebarContent>
         <SidebarHistory user={user} />
       </SidebarContent>
-      <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
+      <SidebarFooter>{<SidebarUserNav user={user} />}</SidebarFooter>
     </Sidebar>
   );
 }

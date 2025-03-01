@@ -1,9 +1,19 @@
-import NextAuth from 'next-auth';
+import { type NextRequest } from 'next/server'
+import { updateSession } from './lib/supabase/middleware'
 
-import { authConfig } from '@/app/(auth)/auth.config';
-
-export default NextAuth(authConfig).auth;
+export async function middleware(request: NextRequest) {
+  // update user's auth session
+  return await updateSession(request)
+}
 
 export const config = {
-  matcher: ['/', '/:id', '/api/:path*', '/login', '/register', '/admin/:path*'],
-};
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}

@@ -1,65 +1,77 @@
-import { ChatRequestOptions, Message } from 'ai';
-import { PreviewMessage, ThinkingMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import { Overview } from './overview';
-import { memo } from 'react';
-import { Vote } from '@/lib/db/schema';
-import equal from 'fast-deep-equal';
+import { Message, Status } from "@/types/message";
+import { ErrorMessage, PreviewMessage, ThinkingMessage } from "./message";
+import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { memo, useEffect, useContext } from "react";
+import equal from "fast-deep-equal/es6/react";
+import { useMessagesVotes } from "@/hooks/use-messages-votes";
+import { UserContext } from "@/lib/userContext";
 
 interface MessagesProps {
-  chatId: string;
+  chatId: string | null;
   isLoading: boolean;
-  votes: Array<Vote> | undefined;
   messages: Array<Message>;
-  setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
-  ) => void;
-  reload: (
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
   isReadonly: boolean;
-  isBlockVisible: boolean;
 }
 
 function PureMessages({
   chatId,
   isLoading,
-  votes,
   messages,
-  setMessages,
-  reload,
   isReadonly,
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
+
+  const user = useContext(UserContext);
+
+  const { 
+    downvotedMessages, 
+    upvotedMessages,
+    isLoading: isLoadingVotes, 
+    error,
+    downvoteMessage, 
+    removeDownvoteMessage,
+    upvoteMessage,
+    removeUpvoteMessage
+  } = useMessagesVotes({ chatId, user });
 
   return (
     <div
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
-      {/* {messages.length === 0 && <Overview />} */}
-
-      {messages.map((message, index) => (
-        <PreviewMessage
-          key={message.id}
-          chatId={chatId}
-          message={message}
-          isLoading={isLoading && messages.length - 1 === index}
-          vote={
-            votes
-              ? votes.find((vote) => vote.messageId === message.id)
-              : undefined
-          }
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-        />
-      ))}
+      {messages.map((message, index) =>
+        message.status === Status.COMPLETED ? (
+          <PreviewMessage
+            key={message.id}
+            chatId={chatId}
+            message={message}
+            isLoading={isLoading && messages.length - 1 === index}
+            isReadonly={isReadonly || index == 0}
+            downvoteMessage={downvoteMessage}
+            removeDownvoteMessage={removeDownvoteMessage}
+            messageDownvoted={downvotedMessages.some((downvotedMessage) => downvotedMessage.request_id === message.requestID)}
+            upvoteMessage={upvoteMessage}
+            removeUpvoteMessage={removeUpvoteMessage}
+            messageUpvoted={upvotedMessages.some((upvotedMessage) => upvotedMessage.request_id === message.requestID)}
+          />
+        ) : message.status === Status.PENDING &&
+          message.actions.length !== 0 ? (
+          <ThinkingMessage
+            key={message.id}
+            message={message.actions[message.actions.length - 1]}
+          />
+        ) : message.status === Status.PENDING &&
+          message.actions.length === 0 ? (
+          <ThinkingMessage key={message.id} />
+        ) : (
+          <ErrorMessage key={message.id} error={message.content} />
+        )
+      )}
 
       {isLoading &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === "user" && <ThinkingMessage />}
 
       <div
         ref={messagesEndRef}
@@ -69,14 +81,4 @@ function PureMessages({
   );
 }
 
-export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-  if (prevProps.isBlockVisible && nextProps.isBlockVisible) return true;
-
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
-  if (prevProps.isLoading && nextProps.isLoading) return false;
-  if (prevProps.messages.length !== nextProps.messages.length) return false;
-  if (!equal(prevProps.messages, nextProps.messages)) return false;
-  if (!equal(prevProps.votes, nextProps.votes)) return false;
-
-  return true;
-});
+export const Messages = PureMessages;

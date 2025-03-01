@@ -1,9 +1,10 @@
 'use client';
 import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
-import type { User } from 'next-auth';
+import type { User } from '@/lib/supabase/user';
 import { useTheme } from 'next-themes';
-import { signOutAction } from '@/app/(auth)/actions';
+import { signOut } from '@/app/(auth)/actions';
+import { cn } from '@/lib/utils';
 
 import {
   DropdownMenu,
@@ -17,9 +18,27 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useRouter } from 'next/navigation';
 
-export function SidebarUserNav({ user }: { user: User }) {
+export function SidebarUserNav({ user, adminPage=false }: { user: User | null, adminPage?: boolean }) {
   const { setTheme, theme } = useTheme();
+  const router = useRouter();
+
+  if (!user) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10"
+            onClick={() => router.push('/sign-in')}
+            size="lg"
+          >
+            <span className="truncate">Sign in</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>
@@ -34,7 +53,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 height={24}
                 className="rounded-full"
               />
-              <span className="truncate">{user?.email}</span>
+              <span className="truncate">{user?.name}</span>
               <ChevronUp className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -43,16 +62,44 @@ export function SidebarUserNav({ user }: { user: User }) {
             className="w-[--radix-popper-anchor-width]"
           >
             <DropdownMenuItem
-              className="cursor-pointer"
+              className={cn(
+                "cursor-pointer text-muted-foreground font-semibold",
+                "transition-colors",
+                "focus:bg-zinc-200 dark:focus:bg-zinc-800",
+                "focus:text-primary active:text-primary"
+              )}
               onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             >
               {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+
+            {user.role === "admin" && (
+              <>
+                <DropdownMenuItem
+                  className={cn(
+                    "cursor-pointer text-muted-foreground font-semibold",
+                    "transition-colors",
+                    "focus:bg-zinc-200 dark:focus:bg-zinc-800",
+                    "focus:text-primary active:text-primary"
+                  )}
+                  onSelect={() => router.push(adminPage ? "/" : "/admin")}
+                >
+                  {adminPage ? "Chat With Agent" : "Admin Panel"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+
             <DropdownMenuItem
-              className="cursor-pointer"
+              className={cn(
+                "cursor-pointer text-muted-foreground font-semibold",
+                "transition-colors",
+                "focus:bg-zinc-200 dark:focus:bg-zinc-800",
+                "focus:text-primary active:text-primary"
+              )}
               onSelect={async () => {
-                await signOutAction();
+                await signOut();
               }}
             >
               Sign out

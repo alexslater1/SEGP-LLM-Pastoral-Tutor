@@ -1,29 +1,31 @@
-import { cookies } from 'next/headers';
-import { auth } from '../(auth)/auth';
-import { redirect } from 'next/navigation';
-import { AdminSidebar } from '@/components/admin-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { AdminHeader } from '@/components/admin-header';
+import { cookies } from "next/headers";
+import { getUser } from "@/lib/supabase/user";
+import { AdminSidebar } from "@/components/admin-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AdminHeader } from "@/components/admin-header";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
-  const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
+  const [user, cookieStore] = await Promise.all([getUser(), cookies()]);
+  const isCollapsed = cookieStore.get("sidebar:state")?.value !== "true";
 
-  if (!session?.user || session.user.role !== 'admin') {
-    redirect('/login');
+  if (!user) {
+    redirect("/sign-in");
+  } else if (user.role !== "admin") {
+    redirect("/");
   }
 
   return (
     <SidebarProvider defaultOpen={!isCollapsed}>
-      <AdminSidebar user={session.user} />
+      <AdminSidebar user={user} />
       <SidebarInset>
         <AdminHeader />
         {children}
       </SidebarInset>
     </SidebarProvider>
   );
-} 
+}

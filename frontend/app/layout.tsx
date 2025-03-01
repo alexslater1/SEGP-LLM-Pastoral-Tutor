@@ -1,23 +1,24 @@
-import type { Metadata } from 'next';
-import { Toaster } from 'sonner';
+import type { Metadata } from "next";
+import { Toaster } from "sonner";
 
-import { ThemeProvider } from '@/components/theme-provider';
-import QueryProvider from '@/providers/query-provider';
+import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "./providers";
 
-import './globals.css';
+import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:3000'),
-  title: 'Next.js Chatbot Template',
-  description: 'Next.js chatbot template using the AI SDK.',
+  metadataBase: new URL("https://segp-frontend.vercel.app"),
+  title: "Imperial College Tutor Agent",
+  description: "A web app for Imperial College students to message an AI agent " +
+    "as a first call before their personal tutor.",
 };
 
 export const viewport = {
   maximumScale: 1, // Disable auto-zoom on mobile Safari
 };
 
-const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
-const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
+const LIGHT_THEME_COLOR = "hsl(0 0% 100%)";
+const DARK_THEME_COLOR = "hsl(255 6% 13%)";
 const THEME_COLOR_SCRIPT = `\
 (function() {
   var html = document.documentElement;
@@ -36,11 +37,11 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html
       lang="en"
@@ -58,7 +59,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <QueryProvider>
+        <Providers>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -68,7 +69,7 @@ export default async function RootLayout({
             <Toaster position="top-center" />
             {children}
           </ThemeProvider>
-        </QueryProvider>
+        </Providers>
       </body>
     </html>
   );

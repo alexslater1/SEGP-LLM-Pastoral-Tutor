@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useChatVisibility } from '@/hooks/use-chat-visibility';
 
 import {
   CheckCircleFillIcon,
@@ -16,7 +17,6 @@ import {
   GlobeIcon,
   LockIcon,
 } from './icons';
-import { useChatVisibility } from '@/hooks/use-chat-visibility';
 
 export type VisibilityType = 'private' | 'public';
 
@@ -45,15 +45,21 @@ export function VisibilitySelector({
   className,
   selectedVisibilityType,
 }: {
-  chatId: string;
+  chatId: string | null;
   selectedVisibilityType: VisibilityType;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
 
-  const { visibilityType, setVisibilityType } = useChatVisibility({
+  // TODO: Use this once we can query the visibility from the backend, maybe
+  /*const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId,
     initialVisibility: selectedVisibilityType,
-  });
+  });*/
+
+  const visibilityType = selectedVisibilityType;
+  const setVisibilityType = (visibilityType: VisibilityType) => {
+    console.log(visibilityType);
+  };
 
   const selectedVisibility = useMemo(
     () => visibilities.find((visibility) => visibility.id === visibilityType),
@@ -65,13 +71,13 @@ export function VisibilitySelector({
       <DropdownMenuTrigger
         asChild
         className={cn(
-          'w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground',
+          'w-fit data-[state=open]:bg-accent data-[state=open]:text-primary',
           className,
         )}
       >
         <Button
           variant="outline"
-          className="hidden md:flex md:px-2 md:h-[34px]"
+          className="hidden md:flex md:px-2 md:h-[34px] hover:text-primary"
         >
           {selectedVisibility?.icon}
           {selectedVisibility?.label}
@@ -87,7 +93,10 @@ export function VisibilitySelector({
               setVisibilityType(visibility.id);
               setOpen(false);
             }}
-            className="gap-4 group/item flex flex-row justify-between items-center"
+            className={cn(
+              "gap-4 group/item flex flex-row justify-between items-center",
+              "text-foreground/70 focus:text-primary"
+            )}
             data-active={visibility.id === visibilityType}
           >
             <div className="flex flex-col gap-1 items-start">

@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
-import type { User } from 'next-auth';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { SidebarUserNav } from '@/components/sidebar-user-nav';
+import type { User } from "@/lib/supabase/user";
+import { usePathname } from "next/navigation";
+import { SidebarUserNav } from "@/components/sidebar-user-nav";
 import {
   Sidebar,
   SidebarContent,
@@ -11,106 +10,64 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
   useSidebar,
-} from '@/components/ui/sidebar';
-import { Home, FileUp, Library } from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/sidebar";
+import {
+  Home,
+  FileUp,
+  Library,
+  Activity,
+  MessageSquare,
+  Settings,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
+import { AdminSidebarMenuButton } from "@/components/admin-sidebar-menu-button";
 
-export function AdminSidebar({ user }: { user: User | undefined }) {
+export function AdminSidebar({ user }: { user: User | null }) {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
 
-  const getSelectedStyles = (path: string) => {
-    const isSelected = path === '/admin' 
-      ? pathname === '/admin'
-      : pathname.includes(path);
-    
-    return isSelected && "bg-[hsl(var(--sidebar-selected-bg)_/_0.15)] text-[hsl(var(--sidebar-selected))]";
-  };
+  const isSelected = (path: string) =>
+    path === "/admin" ? pathname === "/admin" : pathname.includes(path);
+
+  const menuItems = [
+    { href: "/admin", icon: Home, label: "Dashboard" },
+    { href: "/admin/upload", icon: FileUp, label: "Document Upload" },
+    { href: "/admin/library", icon: Library, label: "Document Library" },
+    { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
+    { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
+    { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },
+    { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvotes" },
+    { href: "/admin/upvotes", icon: ThumbsUp, label: "Upvotes" },
+  ];
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
       <SidebarHeader>
         <SidebarMenu>
           <div className="flex flex-row justify-between items-center">
-            <span className="text-lg font-semibold px-2">
-              Admin Dashboard
-            </span>
+            <span className="text-lg text-primary font-semibold px-2">Admin Dashboard</span>
           </div>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu className="px-2 space-y-2">
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild
-              className={cn(
-                "w-full px-5 py-5 rounded-lg transition-colors",
-                "hover:bg-muted/50",
-                getSelectedStyles('/admin')
-              )}
-            >
-              <Link 
-                href="/admin" 
-                onClick={() => setOpenMobile(false)}
-                className="flex items-center gap-3"
-              >
-                <Home size={24} />
-                <span className={cn(
-                  "text-base",
-                  getSelectedStyles('/admin') ? "font-semibold" : "font-normal"
-                )}>Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild
-              className={cn(
-                "w-full px-5 py-5 rounded-lg transition-colors",
-                "hover:bg-muted/50",
-                getSelectedStyles('/admin/upload')
-              )}
-            >
-              <Link 
-                href="/admin/upload" 
-                onClick={() => setOpenMobile(false)}
-                className="flex items-center gap-3"
-              >
-                <FileUp size={24} />
-                <span className={cn(
-                  "text-base",
-                  getSelectedStyles('/admin/upload') ? "font-semibold" : "font-normal"
-                )}>Document Upload</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              asChild
-              className={cn(
-                "w-full px-5 py-5 rounded-lg transition-colors",
-                "hover:bg-muted/50",
-                getSelectedStyles('/admin/library')
-              )}
-            >
-              <Link 
-                href="/admin/library" 
-                onClick={() => setOpenMobile(false)}
-                className="flex items-center gap-3"
-              >
-                <Library size={24} />
-                <span className={cn(
-                  "text-base",
-                  getSelectedStyles('/admin/library') ? "font-semibold" : "font-normal"
-                )}>Document Library</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {menuItems.map((item) => (
+            <AdminSidebarMenuButton
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              isSelected={isSelected(item.href)}
+              onMobileClose={() => setOpenMobile(false)}
+            />
+          ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
+      <SidebarFooter>
+        {user && <SidebarUserNav user={user} adminPage />}
+      </SidebarFooter>
     </Sidebar>
   );
-} 
+}

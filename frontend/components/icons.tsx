@@ -610,13 +610,13 @@ export const MessageIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const CrossIcon = ({ size = 16 }: { size?: number }) => (
+export const CrossIcon = ({ size = 16, color = 'currentcolor' }: { size?: number, color?: string }) => (
   <svg
     height={size}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
     width={size}
-    style={{ color: 'currentcolor' }}
+    style={{ color }}
   >
     <path
       fillRule="evenodd"
