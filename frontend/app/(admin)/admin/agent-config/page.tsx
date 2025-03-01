@@ -368,8 +368,7 @@ const AgentConfigPage = () => {
       onSuccess: () => {
         console.log("Agent deleted successfully");
         toast.success("Agent Deleted", {
-          description: "The agent has been successfully deleted",
-          className: "bg-success text-success-foreground",
+          description: "The agent has been successfully deleted"
         });
         setIsSheetOpen(false);
         setIsDeleting(false);
@@ -377,8 +376,7 @@ const AgentConfigPage = () => {
       onError: (error) => {
         console.error("Failed to delete agent:", error);
         toast.error("Delete Failed", {
-          description: "Failed to delete the agent. Please try again.",
-          className: "bg-error text-error-foreground",
+          description: "Failed to delete the agent. Please try again."
         });
         setIsDeleting(false);
       },
@@ -450,7 +448,7 @@ const AgentConfigPage = () => {
           <DialogContent>
             <DialogTitle className="text-destructive">Delete Agent</DialogTitle>
             <DialogDescription className="text-foreground">
-              Are you sure you want to delete this agent? This action cannot be undone.
+              Are you sure you want to delete &quot;{selectedAgent?.name}&quot;? This action cannot be undone.
             </DialogDescription>
             <div className="flex justify-end gap-2">
               <Button

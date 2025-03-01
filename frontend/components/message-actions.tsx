@@ -86,9 +86,7 @@ export function PureMessageActions({
             variant="outline"
             onClick={async () => {
               await copyToClipboard(message.content as string);
-              toast.success('Copied to clipboard!', {
-                className: 'bg-success text-success-foreground'
-              });
+              toast.success('Copied to clipboard!');
             }}
           >
             <CopyIcon />

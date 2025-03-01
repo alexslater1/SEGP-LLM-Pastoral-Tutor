@@ -1,88 +1,44 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RagDocument } from "@/lib/db/schema";
+import {
+  RagDocument,
+  fetchRagDocuments,
+  downloadRagDocument,
+  uploadRagDocument,
+  deleteRagDocument
+} from "@/app/(admin)/actions";
 
-const BACKEND_RAG_URL = "https://segp-backend-rag.serve.freemyip.com"
-
-function humanReadableSize(sizeInBytes: number): string {
-  const units = ["B", "KB", "MB", "GB", "TB", "PB"];
-  let size = sizeInBytes;
-  let unitIndex = 0;
-  while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-  }
-  return `${size.toFixed(2)} ${units[unitIndex]}`;
-}
-
-const uploadRagDocument = async (file: File) => {
-  try {
-    console.log('Starting upload for:', file.name);
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await fetch(BACKEND_RAG_URL + '/rag-doc', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-    });
-
-
-    if (!response.ok) {
-      throw new Error(`Upload failed with status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Response data:', data);
-    return data;
-  } catch (error) {
-    console.error('Upload error details:', error);
-    throw error;
-  }
-};
-
-type RagDocumentResponse = {
-    documents: Document[];
-}
-
-type Document = {
-  id: number;
-  name: string;
-  date_uploaded: string;
-  document_size: number;
-  document_type: string;
-  user_id?: number;
-  backend_source_id?: number;
-};
-
-const fetchRagDocuments = async (): Promise<RagDocument[]> => {
-  console.log("fetching docs");
-  const response = await fetch(BACKEND_RAG_URL + '/rag-doc', {
-    method: 'GET',
-    credentials: 'include',
+export function useRagDocuments(page: number) {
+  return useQuery({
+    queryKey: ["rag-documents", page],
+    queryFn: () => fetchRagDocuments(page)
   });
+};
 
+export function useDownloadRagDoc() {
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const result = await downloadRagDocument(name);
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch RAG documents: ${response.status}`);
-  }
+      // Create blob from array buffer
+      const blob = new Blob([result.data], { type: result.contentType });
 
-  const resp = await response.json() as RagDocumentResponse;
- 
-  console.log("RESP:", resp);
-  // Map over the array of documents from the API
- 
-  const ragDocs: RagDocument[] = resp.documents.map((doc: Document) => ({
-      id: doc.id.toString(),
-      name: doc.name,
-      uploadedAt: new Date(doc.date_uploaded),
-      size: humanReadableSize(doc.document_size),
-      type: doc.document_type as "PDF" | "DOCX" | "TXT" | "PPTX",
-      userId: doc.user_id?.toString() ?? '-1',
-      backendSourceId: doc.backend_source_id ?? -1
-  }));
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = result.fileName;
+      document.body.appendChild(a);
+      a.click();
 
-  console.log("RagDocs:", ragDocs);
-  return ragDocs;
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      return result;
+    },
+    onError: (error: Error) => {
+      console.error("Download failed", error);
+    },
+  });
 };
 
 export function useRagUploadDocs() {
@@ -94,64 +50,45 @@ export function useRagUploadDocs() {
       return uploads;
     },
     onMutate: async (files: File[]) => {
-      await queryClient.cancelQueries({ queryKey: ['rag-documents'] });
-      const previousDocs = queryClient.getQueryData<RagDocument[]>(['rag-documents']) ?? [];
+      await queryClient.cancelQueries({ queryKey: ["rag-documents"] });
+      const previousData = queryClient.getQueryData<{ data: RagDocument[]; totalPages: number; }>(["rag-documents", 0]) || 
+        { data: [], totalPages: 1 };
+      
       const optimisticDocs: RagDocument[] = files.map(file => ({
         id: `-1`,
         name: file.name,
-        uploadedAt: new Date(),
-        size: 'Uploading...',
-        type: file.name.split('.').pop()?.toUpperCase() as "PDF" | "DOCX" | "TXT" | "PPTX",
-        userId: '-1',
-        backendSourceId: -1
+        url: "",
+        type: "DOCUMENT",
+        date_uploaded: new Date().toISOString(),
+        document_size: file.size,
+        document_type: file.name.split(".").pop()?.toUpperCase() || "UNKNOWN",
+        user_id: "-1",
+        backend_source_id: "-1"
       }));
-      queryClient.setQueryData<RagDocument[]>(
-        ['rag-documents'],
-        old => [...(old ?? []), ...optimisticDocs]
+
+      queryClient.setQueryData<{ data: RagDocument[]; totalPages: number; }>(
+        ["rag-documents", 0],
+        old => ({
+          data: [...(old?.data ?? []), ...optimisticDocs],
+          totalPages: old?.totalPages ?? 1
+        })
       );
-      return { previousDocs }
+
+      return { previousData }
     },
-    onError: (err: Error, variables: File[], context?: { previousDocs: RagDocument[] }) => {
-      if (context?.previousDocs) {
-        queryClient.setQueryData(['rag-documents'], context.previousDocs);
+    onError: (err: Error, variables: File[], context?: { previousData: { data: RagDocument[]; totalPages: number; } }) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(["rag-documents", 0], context.previousData);
       }
       console.error("Upload failed", err);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['rag-documents'] });
+      queryClient.invalidateQueries({ queryKey: ["rag-documents"] });
     }
   });
 
   return mutation;
-}
-
-export function useRagDocuments() {
-  return useQuery({
-    queryKey: ['rag-documents'],
-    queryFn: fetchRagDocuments,
-    staleTime: 1000 * 60,
-  });
-}
-
-const deleteRagDocument = async (name: string) => {
-  try {
-    console.log('Starting delete for:', name);
-    
-    const response = await fetch(BACKEND_RAG_URL + `/rag-doc?name=${encodeURIComponent(name)}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
-
-
-    if (!response.ok) {
-      throw new Error(`Delete failed with status: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('Delete error details:', error);
-    throw error;
-  }
 };
-
 
 export function useDeleteRagDoc() {
   const queryClient = useQueryClient();
@@ -159,7 +96,7 @@ export function useDeleteRagDoc() {
   const mutation = useMutation({
     mutationFn: deleteRagDocument,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rag-documents'] });
+      queryClient.invalidateQueries({ queryKey: ["rag-documents"] });
     },
     onError: (error: Error) => {
       console.error("Delete failed", error);
@@ -167,55 +104,4 @@ export function useDeleteRagDoc() {
   });
 
   return mutation;
-}
-
-
-const downloadRagDocument = async (name: string) => {
-  try { 
-    console.log('Starting download for:', name);
-    
-    const response = await fetch(`${BACKEND_RAG_URL}/rag-doc/download?name=${encodeURIComponent(name)}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-
-
-    if (!response.ok) {
-      throw new Error(`Download failed with status: ${response.status}`);
-    }
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    // Create a temporary link and trigger download
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name; // Set downloaded file name
-    document.body.appendChild(a);
-    a.click();
-
-    // Cleanup
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-
-  } catch (error) {
-    console.error('Download error details:', error);
-    throw error;
-  }
 };
-
-export function useDownloadRagDoc() {
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationFn: downloadRagDocument,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rag-documents'] });
-    },
-    onError: (error: Error) => {
-      console.error("Download failed", error);
-    },
-  });
-
-  return mutation;
-}

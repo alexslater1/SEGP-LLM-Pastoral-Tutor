@@ -1,13 +1,28 @@
 import React, { useState } from "react";
-import { AgentRequest, AgentEvent } from "@/app/(admin)/actions";
-import { ChevronRight } from "lucide-react";
-import { cn, getRelativeTimeString } from "@/lib/utils";
+import { AgentRequest, AgentEvent, RagDocument } from "@/app/(admin)/actions";
+import { ChevronRight, Download, Trash2 } from "lucide-react";
+import { cn, getRelativeTimeString, humanReadableSize } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAgentEvents, useAgentRequests } from "@/hooks/use-agent-data";
 import { useAllDownvotes, useAllUpvotes } from "@/hooks/use-all-downvotes";
 import { UseQueryResult } from "@tanstack/react-query";
 import { VoteAndMessage, VoteType } from "@/lib/supabase/vote";
 import { Markdown } from "@/components/markdown";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  useRagDocuments,
+  useDownloadRagDoc,
+  useDeleteRagDoc
+} from "@/hooks/use-rag";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function PagedAgentRequestsTable() {
   return (
@@ -61,6 +76,20 @@ export function PagedUpvotesTable() {
       TableHeadings={UpvotesTableHeadings}
       RowContents={VotesTableContents}
       ExpandedRowContents={VotesExpandedTableContents}
+    />
+  )
+}
+
+export function PagedRagDocumentsTable() {
+  return (
+    <PagedObjectTable
+      title="Document Library"
+      description="View all RAG documents uploaded to the library."
+      dataHook={useRagDocuments}
+      idField="id"
+      TableHeadings={RagDocumentsTableHeadings}
+      RowContents={RagDocumentsTableContents}
+      ExpandedRowContents={RagDocumentsExpandedTableContents}
     />
   )
 }
@@ -144,7 +173,7 @@ function PagedObjectTable<T>({
                           <td className="p-4 align-middle text-center">
                             <ChevronRight 
                               className={`size-4 text-muted-foreground transition-transform ${
-                                expandedRows.has(data[idField]!) ? 'rotate-90' : ''
+                                expandedRows.has(data[idField]!) ? "rotate-90" : ""
                               }`}
                             />
                           </td>
@@ -185,7 +214,7 @@ function PagedObjectTable<T>({
 
               <div className="flex items-center justify-between p-4 border-t bg-table-footer rounded-b-xl">
                 <div className="flex-1 text-sm text-foreground">
-                  Page {page + 1} of {data?.totalPages || '...'}
+                  Page {page + 1} of {data?.totalPages || "..."}
                 </div>
                 <div className="flex space-x-2">
                   <button
@@ -477,15 +506,172 @@ function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
         </div>
       </div>
       <div>
-        <h4 className="font-semibold text-primary">{data.type === 'downvote' ? "User Downvote Reason:" : "User Upvote Reason:"}</h4>
+        <h4 className="font-semibold text-primary">{data.type === "downvote" ? "User Downvote Reason:" : "User Upvote Reason:"}</h4>
         <p className={cn(
           "mt-1 whitespace-pre-wrap",
           data.reason === "" 
             ? "italic text-muted-foreground" 
-            : (data.type === 'downvote' ? "text-error" : "text-success")
+            : (data.type === "downvote" ? "text-error" : "text-success")
         )}>
           {data.reason === "" ? "User did not provide a reason" : data.reason}
         </p>
+      </div>
+    </>
+  )
+}
+
+function RagDocumentsTableHeadings() {
+  return (
+    <>
+      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
+        Document Name
+      </th>
+      <th className="h-12 w-[150px] px-4 text-left align-middle font-semibold text-primary">
+        Size
+      </th>
+      <th className="h-12 w-[180px] px-4 text-left align-middle font-semibold text-primary">
+        Upload Date
+      </th>
+      <th className="h-12 w-[100px] px-4 text-right align-middle font-semibold text-primary last:rounded-tr-xl">
+        Actions
+      </th>
+    </>
+  )
+}
+
+function RagDocumentsTableContents({data}: {data: RagDocument}) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const downloadMutation = useDownloadRagDoc();
+  const deleteMutation = useDeleteRagDoc();
+
+  const handleDownload = async (doc: RagDocument) => {
+    try {
+      toast.promise(downloadMutation.mutateAsync(doc.name), {
+        loading: `Downloading ${doc.name}...`,
+        success: () => {
+          toast.success(`Downloaded ${doc.name}`);
+          return `Downloaded ${doc.name}`;
+        },
+        error: () => {
+          toast.error("Failed to download file");
+          return "Failed to download file";
+        }
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+    }
+  };
+
+  const handleDelete = async(doc: RagDocument) => {
+    try {
+      setIsDialogOpen(false);
+      toast.promise(deleteMutation.mutateAsync(doc.name), {
+        loading: `Deleting ${doc.name}...`,
+        success: () => {
+          toast.success(`Deleted ${doc.name}`);
+          return `Deleted ${doc.name}`;
+        },
+        error: () => {
+          toast.error("Failed to delete file");
+          return "Failed to delete file";
+        }
+      });
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
+  };
+
+  return (
+    <>
+      <td className="p-4 align-middle">
+        <div className="flex items-center">
+          <span>{data.name}</span>
+        </div>
+      </td>
+      <td className="p-4 align-middle">
+        {data.document_size && humanReadableSize(data.document_size)}
+      </td>
+      <td className="p-4 align-middle">
+        {data.date_uploaded && getRelativeTimeString(new Date(data.date_uploaded))}
+      </td>
+      <td className="p-4 align-middle text-right">
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDownload(data);
+            }}
+            className="size-8 hover:text-primary"
+          >
+            <Download className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDialogOpen(true);
+            }}
+            className="size-8 text-destructive/80 hover:bg-destructive/30 hover:text-destructive"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </td>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogContent>
+            <DialogTitle className="text-destructive">Delete Document</DialogTitle>
+            <DialogDescription className="text-foreground">
+              Are you sure you want to delete &quot;{data.name}&quot;? This action cannot be undone.
+            </DialogDescription>
+            <div className="flex justify-end gap-2">
+              <Button
+                className="bg-muted hover:bg-muted/50"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDialogOpen(false)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-destructive hover:bg-destructive/50"
+                variant="destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(data);
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+    </>
+  )
+}
+
+function RagDocumentsExpandedTableContents({data}: {data: RagDocument}) {
+  return (
+    <>
+      <div>
+        <h4 className="font-semibold text-primary">Document Type:</h4>
+        <div className="text-foreground mt-1">
+          <Markdown>{data.document_type}</Markdown>
+        </div>
+      </div>
+      <div>
+        <h4 className="font-semibold text-primary">URL:</h4>
+        <div className="text-foreground mt-1">
+          <Markdown>{data.url}</Markdown>
+        </div>
       </div>
     </>
   )

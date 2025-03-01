@@ -2,28 +2,33 @@
 
 import { Button } from "@/components/ui/button";
 import { File, CloudUpload } from 'lucide-react';
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { RagDocument } from "@/lib/db/schema";
-import { cn, getRelativeTimeString } from "@/lib/utils";
+import { cn, getRelativeTimeString, humanReadableSize } from "@/lib/utils";
+import { useRagDocuments, useRagUploadDocs } from "@/hooks/use-rag";
 
 const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
 };
 
 export default function UploadPage() {
-  const { data: documents, error } = useRagDocuments();
   const [isDragging, setIsDragging] = useState(false);
-  
-  useEffect(() => {
-    if (error) {
-      toast.error("Error fetching documents", {
-        description: error.message
-      });
-    }
-  }, [error]);
-
+  const { data: documents } = useRagDocuments(0);
   const uploadMutation = useRagUploadDocs();
+
+  const getRecentDocuments = () => {
+    if (!documents?.data) return [];
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    return documents.data
+      .filter(doc => new Date(doc.date_uploaded) > sevenDaysAgo)
+      .sort((a, b) => new Date(b.date_uploaded).getTime() - new Date(a.date_uploaded).getTime())
+      .slice(0, 10); // Cap at 10 documents
+  };
+
+  const recentDocuments = getRecentDocuments();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -65,8 +70,7 @@ export default function UploadPage() {
 
   const handleFiles = async (files: File[]) => {
     console.log("Uploading files:", files);
-    console.log("File type:", files[0].type);
-
+    
     const invalidFiles = files.filter(file => !isValidFileType(file));
     
     if (invalidFiles.length > 0) {
@@ -81,52 +85,56 @@ export default function UploadPage() {
       );
       return;
     }
-  
+
     try {
-      await uploadMutation.mutateAsync(files);
-      toast.success(`Uploaded ${files.length} file(s)`);
+      toast.promise(uploadMutation.mutateAsync(files), {
+        loading: `Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`,
+        success: () => {
+          toast.success(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`);
+          return `Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`;
+        },
+        error: () => {
+          toast.error('Failed to upload files');
+          return 'Failed to upload files';
+        }
+      });
     } catch (error) {
-      toast.error('Failed to upload files');
       console.error('Upload error:', error);
     }
   };
-
-  const getRecentDocuments = () => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    return documents ? documents
-      .filter(doc => doc.uploadedAt > sevenDaysAgo)
-      .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime())
-      : [];
-  };
-
-  const recentDocuments = getRecentDocuments();
 
   return (
     <div className="space-y-6 p-6">
       <div>
         <h2 className="text-2xl font-bold text-primary tracking-tight">Document Upload</h2>
         <p className="text-foreground">
-          Upload documents for the AI pastoral tutor to learn from.
+          Upload documents for the AI tutor to use as extra knowledge.
         </p>
       </div>
 
       <div
-        className={`border-2 border-dashed rounded-lg p-8 transition-colors ${
+        className={cn(
+          "border-2 border-dashed rounded-lg p-8 transition-colors",
           isDragging 
-            ? 'border-primary bg-primary/5' 
-            : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-        }`}
+            ? "border-primary bg-primary/5" 
+            : "border-muted-foreground/25 hover:border-muted-foreground/50"
+        )}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <div className="flex flex-col items-center justify-center gap-4">
-          <CloudUpload className={`size-12 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+          <CloudUpload className={cn(
+            "size-12",
+            isDragging ? "text-primary" : "text-muted-foreground"
+          )} />
           <p className="text-lg">Drag and drop files here</p>
           <p className="text-muted-foreground">or</p>
-          <Button className="bg-button text-button-foreground hover:bg-button/50 disabled:opacity-50 disabled:cursor-not-allowed">
+          <Button 
+            variant="outline"
+            className="bg-button text-button-foreground hover:bg-button/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={uploadMutation.isPending}
+          >
             <label className="cursor-pointer">
               <input
                 type="file"
@@ -134,8 +142,9 @@ export default function UploadPage() {
                 multiple
                 onChange={handleFileInput}
                 accept=".pdf,.docx,.txt,.pptx"
+                disabled={uploadMutation.isPending}
               />
-              Browse Files
+              {uploadMutation.isPending ? 'Uploading...' : 'Browse Files'}
             </label>
           </Button>
           <p className="text-sm text-muted-foreground">
@@ -154,8 +163,8 @@ export default function UploadPage() {
 
           <div className="divide-y divide-border">
             {recentDocuments.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                No documents uploaded in the last 7 days
+              <div className="p-4 text-center bg-table-row-odd text-foreground">
+                No documents uploaded in the last 7 days.
               </div>
             ) : (
               <div className="divide-y divide-border">
@@ -175,7 +184,7 @@ export default function UploadPage() {
                       <div>
                         <p className="font-medium text-foreground">{doc.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {doc.size} • {getRelativeTimeString(doc.uploadedAt)}
+                          {humanReadableSize(doc.document_size)} • {getRelativeTimeString(new Date(doc.date_uploaded))}
                         </p>
                       </div>
                     </div>

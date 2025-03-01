@@ -140,15 +140,13 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
     if (editedAgent) {
       if (!validateForm()) {
         toast.error("Missing Required Fields", {
-          description: "Please fill in all required fields marked with *",
-          className: "bg-error text-error-foreground",
+          description: "Please fill in all required fields marked with *"
         });
         return;
       }
       onSave(editedAgent);
       toast.success("Changes Saved", {
-        description: "Agent configuration has been updated successfully",
-        className: "bg-success text-success-foreground",
+        description: "Agent configuration has been updated successfully"
       });
     }
   };
