@@ -52,6 +52,7 @@ export function SidebarUserNav({ user, adminPage=false }: { user: User | null, a
                 width={24}
                 height={24}
                 className="rounded-full"
+                priority={true}
               />
               <span className="truncate">{user?.name}</span>
               <ChevronUp className="ml-auto" />

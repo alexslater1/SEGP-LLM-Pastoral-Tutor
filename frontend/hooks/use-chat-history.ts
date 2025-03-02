@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { getUserSession } from "@/lib/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type ChatVisibility = "public" | "private";
 
@@ -17,6 +17,7 @@ export type Chat = {
   createdAt: Date;
   userId: string;
   visibility: ChatVisibility;
+  deleted: boolean;
 };
 
 export type ChatHistoryItem = {
@@ -24,17 +25,8 @@ export type ChatHistoryItem = {
   isLoading: boolean;
   refresh: () => void;
   error: string | null;
+  deleteChat: (chatID: string) => Promise<void>;
 };
-
-type BackendUserSession = {
-  id: string;
-  created_at: string;
-  created_by_request_id: string;
-  user_id: string;
-  name?: string;
-};
-
-type BackendUserSessions = BackendUserSession[];
 
 export function useChatSessionHistory(): ChatHistoryItem {
   const queryClient = useQueryClient();
@@ -115,9 +107,10 @@ export function useChatSessionHistory(): ChatHistoryItem {
         createdAt: new Date(session.created_at),
         userId: session.user_id,
         visibility: "public", // TODO: Add visibility
+        deleted: session.deleted,
       } as Chat;
     });
-    return history.reverse();
+    return history.filter(chat => !chat.deleted).reverse();
   };
 
   const fetchUIChatName = async (chatSessionID: string) => {
@@ -130,6 +123,22 @@ export function useChatSessionHistory(): ChatHistoryItem {
     return sessionStatus?.name ?? null;
   };
 
+  const deleteChat = async (chatID: string) => {
+    const loginSession = await getUserSession();
+    if (!loginSession) {
+      throw new Error("No login session found");
+    }
+
+    try {
+      await deleteChatFetch(loginSession, chatID);
+    } catch (error) {
+      console.error("Delete Chat Error:", error);
+      throw error;
+    }
+
+    setHistory(prev => prev.filter(chat => chat.id !== chatID));
+  }
+
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["chat-history"] });
   };
@@ -139,8 +148,20 @@ export function useChatSessionHistory(): ChatHistoryItem {
     isLoading: isPending || (isSessionStatusPending && fetchStatus !== "idle"),
     refresh: refresh,
     error: error?.message ?? sessionStatusError?.message ?? null,
+    deleteChat: deleteChat,
   };
 }
+
+type BackendUserSession = {
+  id: string;
+  created_at: string;
+  created_by_request_id: string;
+  user_id: string;
+  name?: string;
+  deleted: boolean;
+};
+
+type BackendUserSessions = BackendUserSession[];
 
 async function fetchChatHistory(session: Session): Promise<BackendUserSessions> {
   try {
@@ -178,9 +199,33 @@ const fetchSessionName = async (loginSession: Session, chatSessionID: string) =>
       }
     );
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     return (await response.json()) as BackendUserSession;
   } catch (currentError) {
     console.error("Fetch Session Name Error:", currentError);
     return null;
+  }
+};
+
+const deleteChatFetch = async (loginSession: Session, chatSessionID: string): Promise<void> => {
+  try {
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + "/sessions/" + chatSessionID,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${loginSession.access_token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Delete chat HTTP error! status: ${response.status}`);
+    }
+  } catch (currentError) {
+    console.error("Delete Chat Error:", currentError);
+    throw currentError;
   }
 };

@@ -57,7 +57,11 @@ export default async function RootLayout({children}: {children: React.ReactNode}
           }}
         />
       </head>
-      <body className="antialiased">
+      <body 
+        className="antialiased vsc-initialized"
+        data-new-gr-c-s-check-loaded="14.1224.0"
+        data-gr-ext-installed=""
+      >
         <Providers user={user}>
           <ThemeProvider
             attribute="class"

@@ -175,8 +175,7 @@ export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
 export function SidebarHistory({ user }: { user: User | null }) {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const { history, isLoading, refresh: mutate, error } = useChatSessionHistory();
-
+  const { history, isLoading, refresh: mutate, error, deleteChat } = useChatSessionHistory();
   const parseId = (pathname: string) => {
       const id = pathname.split("/").pop();
       return id;
@@ -194,26 +193,16 @@ export function SidebarHistory({ user }: { user: User | null }) {
   const router = useRouter();
 
   const handleDelete = async () => {
-    /*
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
-      method: 'DELETE',
-    });
-
-    toast.promise(deletePromise, {
+    toast.promise(async () => {
+      if (!deleteId) {
+        throw new Error("No chat ID to delete");
+      }
+      await deleteChat(deleteId);
+    }, {
       loading: 'Deleting chat...',
-      success: () => {
-        mutate((history) => {
-          if (history) {
-            return history.filter((h) => h.id !== id);
-          }
-        });
-        return 'Chat deleted successfully';
-      },
+      success: 'Chat deleted successfully',
       error: 'Failed to delete chat',
     });
-    */
-
-    toast.message("Deleting chat... (not really)");
 
     setShowDeleteDialog(false);
 
