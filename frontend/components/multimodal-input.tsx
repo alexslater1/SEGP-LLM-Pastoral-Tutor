@@ -35,12 +35,6 @@ function PureMultimodalInput({
   const { width } = useWindowSize();
   const router = useRouter();
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      adjustHeight();
-    }
-  }, []);
-
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     "input",
     ""
@@ -56,7 +50,10 @@ function PureMultimodalInput({
   const submitForm = useCallback(
     (queryParam?: string) => {
       if (!user) {
-        router.push("/sign-in?query=" + input);
+        let currentInput = structuredClone(input);
+        setInput("");
+        setLocalStorageInput("");
+        router.push("/sign-in?query=" + currentInput);
         return;
       }
 
@@ -84,17 +81,6 @@ function PureMultimodalInput({
     ]
   );
 
-  // Add a ref to track if we've already processed this query
-  const processedQueryRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    // Only process the query if it exists and we haven't processed it before
-    if (query && query !== processedQueryRef.current) {
-      processedQueryRef.current = query;
-      submitForm(query);
-    }
-  }, [query, submitForm]);
-
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -104,14 +90,22 @@ function PureMultimodalInput({
     }
   };
 
+  // Add a ref to track if we've already processed this query
+  const processedQueryRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (textareaRef.current) {
+    // Only process the query if it exists and we haven't processed it before
+    if (query && query !== processedQueryRef.current) {
+      processedQueryRef.current = query;
+      submitForm(query);
+    } else if (textareaRef.current) {
       const domValue = textareaRef.current.value;
       // Prefer DOM value over localStorage to handle hydration
       const finalValue = domValue || localStorageInput || "";
       setInput(finalValue);
       adjustHeight();
     }
+
     // Only run once after hydration
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
