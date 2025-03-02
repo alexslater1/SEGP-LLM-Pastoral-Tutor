@@ -47,6 +47,7 @@ func (s *Server) routes() {
 	s.router.HandleFunc("GET /sessions/{session_id}/history", handlers.ChatHistory(s.history))
 	s.router.HandleFunc("GET /sessions", handlers.SessionIdsForUser(s.storage))
 	s.router.HandleFunc("GET /sessions/{session_id}", handlers.SessionFromId(s.storage))
+ 	s.router.HandleFunc("DELETE /sessions/delete/{session_id}", handlers.SetDeletedSessionFromId(s.storage))
 
 	s.router.HandleFunc("GET /agents", handlers.GetAllAgents(s.storage))
 	s.router.HandleFunc("GET /agents/config", handlers.GetConfigOptions())

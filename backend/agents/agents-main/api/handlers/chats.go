@@ -63,6 +63,19 @@ func SessionFromId(store storage.Storage) http.HandlerFunc {
 	}
 }
 
+func SetDeletedSessionFromId(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionId := r.PathValue("session_id")
+        session, err := storage.Update[storage.Session](store, sessionId, map[string]any{"deleted": true})
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to set session to deleted: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(session)
+	}
+}
+
 func ChatHistory(history history.History) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		chatId := r.PathValue("session_id")

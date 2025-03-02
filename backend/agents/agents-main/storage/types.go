@@ -74,6 +74,7 @@ type Session struct {
 	CreatedByRequestId string     `json:"created_by_request_id"`
 	Name               *string    `json:"name,omitempty"`
 	UserID             string     `json:"user_id"`
+    Deleted            bool       `json:"deleted"`
 }
 
 func (s Session) TableName() StorageTableName {
