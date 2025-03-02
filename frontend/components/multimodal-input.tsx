@@ -127,19 +127,8 @@ function PureMultimodalInput({
     adjustHeight();
   };
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
-
   return (
     <div className="relative w-full flex flex-col gap-4">
-      {/*
-      {messages.length === 0 &&
-        uploadQueue.length === 0 && (
-          <SuggestedActions append={append}/>
-        )
-      }
-      */}
-
       <Textarea
         ref={textareaRef}
         placeholder="Send a message..."
@@ -174,7 +163,6 @@ function PureMultimodalInput({
           <SendButton
             input={input}
             submitForm={submitForm}
-            uploadQueue={uploadQueue}
           />
         )}
       </div>
@@ -235,11 +223,9 @@ const StopButton = memo(PureStopButton);
 function PureSendButton({
   submitForm,
   input,
-  uploadQueue,
 }: {
   submitForm: () => void;
   input: string;
-  uploadQueue: Array<string>;
 }) {
   return (
     <Button
@@ -248,7 +234,7 @@ function PureSendButton({
         event.preventDefault();
         submitForm();
       }}
-      disabled={input.length === 0 || uploadQueue.length > 0}
+      disabled={input.length === 0}
     >
       <ArrowUpIcon size={14} />
     </Button>
@@ -256,8 +242,6 @@ function PureSendButton({
 }
 
 const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
-  if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
-    return false;
   if (prevProps.input !== nextProps.input) return false;
   return true;
 });

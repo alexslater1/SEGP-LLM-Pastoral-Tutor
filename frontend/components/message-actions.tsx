@@ -19,7 +19,7 @@ import {
   PopoverArrow,
 } from './ui/popover';
 import { memo, useContext, useState } from 'react';
-import { InfoIcon, XIcon } from 'lucide-react';
+import { ArrowUpIcon, InfoIcon, XIcon } from 'lucide-react';
 import { cx } from 'class-variance-authority';
 import { Textarea } from './ui/textarea';
 import { UserContext } from '@/lib/userContext';
@@ -187,6 +187,24 @@ const VotePopover = ({
   setInput,
   message
 }: VotePopoverProps) => {
+  const submitVote = () => {
+    changePopoverState(type, false);
+    toast.promise(voteMessage(message.requestID, input), {
+      loading: type === 'downvote' ? 'Downvoting Response...' : 'Upvoting Response...',
+      success: () => {
+        return type === 'downvote' ? 'Downvoted Response!' : 'Upvoted Response!';
+      },
+      error: (error) => {
+        if (error instanceof Error && error.message === 'Message already ' + (type === 'downvote' ? 'downvoted' : 'upvoted')) {
+          return 'Response already ' + (type === 'downvote' ? 'downvoted' : 'upvoted');
+        } else {
+          return 'Failed to ' + type + ' response';
+        }
+      },
+    });
+    setInput('');
+  }
+
   return (
     <Popover open={isVotePopoverOpen} onOpenChange={(state) => changePopoverState(type, state)}>
       {/* Separate state for hover to avoid tooltip opening when pressing enter on popover input */} 
@@ -224,7 +242,7 @@ const VotePopover = ({
                 <XIcon />
               </PopoverClose>
             </div>
-            <div className="flex flex-col gap-2 px-1 py-3">
+            <div className="flex flex-col gap-2 py-2 w-[20rem]">
               <Textarea
                 placeholder={'(Optional) Reason for ' + type + '...'}
                 value={input}
@@ -235,29 +253,19 @@ const VotePopover = ({
                   'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-sm pb-10',
                   'bg-muted dark:bg-background',
                 )}
-                rows={2}
+                rows={3}
                 autoFocus
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
-                    changePopoverState(type, false);
-                    toast.promise(voteMessage(message.requestID, input), {
-                      loading: type === 'downvote' ? 'Downvoting Response...' : 'Upvoting Response...',
-                      success: () => {
-                        return type === 'downvote' ? 'Downvoted Response!' : 'Upvoted Response!';
-                      },
-                      error: (error) => {
-                        if (error instanceof Error && error.message === 'Message already ' + (type === 'downvote' ? 'downvoted' : 'upvoted')) {
-                          return 'Response already ' + (type === 'downvote' ? 'downvoted' : 'upvoted');
-                        } else {
-                          return 'Failed to ' + type + ' response';
-                        }
-                      },
-                    });
-                    setInput('');
+                    submitVote();
                   }
                 }}
               />
+
+              <div className="absolute bottom-0 right-0 px-5 py-6 w-fit flex flex-row justify-end">
+                <VoteSubmitButton submitVote={submitVote} input={input} />
+              </div>
             </div>
             <PopoverArrow />
           </PopoverContent>
@@ -265,4 +273,19 @@ const VotePopover = ({
       </Tooltip>
     </Popover>
   )
+}
+
+function VoteSubmitButton({submitVote, input}: {submitVote: () => void, input: string}) {
+  return (
+    <Button
+      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      onClick={(event) => {
+        event.preventDefault();
+        submitVote();
+      }}
+      disabled={input.length === 0}
+    >
+      <ArrowUpIcon size={14} />
+    </Button>
+  );
 }
