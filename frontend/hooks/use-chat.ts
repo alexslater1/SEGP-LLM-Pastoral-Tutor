@@ -199,6 +199,12 @@ export function useChat({
       error: sendError,
     } = await sendMessageToBackend(chatSessionID, query, loginSession);
 
+    console.log("sendMessageAndGetResponse", {
+      requestID,
+      sessionID: newSessionID,
+      error: sendError,
+    });
+
     if (sendError) {
       let id = generateUUID();
       return {

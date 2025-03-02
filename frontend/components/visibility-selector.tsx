@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { useChatVisibility } from '@/hooks/use-chat-visibility';
 
 import {
   CheckCircleFillIcon,
@@ -40,6 +39,9 @@ const visibilities: Array<{
   },
 ];
 
+// Currently this component is not used
+// TODO: Use this once we can query the visibility from the backend, maybe
+
 export function VisibilitySelector({
   chatId,
   className,
@@ -50,7 +52,6 @@ export function VisibilitySelector({
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
 
-  // TODO: Use this once we can query the visibility from the backend, maybe
   /*const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId,
     initialVisibility: selectedVisibilityType,

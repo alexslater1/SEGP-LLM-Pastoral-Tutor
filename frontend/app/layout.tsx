@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "./providers";
 
 import "./globals.css";
+import { getUser } from "@/lib/supabase/user";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://segp-frontend.vercel.app"),
@@ -37,11 +38,9 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  const user = await getUser();
+
   return (
     <html
       lang="en"
@@ -59,7 +58,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        <Providers>
+        <Providers user={user}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

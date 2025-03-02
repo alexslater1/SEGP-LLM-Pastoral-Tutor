@@ -2,11 +2,17 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { UserContextProvider } from "@/providers/client-provider";
+import { User } from "@/lib/supabase/user";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, user }: { children: React.ReactNode, user: User | null }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <UserContextProvider user={user}>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </UserContextProvider>
   );
 }

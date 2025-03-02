@@ -108,6 +108,7 @@ const PureChatItem = ({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent side="bottom" align="end">
+          {/*
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="cursor-pointer text-muted-foreground hover:text-primary">
               <ShareIcon />
@@ -150,6 +151,7 @@ const PureChatItem = ({
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>
+          */}
 
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
