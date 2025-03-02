@@ -253,7 +253,7 @@ export function useChat({
     messages: [firstMessage, ...messages],
     handleSubmit,
     isLoading:
-      isSendPending || (isStatusPending && statusFetchStatus !== "idle"),
+      isSendPending || (isStatusPending && statusFetchStatus !== "idle") || !!requestIDPollingKey,
     stop,
     error:
       sendError?.message ||

@@ -14,7 +14,6 @@ import { User } from "@/lib/supabase/user";
 import { useRouter } from "next/navigation";
 
 function PureMultimodalInput({
-  chatId,
   isLoading,
   stop,
   messages, // is being used in memo
@@ -23,7 +22,6 @@ function PureMultimodalInput({
   user,
   query,
 }: {
-  chatId: string | null;
   isLoading: boolean;
   stop: () => void;
   handleSubmit: (input: string) => void;
