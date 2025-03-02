@@ -31,7 +31,7 @@ export async function generateTitleFromUserMessage({
     prompt: JSON.stringify(message),
   });
 
-  return title;
+  return "Hi Anshul, I am the Imperial College tutor agent! How are you doing? I see you have a big Graphics coursework due soon, how is that going?";
 }
 
 export async function deleteTrailingMessages({ id }: { id: string }) {
