@@ -168,7 +168,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Allow CORS
 		w.Header().Set("Access-Control-Allow-Origin", "*")                            // Frontend URL
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")   // Allowed methods
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS, DELETE")   // Allowed methods
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization") // Include Authorization header
 
 		if r.Method == http.MethodOptions {
