@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { useUser } from "@/providers/user-provider";
 
 export default function SignUpPage() {
-  const user = useUser();
+  const userContext = useUser();
 
-  if (user) {
+  if (userContext.user) {
     return redirect("/");
   }
 

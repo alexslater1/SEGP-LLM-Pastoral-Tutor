@@ -20,7 +20,7 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  const user = useUser();
+  const userContext = useUser();
 
   const { 
     downvotedMessages, 
@@ -31,7 +31,7 @@ function PureMessages({
     removeDownvoteMessage,
     upvoteMessage,
     removeUpvoteMessage
-  } = useMessagesVotes({ chatId, user });
+  } = useMessagesVotes({ chatId, user: userContext.user });
 
   return (
     <div

@@ -1,110 +1,36 @@
+"use client";
+
 import React, { useState } from "react";
-import { AgentRequest, AgentEvent, RagDocument } from "@/app/(admin)/actions";
-import { ChevronRight, Download, Trash2 } from "lucide-react";
-import { cn, getRelativeTimeString, humanReadableSize } from "@/lib/utils";
+import { cn, getRelativeTimeString } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAgentEvents, useAgentRequests } from "@/hooks/use-agent-data";
-import { useAllDownvotes, useAllUpvotes } from "@/hooks/use-all-downvotes";
 import { UseQueryResult } from "@tanstack/react-query";
-import { VoteAndMessage, VoteType } from "@/lib/supabase/vote";
+import { VoteAndMessage } from "@/lib/supabase/vote";
 import { Markdown } from "@/components/markdown";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  useRagDocuments,
-  useDownloadRagDoc,
-  useDeleteRagDoc
-} from "@/hooks/use-rag";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogOverlay,
-  DialogPortal,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ChevronRight } from "lucide-react";
 
-export function PagedAgentRequestsTable() {
-  return (
-    <PagedObjectTable
-      title="Agent Requests"
-      description="View incoming agent requests."
-      dataHook={useAgentRequests}
-      idField="id"
-      TableHeadings={AgentRequestTableHeadings}
-      RowContents={AgentRequestsTableContents}
-      ExpandedRowContents={AgentRequestsExpandedTableContents}
-    />
-  )
+export const ITEMS_PER_PAGE = 10;
+
+export enum TableRowType {
+  EXPANDABLE = "expandable",
+  CLICKABLE = "clickable",
 }
 
-export function PagedAgentEventsTable() {
-  return (
-    <PagedObjectTable
-      title="Agent Events"
-      description="View agent events."
-      dataHook={useAgentEvents}
-      idField="id"
-      TableHeadings={AgentEventsTableHeadings}
-      RowContents={AgentEventsTableContents}
-      ExpandedRowContents={AgentEventsExpandedTableContents}
-    />
-  )
-}
-
-export function PagedDownvotesTable() {
-  return (
-    <PagedObjectTable
-      title="Downvotes"
-      description="View all downvotes."
-      dataHook={useAllDownvotes}
-      idField="id"
-      TableHeadings={DownvotesTableHeadings}
-      RowContents={VotesTableContents}
-      ExpandedRowContents={VotesExpandedTableContents}
-    />
-  )
-}
-
-export function PagedUpvotesTable() {
-  return (
-    <PagedObjectTable
-      title="Upvotes"
-      description="View all upvotes."
-      dataHook={useAllUpvotes}
-      idField="id"
-      TableHeadings={UpvotesTableHeadings}
-      RowContents={VotesTableContents}
-      ExpandedRowContents={VotesExpandedTableContents}
-    />
-  )
-}
-
-export function PagedRagDocumentsTable() {
-  return (
-    <PagedObjectTable
-      title="Document Library"
-      description="View all RAG documents uploaded to the library."
-      dataHook={useRagDocuments}
-      idField="id"
-      TableHeadings={RagDocumentsTableHeadings}
-      RowContents={RagDocumentsTableContents}
-      ExpandedRowContents={RagDocumentsExpandedTableContents}
-    />
-  )
-}
+type hookResultData<T> = { data: T[]; totalPages: number; }
+type hookResult<T> = { data: hookResultData<T>, error: Error | null, isLoading: boolean }
 
 type props<T> = {
   title: string;
   description: string;
-  dataHook: (page: number) => UseQueryResult<{ data: T[]; totalPages: number; }, Error>;
+  dataHook: (page: number) => (UseQueryResult<hookResultData<T>, Error> | hookResult<T>);
   idField: string;
   TableHeadings: () => React.ReactNode;
   RowContents: ({data}: {data: T}) => React.ReactNode;
   ExpandedRowContents: ({data, index}: {data: T, index: number}) => React.ReactNode;
+  rowType?: TableRowType;
+  rowClickHandler?: (data: T) => void;
 }
 
-function PagedObjectTable<T>({
+export function PagedObjectTable<T>({
   title,
   description,
   dataHook,
@@ -112,6 +38,8 @@ function PagedObjectTable<T>({
   TableHeadings,
   RowContents,
   ExpandedRowContents,
+  rowType = TableRowType.EXPANDABLE,
+  rowClickHandler = () => {},
 }: props<T>) {
   const [page, setPage] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -144,7 +72,9 @@ function PagedObjectTable<T>({
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-table-header">
-                    <th className="h-12 w-[48px] px-4 first:rounded-tl-xl"></th>
+                    {rowType === TableRowType.EXPANDABLE && (
+                      <th className="h-12 w-[48px] px-4 first:rounded-tl-xl"></th>
+                    )}
                     <TableHeadings />
                   </tr>
                 </thead>
@@ -154,6 +84,15 @@ function PagedObjectTable<T>({
                       <td colSpan={5} className="p-0">
                         <div className="h-[569px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
                           Loading...
+                        </div>
+                      </td>
+                    </tr>
+                  ) : !data || data.data.length === 0 ? 
+                  (
+                    <tr>
+                      <td colSpan={5} className="p-0">
+                        <div className="h-[569px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
+                          No table entries found
                         </div>
                       </td>
                     </tr>
@@ -168,44 +107,50 @@ function PagedObjectTable<T>({
                               ? "bg-table-row-odd" 
                               : "bg-table-row-even"
                           )}
-                          onClick={() => data[idField] && toggleRow(data[idField])}
+                          onClick={rowType === TableRowType.CLICKABLE ? 
+                            () => rowClickHandler(data as T) : 
+                            () => data[idField] && toggleRow(data[idField])}
                         >
-                          <td className="p-4 align-middle text-center">
-                            <ChevronRight 
-                              className={`size-4 text-muted-foreground transition-transform ${
-                                expandedRows.has(data[idField]!) ? "rotate-90" : ""
-                              }`}
-                            />
-                          </td>
+                          {rowType === TableRowType.EXPANDABLE && (
+                            <td className="p-4 align-middle text-center">
+                              <ChevronRight 
+                                className={`size-4 text-muted-foreground transition-transform ${
+                                  expandedRows.has(data[idField]!) ? "rotate-90" : ""
+                                }`}
+                              />
+                            </td>
+                          )}
                           <RowContents data={data as T} />
                         </tr>
-                        <AnimatePresence>
-                          {expandedRows.has(data[idField]!) && (
-                            <motion.tr
-                              initial={{ opacity: 1 }}
-                              exit={{ opacity: 1 }}
-                              className={cn(
-                                index % 2 === 0 
-                                  ? "bg-table-row-odd" 
-                                  : "bg-table-row-even"
-                              )}
-                            >
-                              <td colSpan={5} className="p-0">
-                                <motion.div
-                                  initial={{ height: 0 }}
-                                  animate={{ height: "auto" }}
-                                  exit={{ height: 0 }}
-                                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="p-4 space-y-4">
-                                    <ExpandedRowContents data={data as T} index={index} />
-                                  </div>
-                                </motion.div>
-                              </td>
-                            </motion.tr>
-                          )}
-                        </AnimatePresence>
+                        {rowType === TableRowType.EXPANDABLE && (
+                          <AnimatePresence>
+                            {expandedRows.has(data[idField]!) && (
+                              <motion.tr
+                                initial={{ opacity: 1 }}
+                                exit={{ opacity: 1 }}
+                                className={cn(
+                                  index % 2 === 0 
+                                    ? "bg-table-row-odd" 
+                                    : "bg-table-row-even"
+                                )}
+                              >
+                                <td colSpan={5} className="p-0">
+                                  <motion.div
+                                    initial={{ height: 0 }}
+                                    animate={{ height: "auto" }}
+                                    exit={{ height: 0 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="p-4 space-y-4">
+                                      <ExpandedRowContents data={data as T} index={index} />
+                                    </div>
+                                  </motion.div>
+                                </td>
+                              </motion.tr>
+                            )}
+                          </AnimatePresence>
+                        )}
                       </React.Fragment>
                     ))
                   )}
@@ -241,230 +186,7 @@ function PagedObjectTable<T>({
   )
 }
 
-function getRequestsEndpointStyles (endpoint: string) {
-  switch (endpoint) {
-    case "/completion":
-      return "bg-blue-100 text-blue-800";
-    // Add more endpoint styles here if needed
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-}
-
-function formatRequestsEndpoint (endpoint: string) {
-  switch (endpoint) {
-    case "/completion":
-      return "Completion";
-    default:
-      return endpoint;
-  }
-};
-
-function AgentRequestTableHeadings() {
-  return (
-    <>
-      <th className="h-12 w-[500px] px-4 text-left align-middle font-semibold text-primary">
-        Endpoint
-      </th>
-      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-        Query
-      </th>
-      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
-        Time
-      </th>
-    </>
-  )
-}
-
-function AgentRequestsTableContents<T>({data}: {data: AgentRequest}) {
-  return (
-    <>
-      <td className="p-4 align-middle">
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getRequestsEndpointStyles(
-            data.endpoint
-          )}`}
-        >
-          {formatRequestsEndpoint(data.endpoint)}
-        </span>
-      </td>
-      <td className="p-4 align-middle">
-        <div className="truncate max-w-[500px]">
-          {data.metadata.query}
-        </div>
-      </td>
-      <td className="p-4 align-middle text-sm text-foreground">
-        {data.created_at &&
-          getRelativeTimeString(new Date(data.created_at))}
-      </td>
-    </>
-  )
-}
-
-function AgentRequestsExpandedTableContents({data}: {data: AgentRequest, index: number}) {
-  return (
-    <>
-      <div>
-        <h4 className="font-semibold text-primary">Full Query:</h4>
-        <div className="text-foreground mt-1">
-          <Markdown>{data.metadata.query}</Markdown>
-        </div>
-      </div>
-    </>
-  )
-}
-
-const getEventTypeStyles = (type: string) => {
-  switch (type) {
-    case "answer_success":
-      return "bg-green-100 text-green-800";
-    case "tool_call_choice":
-      return "bg-blue-100 text-blue-800";
-    case "tool_call_result":
-      return "bg-purple-100 text-purple-800";
-    case "error":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
-
-function AgentEventsTableHeadings() {
-  return (
-    <>
-      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary">
-        Type
-      </th>
-      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-        Request ID
-      </th>
-      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
-        Time
-      </th>
-    </>
-  )
-}
-
-function AgentEventsTableContents<T>({data}: {data: AgentEvent}) {
-  return (
-    <>
-      <td className="p-4 align-middle">
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getEventTypeStyles(
-            data.type
-          )}`}
-        >
-          {data.type}
-        </span>
-      </td>
-      <td className="p-4 align-middle font-mono text-sm text-foreground">
-        {data.request_id}
-      </td>
-      <td className="p-4 align-middle text-sm text-foreground">
-        {data.created_at &&
-          getRelativeTimeString(
-            new Date(data.created_at)
-          )}
-      </td>
-    </>
-  )
-}
-
-export function AgentEventsExpandedTableContents({data, index}: {data: AgentEvent, index: number}) {
-  return (
-    <>
-      {data.metadata.answer && (
-        <div>
-          <h4 className="font-semibold text-primary">Answer:</h4>
-          <div className="text-foreground mt-1">
-            <Markdown>{data.metadata.answer}</Markdown>
-          </div>
-        </div>
-      )}
-      {data.metadata.reason && (
-        <div>
-          <h4 className="font-semibold text-primary">Reason:</h4>
-          <div className="text-foreground mt-1">
-            <Markdown>{data.metadata.reason}</Markdown>
-          </div>
-        </div>
-      )}
-      {data.metadata.toolCallChoice && (
-        <div>
-          <h4 className="font-semibold text-primary">Tool Call:</h4>
-          <p className="text-foreground mt-1">
-            Name: {data.metadata.toolCallChoice.name}
-          </p>
-          <pre className={cn(
-            "mt-2 p-4 rounded-md overflow-x-auto whitespace-pre-wrap break-words font-mono",
-            index % 2 === 0 
-              ? "bg-table-row-even" 
-              : "bg-table-row-odd"
-          )}>
-            {JSON.stringify(
-              JSON.parse(data.metadata.toolCallChoice.arguments),
-              null,
-              2
-            )}
-          </pre>
-        </div>
-      )}
-      {data.metadata.toolCallResult && (
-        <div>
-          <h4 className="font-semibold text-primary">Tool Result:</h4>
-          <pre className={cn(
-            "mt-2 p-4 rounded-md whitespace-pre-wrap break-all font-mono",
-            index % 2 === 0 
-              ? "bg-table-row-even" 
-              : "bg-table-row-odd"
-          )}>
-            {data.metadata.toolCallResult}
-          </pre>
-        </div>
-      )}
-    </>
-  )
-}
-
-function DownvotesTableHeadings() {
-  return (
-    <>
-      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-        Downvote ID
-      </th>
-      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-        Request ID
-      </th>
-      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-        User Email
-      </th>
-      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
-        Time
-      </th>
-    </>
-  )
-}
-
-function UpvotesTableHeadings() {
-  return (
-    <>
-      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-        Upvote ID
-      </th>
-      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
-        Request ID
-      </th>
-      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-        User Email
-      </th>
-      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
-        Time
-      </th>
-    </>
-  )
-}
-
-function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
+export function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
   return (
     <>
       <td className="p-4 align-middle font-mono text-sm text-foreground">
@@ -486,7 +208,7 @@ function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
   )
 }
 
-function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
+export function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
   return (
     <>
       <div>
@@ -515,163 +237,6 @@ function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
         )}>
           {data.reason === "" ? "User did not provide a reason" : data.reason}
         </p>
-      </div>
-    </>
-  )
-}
-
-function RagDocumentsTableHeadings() {
-  return (
-    <>
-      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-        Document Name
-      </th>
-      <th className="h-12 w-[150px] px-4 text-left align-middle font-semibold text-primary">
-        Size
-      </th>
-      <th className="h-12 w-[180px] px-4 text-left align-middle font-semibold text-primary">
-        Upload Date
-      </th>
-      <th className="h-12 w-[100px] px-4 text-right align-middle font-semibold text-primary last:rounded-tr-xl">
-        Actions
-      </th>
-    </>
-  )
-}
-
-function RagDocumentsTableContents({data}: {data: RagDocument}) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const downloadMutation = useDownloadRagDoc();
-  const deleteMutation = useDeleteRagDoc();
-
-  const handleDownload = async (doc: RagDocument) => {
-    try {
-      toast.promise(downloadMutation.mutateAsync(doc.name), {
-        loading: `Downloading ${doc.name}...`,
-        success: () => {
-          toast.success(`Downloaded ${doc.name}`);
-          return `Downloaded ${doc.name}`;
-        },
-        error: () => {
-          toast.error("Failed to download file");
-          return "Failed to download file";
-        }
-      });
-    } catch (error) {
-      console.error("Download error:", error);
-    }
-  };
-
-  const handleDelete = async(doc: RagDocument) => {
-    try {
-      setIsDialogOpen(false);
-      toast.promise(deleteMutation.mutateAsync(doc.name), {
-        loading: `Deleting ${doc.name}...`,
-        success: () => {
-          toast.success(`Deleted ${doc.name}`);
-          return `Deleted ${doc.name}`;
-        },
-        error: () => {
-          toast.error("Failed to delete file");
-          return "Failed to delete file";
-        }
-      });
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
-  };
-
-  return (
-    <>
-      <td className="p-4 align-middle">
-        <div className="flex items-center">
-          <span>{data.name}</span>
-        </div>
-      </td>
-      <td className="p-4 align-middle">
-        {data.document_size && humanReadableSize(data.document_size)}
-      </td>
-      <td className="p-4 align-middle">
-        {data.date_uploaded && getRelativeTimeString(new Date(data.date_uploaded))}
-      </td>
-      <td className="p-4 align-middle text-right">
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload(data);
-            }}
-            className="size-8 hover:text-primary"
-          >
-            <Download className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDialogOpen(true);
-            }}
-            className="size-8 text-destructive/80 hover:bg-destructive/30 hover:text-destructive"
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
-      </td>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogPortal>
-          <DialogOverlay />
-          <DialogContent>
-            <DialogTitle className="text-destructive">Delete Document</DialogTitle>
-            <DialogDescription className="text-foreground">
-              Are you sure you want to delete &quot;{data.name}&quot;? This action cannot be undone.
-            </DialogDescription>
-            <div className="flex justify-end gap-2">
-              <Button
-                className="bg-muted hover:bg-muted/50"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDialogOpen(false)
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-destructive hover:bg-destructive/50"
-                variant="destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(data);
-                }}
-              >
-                Delete
-              </Button>
-            </div>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    </>
-  )
-}
-
-function RagDocumentsExpandedTableContents({data}: {data: RagDocument}) {
-  return (
-    <>
-      <div>
-        <h4 className="font-semibold text-primary">Document Type:</h4>
-        <div className="text-foreground mt-1">
-          <Markdown>{data.document_type}</Markdown>
-        </div>
-      </div>
-      <div>
-        <h4 className="font-semibold text-primary">URL:</h4>
-        <div className="text-foreground mt-1">
-          <Markdown>{data.url}</Markdown>
-        </div>
       </div>
     </>
   )

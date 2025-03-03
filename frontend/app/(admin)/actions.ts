@@ -2,8 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getAllVotes, VoteType } from "@/lib/supabase/vote";
-
-const ITEMS_PER_PAGE = 10;
+import { ITEMS_PER_PAGE } from "@/components/paged-object-table";
 
 export interface AgentEvent {
   id?: string;

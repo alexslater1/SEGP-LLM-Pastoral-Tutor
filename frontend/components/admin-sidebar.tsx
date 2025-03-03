@@ -1,6 +1,5 @@
 "use client";
 
-import type { User } from "@/lib/supabase/user";
 import { usePathname } from "next/navigation";
 import { SidebarUserNav } from "@/components/sidebar-user-nav";
 import {
@@ -9,7 +8,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -21,20 +19,22 @@ import {
   Settings,
   ThumbsDown,
   ThumbsUp,
+  UserRound,
 } from "lucide-react";
 import { useUser } from "@/providers/user-provider";
 
 import { AdminSidebarMenuButton } from "@/components/admin-sidebar-menu-button";
+import { UserRoleEnum } from "@/app/(admin)/role-authorization";
 
 export function AdminSidebar() {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
-  const user = useUser();
+  const userContext = useUser();
 
   const isSelected = (path: string) =>
     path === "/admin" ? pathname === "/admin" : pathname.includes(path);
 
-  const menuItems = [
+  const adminMenuItems = [
     { href: "/admin", icon: Home, label: "Dashboard" },
     { href: "/admin/upload", icon: FileUp, label: "Document Upload" },
     { href: "/admin/library", icon: Library, label: "Document Library" },
@@ -44,6 +44,32 @@ export function AdminSidebar() {
     { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvotes" },
     { href: "/admin/upvotes", icon: ThumbsUp, label: "Upvotes" },
   ];
+
+  const tutorMenuItems = [
+    { href: "/admin", icon: Home, label: "Dashboard" },
+    { href: "/admin/tutees", icon: UserRound, label: "Tutees" },
+  ];
+
+  if (!userContext.user) {
+    return (
+      <Sidebar className="group-data-[side=left]:border-r-0">
+        <SidebarHeader>
+          <SidebarMenu>
+            <div className="flex flex-row justify-between items-center">
+              <span className="text-lg text-primary font-semibold px-2">Admin Dashboard</span>
+            </div>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          <div className="flex flex-col gap-2 text-error text-center py-4">
+            Couldn&apos;t load user
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
+
+  const menuItems = userContext.user.role === UserRoleEnum.ADMIN ? adminMenuItems : tutorMenuItems;
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -69,7 +95,7 @@ export function AdminSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        {user && <SidebarUserNav user={user} adminPage />}
+        {userContext.user && <SidebarUserNav user={userContext.user} adminPage />}
       </SidebarFooter>
     </Sidebar>
   );

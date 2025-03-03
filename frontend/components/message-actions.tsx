@@ -24,7 +24,6 @@ import { cx } from 'class-variance-authority';
 import { Textarea } from './ui/textarea';
 import { cn } from '@/lib/utils';
 import { VoteType } from '@/lib/supabase/vote';
-import { useUser } from '@/providers/user-provider';
 
 export function PureMessageActions({
   chatId,
@@ -59,8 +58,6 @@ export function PureMessageActions({
   const [input, setInput] = useState('');
   const [isUpvotePopoverOpen, setIsUpvotePopoverOpen] = useState(false);
   const [isUpvoteHover, setIsUpvoteHover] = useState(false);
-
-  const user = useUser();
 
   if (isLoading) return null;
   if (message.role === 'user') return null;

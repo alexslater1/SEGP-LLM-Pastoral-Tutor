@@ -9,5 +9,5 @@ export const ADMIN_PANEL_ROLES: UserRoleEnum[] = [UserRoleEnum.ADMIN, UserRoleEn
 export const PUBLIC_PAGES = [/\/sign-in.*/, /\/sign-up.*/, /\/fonts.*/, /\/auth.*/, /\/$/];
 
 export const STUDENT_WHITELISTED_PAGES = [/\/chat.*/].concat(PUBLIC_PAGES);
-export const TUTOR_WHITELISTED_PAGES = [/\/admin$/, /\/admin\/tutee-chats.*/].concat(STUDENT_WHITELISTED_PAGES);
+export const TUTOR_WHITELISTED_PAGES = [/\/admin$/, /\/admin\/tutees.*/].concat(STUDENT_WHITELISTED_PAGES);
 export const ADMIN_WHITELISTED_PAGES = [/.*/];

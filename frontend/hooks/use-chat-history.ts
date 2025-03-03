@@ -28,15 +28,18 @@ export type ChatHistoryItem = {
   deleteChat: (chatID: string) => Promise<void>;
 };
 
-export function useChatSessionHistory(): ChatHistoryItem {
+// if userID is not provided and undefined, we will fetch the chat history for the current user
+// if userID is provided and null, we have an error
+// if userID is provided and a string, we will fetch the chat history for the user with the given ID
+export function useChatSessionHistory(userID?: string | null): ChatHistoryItem {
   const queryClient = useQueryClient();
   const [history, setHistory] = useState<Chat[]>([]);
   const chatIDPollingKeys = useRef<{id: string, fetchAttempt: number}[]>([]);
 
   const { isPending, error, fetchStatus } = useQuery({
-    queryKey: ["chat-history"],
+    queryKey: ["chat-history", userID],
     queryFn: async () => {
-      const history = await fetchUIChatHistory();
+      const history = await fetchUIChatHistory(userID);
       setHistory(history);
       chatIDPollingKeys.current = getSessionsWithNoNames(history);
       return history;
@@ -93,13 +96,13 @@ export function useChatSessionHistory(): ChatHistoryItem {
     return history.filter(chat => chat.title === "Loading...").map(chat => ({id: chat.id, fetchAttempt: 0}));
   }
 
-  const fetchUIChatHistory = async () => {
+  const fetchUIChatHistory = async (userID?: string | null) => {
     const login_session = await getUserSession();
     if (!login_session) {
       return [];
     }
 
-    const chatHistory = await fetchChatHistory(login_session);
+    const chatHistory = await fetchChatHistory(login_session, userID);
     const history = chatHistory.map((session) => {
       return {
         id: session.id,
@@ -163,9 +166,13 @@ type BackendUserSession = {
 
 type BackendUserSessions = BackendUserSession[];
 
-async function fetchChatHistory(session: Session): Promise<BackendUserSessions> {
+async function fetchChatHistory(session: Session, userID?: string | null): Promise<BackendUserSessions> {
   try {
-    const completionEndpoint = "/sessions";
+    if (userID === null) {
+      throw new Error("User ID is null");
+    }
+
+    const completionEndpoint = userID ? "/user/" + userID + "/sessions" : "/sessions";
     const response = await fetch(
       process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
       {

@@ -5,8 +5,8 @@ import { Login } from "@/components/login";
 import { useUser } from "@/providers/user-provider";
 
 export default function SignInPage() {
-  const user = useUser();
-  if (user) {
+  const userContext = useUser();
+  if (userContext.user) {
     return redirect("/");
   }
 

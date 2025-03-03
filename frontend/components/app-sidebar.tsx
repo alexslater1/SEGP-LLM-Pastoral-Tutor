@@ -24,7 +24,7 @@ import { useChatUrl } from '@/providers/chat-url-provider';
 export function AppSidebar() {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
-  const user = useUser();
+  const userContext = useUser();
   const [_, setChatUrl] = useChatUrl();
 
   return (
@@ -65,9 +65,9 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarHistory user={user} />
+        <SidebarHistory user={userContext.user} />
       </SidebarContent>
-      <SidebarFooter>{<SidebarUserNav user={user} />}</SidebarFooter>
+      <SidebarFooter>{<SidebarUserNav user={userContext.user} />}</SidebarFooter>
     </Sidebar>
   );
 }

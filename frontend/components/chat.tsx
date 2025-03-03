@@ -25,10 +25,10 @@ export function Chat({
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
-  const user = useUser();
+  const userContext = useUser();
   const query = useSearchParams().get("query");
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
-  const firstAgentMessage = `Hi${user ? (" " + capitalize(user.firstName)) : ""}, I'm the Imperial College tutor agent. Ask me anything!`;
+  const firstAgentMessage = `Hi${userContext.user ? (" " + capitalize(userContext.user.firstName)) : ""}, I'm the Imperial College tutor agent. Ask me anything!`;
 
   const [_, setChatUrl] = useChatUrl();
   const { refresh: refreshHistory } = useSessionHistory();
@@ -88,7 +88,7 @@ export function Chat({
             handleSubmit={handleSubmit}
             isLoading={isLoading}
             stop={stop}
-            user={user}
+            user={userContext.user}
             query={query}
           />
         )}

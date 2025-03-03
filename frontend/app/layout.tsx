@@ -5,7 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "./providers";
 
 import "./globals.css";
-import { getUser } from "@/lib/supabase/user";
+import { getUser, getUserSubordinates } from "@/lib/supabase/user";
+import { UserRoleEnum } from "@/app/(admin)/role-authorization";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://segp-frontend.vercel.app"),
@@ -40,6 +41,7 @@ const THEME_COLOR_SCRIPT = `\
 
 export default async function RootLayout({children}: {children: React.ReactNode}) {
   const user = await getUser();
+  const subordinates = user && user.role === UserRoleEnum.TUTOR ? await getUserSubordinates(user) : null;
 
   return (
     <html
@@ -62,7 +64,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         data-new-gr-c-s-check-loaded="14.1224.0"
         data-gr-ext-installed=""
       >
-        <Providers user={user}>
+        <Providers user={user} subordinates={subordinates}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
