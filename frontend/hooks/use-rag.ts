@@ -4,13 +4,21 @@ import {
   fetchRagDocuments,
   downloadRagDocument,
   uploadRagDocument,
-  deleteRagDocument
+  deleteRagDocument,
+  fetchRagWebpages
 } from "@/app/(admin)/actions";
 
 export function useRagDocuments(page: number) {
   return useQuery({
     queryKey: ["rag-documents", page],
     queryFn: () => fetchRagDocuments(page)
+  });
+};
+
+export function useRagWebpages(page: number) {
+  return useQuery({
+    queryKey: ["rag-webpages", page],
+    queryFn: () => fetchRagWebpages(page)
   });
 };
 

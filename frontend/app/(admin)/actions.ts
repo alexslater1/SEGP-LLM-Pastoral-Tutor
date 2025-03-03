@@ -42,6 +42,12 @@ export interface RagDocument {
   backend_source_id: string;
 }
 
+export interface RagWebpage {
+  id: string;
+  url: string;
+  date_uploaded: string;
+}
+
 export async function fetchAgentEvents(page: number) {
   const supabase = await createClient();
 
@@ -130,7 +136,7 @@ export async function fetchVotes(type: VoteType, page: number) {
   }
 }
 
-export async function fetchRagDocuments(page: number) {
+export async function fetchRagSources(page: number, type: string) {
   const supabase = await createClient();
 
   const start = page * ITEMS_PER_PAGE;
@@ -139,39 +145,54 @@ export async function fetchRagDocuments(page: number) {
   const { count } = await supabase
     .from("rag_sources")
     .select("*", { count: "exact", head: true })
-    .eq("type", "DOCUMENT");
+    .eq("type", type);
 
   const { data, error } = await supabase
     .from("rag_sources")
     .select("*")
-    .eq("type", "DOCUMENT")
+    .eq("type", type)
     .order("date_uploaded", { ascending: false })
     .range(start, end);
 
   if (error) throw error;
 
-  return {
-    data: data.map((doc: any) => ({
-      id: doc.id,
-      url: doc.url,
-      name: doc.name,
-      date_uploaded: doc.date_uploaded,
-      document_size: doc.document_size,
-      document_type: doc.document_type,
-      user_id: doc.user_id,
-      backend_source_id: doc.backend_source_id,
+  return type === "DOCUMENT" ? {
+    data: data.map((source: any) => ({
+      id: source.id,
+      url: source.url,
+      name: source.name,
+      date_uploaded: source.date_uploaded,
+      document_size: source.document_size,
+      document_type: source.document_type,
+      user_id: source.user_id,
+      backend_source_id: source.backend_source_id,
     })) as RagDocument[],
+    totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
+  } : {
+    data: data.map((source: any) => ({
+      id: source.id,
+      url: source.url,
+      date_uploaded: source.date_uploaded,
+    })) as RagWebpage[],
     totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
   };
 }
 
+export async function fetchRagDocuments(page: number){
+  return fetchRagSources(page, "DOCUMENT") as Promise<{ data: RagDocument[], totalPages: number }>;
+}
+
+export async function fetchRagWebpages(page: number) {
+  return fetchRagSources(page, "WEBSITE") as Promise<{ data: RagWebpage[], totalPages: number }>;
+}
+
 export async function downloadRagDocument(name: string) {
   try { 
-    console.log('Starting download for:', name);
+    console.log("Starting download for:", name);
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_RAG_URL}/rag-doc/download?name=${encodeURIComponent(name)}`, {
-      method: 'GET',
-      credentials: 'include',
+      method: "GET",
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -179,7 +200,7 @@ export async function downloadRagDocument(name: string) {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    const contentType = response.headers.get("content-type") || "application/octet-stream";
 
     return { 
       data: arrayBuffer, 
@@ -187,7 +208,7 @@ export async function downloadRagDocument(name: string) {
       fileName: name 
     };
   } catch (error) {
-    console.error('Download error details:', error);
+    console.error("Download error details:", error);
     throw error;
   }
 }

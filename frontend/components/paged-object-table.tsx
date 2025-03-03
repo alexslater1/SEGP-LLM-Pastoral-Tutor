@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AgentRequest, AgentEvent, RagDocument } from "@/app/(admin)/actions";
+import { AgentRequest, AgentEvent, RagDocument, RagWebpage } from "@/app/(admin)/actions";
 import { ChevronRight, Download, Trash2 } from "lucide-react";
 import { cn, getRelativeTimeString, humanReadableSize } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import {
   useRagDocuments,
   useDownloadRagDoc,
-  useDeleteRagDoc
+  useDeleteRagDoc,
+  useRagWebpages
 } from "@/hooks/use-rag";
 import {
   Dialog,
@@ -84,12 +85,26 @@ export function PagedRagDocumentsTable() {
   return (
     <PagedObjectTable
       title="Document Library"
-      description="View all RAG documents uploaded to the library."
+      description="View all documents uploaded to the RAG library."
       dataHook={useRagDocuments}
       idField="id"
       TableHeadings={RagDocumentsTableHeadings}
       RowContents={RagDocumentsTableContents}
       ExpandedRowContents={RagDocumentsExpandedTableContents}
+    />
+  )
+}
+
+export function PagedRagWebpagesTable() {
+  return (
+    <PagedObjectTable
+      title="Webpage Library"
+      description="View all webpages uploaded to the RAG library."
+      dataHook={useRagWebpages}
+      idField="id"
+      TableHeadings={RagWebpagesTableHeadings}
+      RowContents={RagWebpagesTableContents}
+      ExpandedRowContents={RagWebpagesExpandedTableContents}
     />
   )
 }
@@ -549,11 +564,9 @@ function RagDocumentsTableContents({data}: {data: RagDocument}) {
       toast.promise(downloadMutation.mutateAsync(doc.name), {
         loading: `Downloading ${doc.name}...`,
         success: () => {
-          toast.success(`Downloaded ${doc.name}`);
           return `Downloaded ${doc.name}`;
         },
         error: () => {
-          toast.error("Failed to download file");
           return "Failed to download file";
         }
       });
@@ -568,11 +581,9 @@ function RagDocumentsTableContents({data}: {data: RagDocument}) {
       toast.promise(deleteMutation.mutateAsync(doc.name), {
         loading: `Deleting ${doc.name}...`,
         success: () => {
-          toast.success(`Deleted ${doc.name}`);
           return `Deleted ${doc.name}`;
         },
         error: () => {
-          toast.error("Failed to delete file");
           return "Failed to delete file";
         }
       });
@@ -667,6 +678,52 @@ function RagDocumentsExpandedTableContents({data}: {data: RagDocument}) {
           <Markdown>{data.document_type}</Markdown>
         </div>
       </div>
+      <div>
+        <h4 className="font-semibold text-primary">URL:</h4>
+        <div className="text-foreground mt-1">
+          <Markdown>{data.url}</Markdown>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function truncateUrl(url: string, maxLength: number = 115): string {
+  if (url.length <= maxLength) return url;
+  return url.substring(0, maxLength - 3) + "...";
+}
+
+function RagWebpagesTableHeadings() {
+  return (
+    <>
+      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
+        URL
+      </th>
+      <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
+        Upload Date
+      </th>
+    </>
+  )
+}
+
+function RagWebpagesTableContents({data}: {data: RagWebpage}) {
+  return (
+    <>
+      <td className="p-4 align-middle">
+        <div className="flex items-center">
+          <span className="font-mono">{truncateUrl(data.url)}</span>
+        </div>
+      </td>
+      <td className="p-4 align-middle">
+        {data.date_uploaded && getRelativeTimeString(new Date(data.date_uploaded))}
+      </td>
+    </>
+  )
+}
+
+function RagWebpagesExpandedTableContents({data}: {data: RagWebpage}) {
+  return (
+    <>
       <div>
         <h4 className="font-semibold text-primary">URL:</h4>
         <div className="text-foreground mt-1">
