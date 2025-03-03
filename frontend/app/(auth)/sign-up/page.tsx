@@ -1,9 +1,12 @@
-import { getUser } from "@/lib/supabase/user";
+"use client";
+
 import { Login } from "@/components/login";
 import { redirect } from "next/navigation";
+import { useUser } from "@/providers/user-provider";
 
-export default async function SignUpPage() {
-  const user = await getUser();
+export default function SignUpPage() {
+  const user = useUser();
+
   if (user) {
     return redirect("/");
   }

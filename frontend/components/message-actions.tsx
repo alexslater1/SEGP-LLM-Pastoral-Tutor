@@ -22,9 +22,9 @@ import { memo, useContext, useState } from 'react';
 import { ArrowUpIcon, InfoIcon, XIcon } from 'lucide-react';
 import { cx } from 'class-variance-authority';
 import { Textarea } from './ui/textarea';
-import { UserContext } from '@/lib/userContext';
 import { cn } from '@/lib/utils';
 import { VoteType } from '@/lib/supabase/vote';
+import { useUser } from '@/providers/user-provider';
 
 export function PureMessageActions({
   chatId,
@@ -60,7 +60,7 @@ export function PureMessageActions({
   const [isUpvotePopoverOpen, setIsUpvotePopoverOpen] = useState(false);
   const [isUpvoteHover, setIsUpvoteHover] = useState(false);
 
-  const user = useContext(UserContext);
+  const user = useUser();
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
@@ -242,7 +242,7 @@ const VotePopover = ({
                 <XIcon />
               </PopoverClose>
             </div>
-            <div className="flex flex-col gap-2 py-2 w-[20rem]">
+            <div className="flex flex-col gap-2 py-2 w-80">
               <Textarea
                 placeholder={'(Optional) Reason for ' + type + '...'}
                 value={input}

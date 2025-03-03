@@ -1,5 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getUserData } from './user'
+import { ADMIN_WHITELISTED_PAGES, PUBLIC_PAGES, STUDENT_WHITELISTED_PAGES, TUTOR_WHITELISTED_PAGES } from '@/app/(admin)/role-authorization'
+import { UserRoleEnum } from '@/app/(admin)/role-authorization'
+
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -31,19 +35,50 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/sign-in') &&
-    !request.nextUrl.pathname.startsWith('/sign-up') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/fonts') &&
-    !(request.nextUrl.pathname === "/")
+    !PUBLIC_PAGES.some(pageRegex => request.nextUrl.pathname.match(pageRegex))
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/sign-in'
     return NextResponse.redirect(url)
+  } else if (!user) {
+    return supabaseResponse
+  }
+
+  const userData = await getUserData(user.id)
+  
+  switch (userData.role) {
+    case UserRoleEnum.STUDENT:
+      let redirect = checkAndRedirect(request, STUDENT_WHITELISTED_PAGES, '/')
+      if (redirect) {
+        return redirect
+      }
+      break
+    case UserRoleEnum.TUTOR:
+      redirect = checkAndRedirect(request, TUTOR_WHITELISTED_PAGES, '/admin/')
+      if (redirect) {
+        return redirect
+      }
+      break
+    case UserRoleEnum.ADMIN:
+      redirect = checkAndRedirect(request, ADMIN_WHITELISTED_PAGES, '/admin/')
+      if (redirect) {
+        return redirect
+      }
+      break
   }
 
   return supabaseResponse
+}
+
+function checkAndRedirect(request: NextRequest, whitelistedPages: RegExp[], redirectUrl: string) {
+  if (!whitelistedPages.some(pageRegex => request.nextUrl.pathname.match(pageRegex))) {
+    const url = request.nextUrl.clone()
+    url.pathname = redirectUrl
+    return NextResponse.redirect(url)
+  }
+  return null;
 }

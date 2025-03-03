@@ -1,10 +1,8 @@
 import { Message, Status } from "@/types/message";
 import { ErrorMessage, PreviewMessage, ThinkingMessage } from "./message";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
-import { memo, useEffect, useContext } from "react";
-import equal from "fast-deep-equal/es6/react";
 import { useMessagesVotes } from "@/hooks/use-messages-votes";
-import { UserContext } from "@/lib/userContext";
+import { useUser } from "@/providers/user-provider";
 
 interface MessagesProps {
   chatId: string | null;
@@ -22,7 +20,7 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  const user = useContext(UserContext);
+  const user = useUser();
 
   const { 
     downvotedMessages, 

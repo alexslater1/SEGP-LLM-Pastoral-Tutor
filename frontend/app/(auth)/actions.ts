@@ -41,7 +41,7 @@ export async function signIn(formData: FormData) {
     // No user_data entry found, create one
     const { error: insertError } = await supabase
       .from("user_data")
-      .insert({ id: signInData.user?.id, role: "student", name: email.split("@")[0] });
+      .insert({ id: signInData.user?.id, role: "student", email: email, first_name: email.split("@")[0] });
     if (insertError) {
       return { error: insertError.message };
     }
@@ -84,7 +84,7 @@ export async function signUp(formData: FormData) {
   // Create a new user_data entry
   const { error: insertError } = await supabase
     .from("user_data")
-    .insert({ id: signUpData?.user?.id, role: "student", name: email.split("@")[0], email: email });
+    .insert({ id: signUpData?.user?.id, role: "student", email: email, first_name: email.split("@")[0] });
 
   if (insertError) {
     return { error: insertError.message };

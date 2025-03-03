@@ -22,11 +22,14 @@ import {
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
+import { useUser } from "@/providers/user-provider";
+
 import { AdminSidebarMenuButton } from "@/components/admin-sidebar-menu-button";
 
-export function AdminSidebar({ user }: { user: User | null }) {
+export function AdminSidebar() {
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
+  const user = useUser();
 
   const isSelected = (path: string) =>
     path === "/admin" ? pathname === "/admin" : pathname.includes(path);

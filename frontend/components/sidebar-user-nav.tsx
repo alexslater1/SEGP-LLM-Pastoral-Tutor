@@ -19,6 +19,8 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useRouter } from 'next/navigation';
+import { ADMIN_PANEL_ROLES } from '@/app/(admin)/role-authorization';
+
 
 export function SidebarUserNav({ user, adminPage=false }: { user: User | null, adminPage?: boolean }) {
   const { setTheme, theme } = useTheme();
@@ -54,7 +56,7 @@ export function SidebarUserNav({ user, adminPage=false }: { user: User | null, a
                 className="rounded-full"
                 priority={true}
               />
-              <span className="truncate">{user?.name}</span>
+              <span className="truncate">{user?.firstName}</span>
               <ChevronUp className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -75,7 +77,7 @@ export function SidebarUserNav({ user, adminPage=false }: { user: User | null, a
             </DropdownMenuItem>
             <DropdownMenuSeparator />
 
-            {user.role === "admin" && (
+            {ADMIN_PANEL_ROLES.includes(user.role) && (
               <>
                 <DropdownMenuItem
                   className={cn(

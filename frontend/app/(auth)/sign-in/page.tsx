@@ -1,9 +1,11 @@
+"use client";
+
 import { redirect } from "next/navigation";
 import { Login } from "@/components/login";
-import { getUser } from "@/lib/supabase/user";
+import { useUser } from "@/providers/user-provider";
 
-export default async function SignInPage() {
-  const user = await getUser();
+export default function SignInPage() {
+  const user = useUser();
   if (user) {
     return redirect("/");
   }

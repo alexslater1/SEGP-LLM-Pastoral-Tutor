@@ -8,8 +8,8 @@ import { ChatHeader } from "@/components/chat-header";
 import { MultimodalInput } from "./multimodal-input";
 import { Messages } from "./messages";
 import { VisibilityType } from "./visibility-selector";
-import { UserContext } from "@/lib/userContext";
-import { useContext, useEffect } from "react";
+import { useUser } from "@/providers/user-provider";
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 type MessageType = "initial" | "loading" | "error";
@@ -23,10 +23,10 @@ export function Chat({
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
-  const user = useContext(UserContext);
+  const user = useUser();
   const query = useSearchParams().get("query");
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
-  const firstAgentMessage = `Hi${user ? (" " + capitalize(user.name)) : ""}, I'm the Imperial College tutor agent. Ask me anything!`;
+  const firstAgentMessage = `Hi${user ? (" " + capitalize(user.firstName)) : ""}, I'm the Imperial College tutor agent. Ask me anything!`;
 
   const {
     messages,
