@@ -4,27 +4,36 @@ from config import supabase, RAG_SOURCES_TABLE_NAME, RAG_CHUNKS_TABLE_NAME, RAG_
 from transformers import AutoTokenizer, AutoModel
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 
 model_name = "BAAI/bge-small-en-v1.5"
 model = AutoModel.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 async def upload_url(url):
-    #add entry for url in sources table
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    driver = webdriver.Chrome(options=chrome_options)
+    
+    try:
+        driver.get(url)
+        text = driver.find_element(By.TAG_NAME, "body").text
+    finally:
+        driver.quit()
+
+    # add entry for url in sources table
     response = supabase.table(RAG_SOURCES_TABLE_NAME).insert([
             {"url": url, "type": "WEBSITE"}
         ]).execute()
     url_id = response.data[0].get('id')
 
-    driver = webdriver.Chrome()
-    driver.get(url)
-    text = driver.find_element(By.TAG_NAME, "body").text
-    driver.quit()
-
-    #chunk document
+    # chunk document
     chunks = document_chunker(text, tokenizer)
 
-    # Process chunks
+    # process chunks
     index = 1
     for chunk in chunks:
         supabase.table(RAG_CHUNKS_TABLE_NAME).insert([{
