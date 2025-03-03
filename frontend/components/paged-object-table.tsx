@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { AgentRequest, AgentEvent, RagDocument, RagWebpage } from "@/app/(admin)/actions";
 import { ChevronRight, Download, Trash2 } from "lucide-react";
-import { cn, getRelativeTimeString, humanReadableSize } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAgentEvents, useAgentRequests } from "@/hooks/use-agent-data";
 import { useAllDownvotes, useAllUpvotes } from "@/hooks/use-all-downvotes";
@@ -10,6 +8,18 @@ import { VoteAndMessage, VoteType } from "@/lib/supabase/vote";
 import { Markdown } from "@/components/markdown";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  AgentRequest,
+  AgentEvent,
+  RagDocument,
+  RagWebpage
+} from "@/app/(admin)/actions";
+import {
+  cn,
+  getRelativeTimeString,
+  humanReadableSize,
+  truncateUrl
+} from "@/lib/utils";
 import {
   useRagDocuments,
   useDownloadRagDoc,
@@ -688,11 +698,6 @@ function RagDocumentsExpandedTableContents({data}: {data: RagDocument}) {
   )
 }
 
-function truncateUrl(url: string, maxLength: number = 115): string {
-  if (url.length <= maxLength) return url;
-  return url.substring(0, maxLength - 3) + "...";
-}
-
 function RagWebpagesTableHeadings() {
   return (
     <>
@@ -725,7 +730,7 @@ function RagWebpagesExpandedTableContents({data}: {data: RagWebpage}) {
   return (
     <>
       <div>
-        <h4 className="font-semibold text-primary">URL:</h4>
+        <h4 className="font-semibold text-primary">Full URL:</h4>
         <div className="text-foreground mt-1">
           <Markdown>{data.url}</Markdown>
         </div>
