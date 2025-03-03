@@ -16,6 +16,7 @@ import {
   Home,
   FileUp,
   Library,
+  Globe,
   Activity,
   MessageSquare,
   Settings,
@@ -34,7 +35,8 @@ export function AdminSidebar({ user }: { user: User | null }) {
   const menuItems = [
     { href: "/admin", icon: Home, label: "Dashboard" },
     { href: "/admin/upload", icon: FileUp, label: "Document Upload" },
-    { href: "/admin/library", icon: Library, label: "Document Library" },
+    { href: "/admin/web-scraper", icon: Globe, label: "Web Scraper" },
+    { href: "/admin/library", icon: Library, label: "RAG Library" },
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
     { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },

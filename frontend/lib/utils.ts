@@ -66,3 +66,8 @@ export function humanReadableSize(sizeInBytes: number): string {
   }
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 }
+
+export function truncateUrl(url: string, maxLength: number = 105): string {
+  if (url.length <= maxLength) return url;
+  return url.substring(0, maxLength - 3) + "...";
+}
