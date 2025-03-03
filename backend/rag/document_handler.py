@@ -27,7 +27,7 @@ async def upload_doc(file):
          "type": "DOCUMENT",
          "document_size": size,
          "document_type": file_name.split(".")[-1].upper()}
-        ]).execute()
+    ]).execute()
     
     doc_id = response.data[0].get('id')
     

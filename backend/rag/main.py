@@ -1,11 +1,13 @@
 from io import BytesIO
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Form
 from searcher import get_supabase_rag_chunks
 from dotenv import load_dotenv
-from document_uploader import download_doc, fetch_docs, upload_doc, delete_doc
+from document_handler import upload_doc, delete_doc, fetch_docs, download_doc
 from transformers import AutoTokenizer, AutoModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from url_handler import upload_url, delete_url
+import validators
 
 # Load environment variables from .env file
 load_dotenv()
@@ -75,10 +77,40 @@ async def upload_rag_document(file: UploadFile = File(...)):
         # Embed and upload document chunks to database
         await upload_doc(file)
         return {"response": "Document uploaded"}
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag-doc/url")
+async def upload_rag_document_url(url: str):
+    # Clean url of extra whitespace
+    url = url.strip()
+
+    # Validate url
+    if not url:
+        raise HTTPException(
+            status_code=400, 
+            detail="Url parameter cannot be empty"
+        )
+
+    if not url.endswith((".pdf", ".docx", ".txt", ".pptx")):
+        raise HTTPException(
+            status_code=400, 
+            detail="Document must be a .pdf, .docx, .txt or .pptx"
+        )
     
+    if not url.rsplit('.', 1)[0]:
+        raise HTTPException(
+            status_code=400, 
+            detail="Document name must exist"
+        )
+    
+    try:
+        # Embed and upload document chunks to database
+        upload_doc(url)
+        return {"response": "Document uploaded"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/rag-doc")
 async def fetch_rag_documents():
     print("Fetching documents")
@@ -121,8 +153,8 @@ async def delete_rag_document(name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/rag-doc/download")
-async def fetch_rag_documents(name: str):
-    print("Downloading documents")
+async def download_rag_document(name: str):
+    print("Downloading document")
     try:
         file = download_doc(name)
         
@@ -136,7 +168,56 @@ async def fetch_rag_documents(name: str):
                 "Content-Disposition": f"attachment; filename={name}"
             }
         )
-        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/rag-url")
+async def upload_rag_url(url: str):
+    # Clean url of extra whitespace
+    url = url.strip()
+    
+    # Validate url
+    if not url:
+        raise HTTPException(
+            status_code=400, 
+            detail="Url parameter cannot be empty"
+        )
+
+    if not validators.url(url):
+        raise HTTPException(
+            status_code=400, 
+            detail="Input must be a valid url"
+        )
+    
+    try:
+        # Embed and upload url chunks to database
+        await upload_url(url)
+        return {"response": "Url uploaded"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/rag-url")
+async def delete_rag_url(url: str):
+    # Clean url of extra whitespace
+    url = url.strip()
+
+    # Validate url
+    if not url:
+        raise HTTPException(
+            status_code=400, 
+            detail="Url parameter cannot be empty"
+        )
+
+    if not validators.url(url):
+        raise HTTPException(
+            status_code=400, 
+            detail="Input must be a valid url"
+        )
+    
+    try:    
+        # Embed and upload url chunks to database
+        delete_url(url)
+        return {"response": "Url deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
