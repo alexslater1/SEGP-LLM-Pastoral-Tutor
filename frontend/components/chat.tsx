@@ -2,12 +2,9 @@
 
 import { useChat } from "@/hooks/use-chat";
 import { motion } from "framer-motion";
-
 import { ChatHeader } from "@/components/chat-header";
-
 import { MultimodalInput } from "./multimodal-input";
 import { Messages } from "./messages";
-import { VisibilityType } from "./visibility-selector";
 import { useUser } from "@/providers/user-provider";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -18,11 +15,9 @@ type MessageType = "initial" | "loading" | "error";
 
 export function Chat({
   id,
-  selectedVisibilityType,
   isReadonly,
 }: {
   id: string | null;
-  selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
   const userContext = useUser();
@@ -43,11 +38,11 @@ export function Chat({
     isInitialLoad,
   } = useChat({
     id,
-    firstAgentMessage
+    firstAgentMessage: !isReadonly ? firstAgentMessage : undefined
   });
 
   useEffect(() => {
-    if (current_id) {
+    if (current_id && !isReadonly) {
       const newUrl = `/chat/${current_id}`;
       window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
 
@@ -63,10 +58,8 @@ export function Chat({
   ) : error ? (
     <FullScreenMessage messageType="error" error={error} />
   ) : (
-    <div className="flex flex-col min-w-0 h-dvh bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
       <ChatHeader
-        chatId={current_id}
-        selectedVisibilityType={selectedVisibilityType}
         isReadonly={isReadonly}
       />
 
@@ -81,8 +74,8 @@ export function Chat({
         />
       )}
 
+      {!isReadonly && (
       <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
-        {!isReadonly && (
           <MultimodalInput
             messages={messages}
             handleSubmit={handleSubmit}
@@ -91,8 +84,8 @@ export function Chat({
             user={userContext.user}
             query={query}
           />
-        )}
       </form>
+    )}
     </div>
   );
 }

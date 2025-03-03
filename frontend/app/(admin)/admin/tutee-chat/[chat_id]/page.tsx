@@ -4,18 +4,15 @@ import { notFound, useParams } from 'next/navigation';
 import { Chat } from '@/components/chat';
 
 export default function Page() {
-  const { id } = useParams();
-
-  if (!id) {
+  const { chat_id } = useParams();
+  if (!chat_id) {
     notFound();
   }
 
   return (
-    <>
-      <Chat
-        id={id as string}
-        isReadonly={false}
-      />
-    </>
+    <Chat
+      id={chat_id as string}
+      isReadonly={true}      
+    />
   );
 }

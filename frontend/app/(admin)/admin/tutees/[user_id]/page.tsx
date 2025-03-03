@@ -1,8 +1,7 @@
 "use client";
 
-import { useAllDownvotes } from "@/hooks/use-all-votes";
-import { PagedObjectTable, VotesTableContents, VotesExpandedTableContents, TableRowType } from "@/components/paged-object-table";
-import { useParams } from "next/navigation";
+import { PagedObjectTable, TableRowType } from "@/components/paged-object-table";
+import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@/providers/user-provider";
 import { User } from "@/lib/supabase/user";
 import { useUserChatHistory } from "@/hooks/use-user-chat-history-adapter";
@@ -16,17 +15,18 @@ export default function TuteeChatHistoryPage() {
 }
 
 function UsePartiallyApplliedUserChatHistory(page: number) {
-  const { id } = useParams();
+  const { user_id } = useParams();
   const userContext = useUser();
-  const tutee = userContext.subordinates?.find((user: User) => user.id === id) || null;
+  const tutee = userContext.subordinates?.find((user: User) => user.id === user_id) || null;
 
   return useUserChatHistory(tutee ? tutee.id : null, page);
 }
 
 function PagedChatHistoryTable() {
-  const { id } = useParams();
+  const { user_id } = useParams();
   const userContext = useUser();
-  const tutee = userContext.subordinates?.find((user: User) => user.id === id);
+  const tutee = userContext.subordinates?.find((user: User) => user.id === user_id);
+  const router = useRouter();
 
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
 
@@ -41,7 +41,7 @@ function PagedChatHistoryTable() {
       ExpandedRowContents={() => null}
       rowType={TableRowType.CLICKABLE}
       rowClickHandler={(data: Chat) => {
-        console.log(data);
+        router.push(`/admin/tutee-chat/${data.id}?title=${data.title}&user_id=${user_id}`);
       }}
     />
   )
