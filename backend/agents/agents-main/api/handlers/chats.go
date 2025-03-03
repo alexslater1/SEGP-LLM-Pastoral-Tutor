@@ -32,7 +32,7 @@ type ChatHistoryResponse struct {
 	Messages []QueryAndResponse `json:"query_and_responses"`
 }
 
-func SessionIdsForUser(store storage.Storage) http.HandlerFunc {
+func SessionIdsForLoggedInUser(store storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := context_keys.GetUserID(r.Context())
 		if !ok {
@@ -40,6 +40,21 @@ func SessionIdsForUser(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
+		sessions, err := storage.GetAll[storage.Session](store, storage.NewQueryBuilder().Eq("user_id", userID))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to get sessions: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(sessions)
+	}
+}
+
+func SessionIdsForDifferentUser(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+ 		// TODO: Should be some kind of check for if the current user has authorization to access the userID's
+ 		// sessions
+		userID := r.PathValue("user_id")
 		sessions, err := storage.GetAll[storage.Session](store, storage.NewQueryBuilder().Eq("user_id", userID))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to get sessions: %v", err), http.StatusInternalServerError)
