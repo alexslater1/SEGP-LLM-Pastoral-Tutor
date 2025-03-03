@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Link, CloudUpload, Globe } from "lucide-react";
 import { useState } from "react";
 import { cn, getRelativeTimeString, truncateUrl } from "@/lib/utils";
-import { useRagWebpages } from "@/hooks/use-rag";
+import { useRagWebpages, useRagUploadUrl } from "@/hooks/use-rag";
+import { toast } from "sonner";
 
 export default function WebScraperPage() {
   const [isDragging, setIsDragging] = useState(false);
+  const [url, setUrl] = useState("");
   const { data: webpages } = useRagWebpages(0);
+  const uploadUrlMutation = useRagUploadUrl();
 
   const getRecentWebpages = () => {
     if (!webpages?.data) return [];
@@ -46,6 +49,27 @@ export default function WebScraperPage() {
     // TODO: yeah
   };
 
+  const handleUrlSubmit = async () => {
+    const trimmedUrl = url.trim();
+    
+    if (!trimmedUrl) {
+      toast.error("Please enter a URL");
+      return;
+    }
+
+    try {
+      await toast.promise(uploadUrlMutation.mutateAsync(trimmedUrl), {
+        loading: "Adding URL. This may take a while...",
+        success: "URL added successfully",
+        error: "Failed to add URL"
+      });
+      
+      setUrl(""); // Clear input on success
+    } catch (error) {
+      console.error("URL upload error:", error);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div>
@@ -64,12 +88,16 @@ export default function WebScraperPage() {
             type="url"
             placeholder="Enter webpage URL"
             className="w-full pl-9 p-2 bg-muted/25 dark:bg-muted border rounded-md"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
           />
         </div>
         <Button 
           className="bg-button text-button-foreground hover:bg-button/50"
+          onClick={handleUrlSubmit}
+          disabled={uploadUrlMutation.isPending}
         >
-          Add URL
+          {uploadUrlMutation.isPending ? "Adding..." : "Add URL"}
         </Button>
       </div>
 

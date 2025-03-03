@@ -256,3 +256,47 @@ export async function deleteRagDocument(name: string) {
     throw error;
   }
 };
+
+export async function uploadRagUrl(url: string) {
+  try {
+    console.log("Starting URL upload for:", url);
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_RAG_URL}/rag-url?url=${encodeURIComponent(url)}`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Response data:", data);
+    return data;
+  } catch (error) {
+    console.error("Upload error details:", error);
+    throw error;
+  }
+}
+
+export async function deleteRagUrl(url: string) {
+  try {
+    console.log("Starting URL delete for:", url);
+    
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_RAG_URL}/rag-url?url=${encodeURIComponent(url)}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Delete failed with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Response data:", data);
+    return data;
+  } catch (error) {
+    console.error("Delete error details:", error);
+    throw error;
+  }
+}
