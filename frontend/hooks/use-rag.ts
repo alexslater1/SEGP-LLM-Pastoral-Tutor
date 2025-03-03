@@ -4,13 +4,23 @@ import {
   fetchRagDocuments,
   downloadRagDocument,
   uploadRagDocument,
-  deleteRagDocument
+  deleteRagDocument,
+  fetchRagWebpages,
+  uploadRagUrl,
+  deleteRagUrl
 } from "@/app/(admin)/actions";
 
 export function useRagDocuments(page: number) {
   return useQuery({
     queryKey: ["rag-documents", page],
     queryFn: () => fetchRagDocuments(page)
+  });
+};
+
+export function useRagWebpages(page: number) {
+  return useQuery({
+    queryKey: ["rag-webpages", page],
+    queryFn: () => fetchRagWebpages(page)
   });
 };
 
@@ -105,3 +115,31 @@ export function useDeleteRagDoc() {
 
   return mutation;
 };
+
+export function useRagUploadUrl() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: uploadRagUrl,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rag-webpages"] });
+    },
+    onError: (error: Error) => {
+      console.error("URL upload failed", error);
+    },
+  });
+}
+
+export function useDeleteRagUrl() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteRagUrl,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rag-webpages"] });
+    },
+    onError: (error: Error) => {
+      console.error("URL delete failed", error);
+    },
+  });
+}

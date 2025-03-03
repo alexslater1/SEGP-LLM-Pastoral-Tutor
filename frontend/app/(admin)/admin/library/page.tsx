@@ -1,189 +1,54 @@
 'use client';
 
-import { PagedObjectTable } from "@/components/paged-object-table";
-import { useDeleteRagDoc, useDownloadRagDoc, useRagDocuments } from "@/hooks/use-rag";
-import { RagDocument } from "../../actions";
-import { humanReadableSize, getRelativeTimeString } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { useState } from "react";
-import { Trash2, Download } from "lucide-react";
-import { Markdown } from "@/components/markdown";
+import { PagedRagDocumentsTable } from "./paged-rag-documents-table";
+import { PagedRagWebpagesTable } from "./paged-rag-webpages-table";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function LibraryPage() {
-  return <PagedRagDocumentsTable />
-}
+  return <PagedRagSourcesTable />;
+} 
 
-function PagedRagDocumentsTable() {
-  return (
-    <PagedObjectTable
-      title="Document Library"
-      description="View all RAG documents uploaded to the library."
-      dataHook={useRagDocuments}
-      idField="id"
-      TableHeadings={RagDocumentsTableHeadings}
-      RowContents={RagDocumentsTableContents}
-      ExpandedRowContents={RagDocumentsExpandedTableContents}
-    />
-  )
-}
-
-function RagDocumentsTableHeadings() {
-  return (
-    <>
-      <th className="h-12 px-4 text-left align-middle font-semibold text-primary">
-        Document Name
-      </th>
-      <th className="h-12 w-[150px] px-4 text-left align-middle font-semibold text-primary">
-        Size
-      </th>
-      <th className="h-12 w-[180px] px-4 text-left align-middle font-semibold text-primary">
-        Upload Date
-      </th>
-      <th className="h-12 w-[100px] px-4 text-right align-middle font-semibold text-primary last:rounded-tr-xl">
-        Actions
-      </th>
-    </>
-  )
-}
-
-function RagDocumentsTableContents({data}: {data: RagDocument}) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const downloadMutation = useDownloadRagDoc();
-  const deleteMutation = useDeleteRagDoc();
-
-  const handleDownload = async (doc: RagDocument) => {
-    try {
-      toast.promise(downloadMutation.mutateAsync(doc.name), {
-        loading: `Downloading ${doc.name}...`,
-        success: () => {
-          toast.success(`Downloaded ${doc.name}`);
-          return `Downloaded ${doc.name}`;
-        },
-        error: () => {
-          toast.error("Failed to download file");
-          return "Failed to download file";
-        }
-      });
-    } catch (error) {
-      console.error("Download error:", error);
-    }
-  };
-
-  const handleDelete = async(doc: RagDocument) => {
-    try {
-      setIsDialogOpen(false);
-      toast.promise(deleteMutation.mutateAsync(doc.name), {
-        loading: `Deleting ${doc.name}...`,
-        success: () => {
-          toast.success(`Deleted ${doc.name}`);
-          return `Deleted ${doc.name}`;
-        },
-        error: () => {
-          toast.error("Failed to delete file");
-          return "Failed to delete file";
-        }
-      });
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
-  };
+function PagedRagSourcesTable() {
+  const [showDocuments, setShowDocuments] = useState(true);
 
   return (
-    <>
-      <td className="p-4 align-middle">
-        <div className="flex items-center">
-          <span>{data.name}</span>
-        </div>
-      </td>
-      <td className="p-4 align-middle">
-        {data.document_size && humanReadableSize(data.document_size)}
-      </td>
-      <td className="p-4 align-middle">
-        {data.date_uploaded && getRelativeTimeString(new Date(data.date_uploaded))}
-      </td>
-      <td className="p-4 align-middle text-right">
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload(data);
+    <div className="relative">
+      <div className="absolute right-6 top-8">
+        <div className="relative flex items-center bg-card rounded-lg p-1 border shadow-sm">
+          <div 
+            className="absolute h-[85%] top-[7.5%] bg-primary/10 rounded-md transition-all duration-300 ease-out"
+            style={{
+              left: showDocuments ? '3px' : '50%',
+              width: 'calc(50% - 6px)',
             }}
-            className="size-8 hover:text-primary"
+          />
+          
+          <Button
+            onClick={() => setShowDocuments(true)}
+            variant="ghost"
+            className={cn(
+              "relative px-2 z-10 transition-colors duration-300",
+              showDocuments ? "font-bold text-primary hover:bg-transparent" : "text-muted-foreground"
+            )}
           >
-            <Download className="size-4" />
+            Documents
           </Button>
           <Button
+            onClick={() => setShowDocuments(false)}
             variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsDialogOpen(true);
-            }}
-            className="size-8 text-destructive/80 hover:bg-destructive/30 hover:text-destructive"
+            className={cn(
+              "relative px-3 z-10 transition-colors duration-300",
+              !showDocuments ? "font-bold text-primary hover:bg-transparent" : "text-muted-foreground"
+            )}
           >
-            <Trash2 className="size-4" />
+            Webpages
           </Button>
         </div>
-      </td>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogPortal>
-          <DialogOverlay />
-          <DialogContent>
-            <DialogTitle className="text-destructive">Delete Document</DialogTitle>
-            <DialogDescription className="text-foreground">
-              Are you sure you want to delete &quot;{data.name}&quot;? This action cannot be undone.
-            </DialogDescription>
-            <div className="flex justify-end gap-2">
-              <Button
-                className="bg-muted hover:bg-muted/50"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsDialogOpen(false)
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-destructive hover:bg-destructive/50"
-                variant="destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(data);
-                }}
-              >
-                Delete
-              </Button>
-            </div>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    </>
-  )
-}
-
-function RagDocumentsExpandedTableContents({data}: {data: RagDocument}) {
-  return (
-    <>
-      <div>
-        <h4 className="font-semibold text-primary">Document Type:</h4>
-        <div className="text-foreground mt-1">
-          <Markdown>{data.document_type}</Markdown>
-        </div>
       </div>
-      <div>
-        <h4 className="font-semibold text-primary">URL:</h4>
-        <div className="text-foreground mt-1">
-          <Markdown>{data.url}</Markdown>
-        </div>
-      </div>
-    </>
-  )
+
+      {showDocuments ? <PagedRagDocumentsTable /> : <PagedRagWebpagesTable />}
+    </div>
+  );
 }
-
-

@@ -8,7 +8,7 @@ import { VoteAndMessage } from "@/lib/supabase/vote";
 import { Markdown } from "@/components/markdown";
 import { ChevronRight } from "lucide-react";
 
-export const ITEMS_PER_PAGE = 10;
+export const ITEMS_PER_PAGE: number = 10;
 
 export enum TableRowType {
   EXPANDABLE = "expandable",

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import { Button } from "@/components/ui/button";
-import { File, CloudUpload } from 'lucide-react';
+import { File, CloudUpload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn, getRelativeTimeString, humanReadableSize } from "@/lib/utils";
@@ -60,10 +60,10 @@ export default function UploadPage() {
 
   const isValidFileType = (file: File) => {
     const supportedTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'text/plain'
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain"
     ];
     return supportedTypes.includes(file.type);
   };
@@ -77,8 +77,8 @@ export default function UploadPage() {
       toast.error(
         <div>
           <p>
-            Unsupported file format{invalidFiles.length > 1 ? 's' : ''}:   
-            {invalidFiles.map(f => ` ${getFileExtension(f.name).toUpperCase()}`).join(', ')}
+            Unsupported file format{invalidFiles.length > 1 ? "s" : ""}:   
+            {invalidFiles.map(f => ` ${getFileExtension(f.name).toUpperCase()}`).join(", ")}
           </p>
           <p>Only PDF, DOCX, PPTX, and TXT files are supported.</p>
         </div>
@@ -88,18 +88,16 @@ export default function UploadPage() {
 
     try {
       toast.promise(uploadMutation.mutateAsync(files), {
-        loading: `Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`,
+        loading: `Uploading ${files.length} file${files.length > 1 ? "s" : ""}...`,
         success: () => {
-          toast.success(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`);
-          return `Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`;
+          return `Uploaded ${files.length} file${files.length > 1 ? "s" : ""}`;
         },
         error: () => {
-          toast.error('Failed to upload files');
-          return 'Failed to upload files';
+          return "Failed to upload files";
         }
       });
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
     }
   };
 
@@ -144,7 +142,7 @@ export default function UploadPage() {
                 accept=".pdf,.docx,.txt,.pptx"
                 disabled={uploadMutation.isPending}
               />
-              {uploadMutation.isPending ? 'Uploading...' : 'Browse Files'}
+              {uploadMutation.isPending ? "Uploading..." : "Browse Files"}
             </label>
           </Button>
           <p className="text-sm text-muted-foreground">
