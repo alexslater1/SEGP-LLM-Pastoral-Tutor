@@ -209,8 +209,14 @@ const VotePopover = ({
         <TooltipTrigger asChild> 
           <PopoverTrigger asChild> 
             <Button 
-              className={cn( "py-1 px-2 h-fit text-muted-foreground !pointer-events-auto", 
-                             messageVoted && "bg-zinc-300")} 
+              className={cn(
+                "py-1 px-2 h-fit",
+                messageVoted 
+                  ? type === 'upvote'
+                    ? "bg-success/10 border-success text-success hover:bg-success/20"
+                    : "bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20"
+                  : "text-muted-foreground hover:text-primary"
+              )} 
               variant="outline" 
               onClick={() => { 
                 if (messageVoted) { 
@@ -280,7 +286,6 @@ function VoteSubmitButton({submitVote, input}: {submitVote: () => void, input: s
         event.preventDefault();
         submitVote();
       }}
-      disabled={input.length === 0}
     >
       <ArrowUpIcon size={14} />
     </Button>

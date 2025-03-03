@@ -22,7 +22,7 @@ export default function TuteesPage() {
         <p className="text-foreground">View all tutees. Click on a tutee to view their chat history.</p>
       </div>
       <div>
-        <div className="bg-background md:w-1/2 w-full">
+        <div className="bg-background">
           <div className="rounded-xl border bg-card">
             <div className="overflow-hidden rounded-xl">
               <table className="w-full">
@@ -53,19 +53,11 @@ export default function TuteesPage() {
                         )}
                         onClick={() => router.push(`/admin/tutees/${user.id}`)}
                       >
-                        <td className="p-4 align-middle">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium`}
-                          >
-                            {capitalize(user.firstName)} {capitalize(user.lastName)}
-                          </span>
+                        <td className="p-4 align-middle text-foreground">
+                          {capitalize(user.firstName)} {capitalize(user.lastName)}
                         </td>
-                        <td className="p-4 align-middle">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium`}
-                          >
-                            {user.email}
-                          </span>
+                        <td className="p-4 align-middle text-foreground">
+                          {user.email}
                         </td>
                       </tr>
                     ))
