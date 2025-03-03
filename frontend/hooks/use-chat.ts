@@ -199,12 +199,6 @@ export function useChat({
       error: sendError,
     } = await sendMessageToBackend(chatSessionID, query, loginSession);
 
-    console.log("sendMessageAndGetResponse", {
-      requestID,
-      sessionID: newSessionID,
-      error: sendError,
-    });
-
     if (sendError) {
       let id = generateUUID();
       return {
@@ -371,7 +365,6 @@ async function sendMessageToBackend(
 ): Promise<BackendResponseCompletion> {
   try {
     const completionEndpoint = "/completion/v2";
-    console.log({ id, message, session: session.access_token });
     const response = await fetch(
       process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
       {

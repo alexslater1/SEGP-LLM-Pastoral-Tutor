@@ -11,6 +11,8 @@ import { VisibilityType } from "./visibility-selector";
 import { useUser } from "@/providers/user-provider";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSessionHistory } from "@/providers/session-history-provider";
+import { useChatUrl } from "@/providers/chat-url-provider";
 
 type MessageType = "initial" | "loading" | "error";
 
@@ -27,6 +29,9 @@ export function Chat({
   const query = useSearchParams().get("query");
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
   const firstAgentMessage = `Hi${user ? (" " + capitalize(user.firstName)) : ""}, I'm the Imperial College tutor agent. Ask me anything!`;
+
+  const [_, setChatUrl] = useChatUrl();
+  const { refresh: refreshHistory } = useSessionHistory();
 
   const {
     messages,
@@ -45,7 +50,12 @@ export function Chat({
     if (current_id) {
       const newUrl = `/chat/${current_id}`;
       window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, "", newUrl);
+
+      setChatUrl(newUrl);
+      refreshHistory();
     }
+    // setChatUrl and refreshHistory will not change, so we can disable the linting
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current_id]);
 
   return isInitialLoad ? (

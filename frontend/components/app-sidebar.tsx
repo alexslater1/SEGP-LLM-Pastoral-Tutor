@@ -18,12 +18,14 @@ import {
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useUser } from '@/providers/user-provider';
+import { useChatUrl } from '@/providers/chat-url-provider';
 
 
 export function AppSidebar() {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
   const user = useUser();
+  const [_, setChatUrl] = useChatUrl();
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -49,6 +51,7 @@ export function AppSidebar() {
                   className="p-2 h-fit hover:text-primary"
                   onClick={() => {
                     setOpenMobile(false);
+                    setChatUrl(null);
                     router.push('/');
                     router.refresh();
                   }}

@@ -110,7 +110,7 @@ export function useChatSessionHistory(): ChatHistoryItem {
         deleted: session.deleted,
       } as Chat;
     });
-    return history.filter(chat => !chat.deleted).reverse();
+    return history.filter(chat => !chat.deleted).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   };
 
   const fetchUIChatName = async (chatSessionID: string) => {

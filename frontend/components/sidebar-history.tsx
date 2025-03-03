@@ -48,6 +48,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { Chat } from "@/hooks/use-chat-history";
+import { useSessionHistory } from "@/providers/session-history-provider";
+import { useChatUrl } from "@/providers/chat-url-provider";
 
 type GroupedChats = {
   today: Chat[];
@@ -174,19 +176,15 @@ export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
 
 export function SidebarHistory({ user }: { user: User | null }) {
   const { setOpenMobile } = useSidebar();
-  const pathname = usePathname();
-  const { history, isLoading, refresh: mutate, error, deleteChat } = useChatSessionHistory();
-  const parseId = (pathname: string) => {
-      const id = pathname.split("/").pop();
-      return id;
-  };
+  const { history, isLoading, error, deleteChat } = useSessionHistory();
 
-  useEffect(() => {
-    mutate();
-    // We can safely ignore the mutate dependency here since it's stable
-    // and we only want to refresh when pathname changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  const [providedPathname, _] = useChatUrl();
+  const currentBrowserPathname = usePathname();
+  const parseId = () => {
+    const pathname = providedPathname || currentBrowserPathname;
+    const id = pathname.split("/").pop();
+    return id;
+  };
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -206,7 +204,7 @@ export function SidebarHistory({ user }: { user: User | null }) {
 
     setShowDeleteDialog(false);
 
-    if (deleteId === parseId(pathname)) {
+    if (deleteId === parseId()) {
       router.push("/");
     }
   };
@@ -328,7 +326,7 @@ export function SidebarHistory({ user }: { user: User | null }) {
                   <ChatItem
                     key={chat.id}
                     chat={chat}
-                    isActive={chat.id === parseId(pathname)}
+                    isActive={chat.id === parseId()}
                     onDelete={(chatId) => {
                       setDeleteId(chatId);
                       setShowDeleteDialog(true);
@@ -348,7 +346,7 @@ export function SidebarHistory({ user }: { user: User | null }) {
                   <ChatItem
                     key={chat.id}
                     chat={chat}
-                    isActive={chat.id === parseId(pathname)}
+                    isActive={chat.id === parseId()}
                     onDelete={(chatId) => {
                       setDeleteId(chatId);
                       setShowDeleteDialog(true);
@@ -368,7 +366,7 @@ export function SidebarHistory({ user }: { user: User | null }) {
                   <ChatItem
                     key={chat.id}
                     chat={chat}
-                    isActive={chat.id === parseId(pathname)}
+                    isActive={chat.id === parseId()}
                     onDelete={(chatId) => {
                       setDeleteId(chatId);
                       setShowDeleteDialog(true);
@@ -388,7 +386,7 @@ export function SidebarHistory({ user }: { user: User | null }) {
                   <ChatItem
                     key={chat.id}
                     chat={chat}
-                    isActive={chat.id === parseId(pathname)}
+                    isActive={chat.id === parseId()}
                     onDelete={(chatId) => {
                       setDeleteId(chatId);
                       setShowDeleteDialog(true);
@@ -408,7 +406,7 @@ export function SidebarHistory({ user }: { user: User | null }) {
                   <ChatItem
                     key={chat.id}
                     chat={chat}
-                    isActive={chat.id === parseId(pathname)}
+                    isActive={chat.id === parseId()}
                     onDelete={(chatId) => {
                       setDeleteId(chatId);
                       setShowDeleteDialog(true);

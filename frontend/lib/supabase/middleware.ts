@@ -1,8 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getUserData } from './user'
-import { ADMIN_WHITELISTED_PAGES, PUBLIC_PAGES, STUDENT_WHITELISTED_PAGES, TUTOR_WHITELISTED_PAGES } from '@/app/(admin)/role-authorization'
-import { UserRoleEnum } from '@/app/(admin)/role-authorization'
+import { 
+  UserRoleEnum, 
+  ADMIN_WHITELISTED_PAGES, 
+  PUBLIC_PAGES, 
+  STUDENT_WHITELISTED_PAGES, 
+  TUTOR_WHITELISTED_PAGES 
+} from '@/app/(admin)/role-authorization'
 
 
 export async function updateSession(request: NextRequest) {
@@ -50,9 +55,10 @@ export async function updateSession(request: NextRequest) {
 
   const userData = await getUserData(user.id)
   
+  let redirect: NextResponse<unknown> | null = null;
   switch (userData.role) {
     case UserRoleEnum.STUDENT:
-      let redirect = checkAndRedirect(request, STUDENT_WHITELISTED_PAGES, '/')
+      redirect = checkAndRedirect(request, STUDENT_WHITELISTED_PAGES, '/')
       if (redirect) {
         return redirect
       }

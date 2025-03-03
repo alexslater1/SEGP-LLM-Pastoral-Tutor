@@ -2,6 +2,8 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { cookies } from 'next/headers';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import Script from 'next/script';
+import { SessionHistoryProvider } from '@/providers/session-history-provider';
+import { ChatUrlProvider } from '@/providers/chat-url-provider';
 
 export const experimental_ppr = true;
 
@@ -20,8 +22,12 @@ export default async function Layout({
         strategy="beforeInteractive"
       />
       <SidebarProvider defaultOpen={!isCollapsed}>
-        <AppSidebar />
-        <SidebarInset>{children}</SidebarInset>
+        <SessionHistoryProvider>
+          <ChatUrlProvider>
+            <AppSidebar />
+            <SidebarInset>{children}</SidebarInset>
+          </ChatUrlProvider>
+        </SessionHistoryProvider>
       </SidebarProvider>
     </>
   );
