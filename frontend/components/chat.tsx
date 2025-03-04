@@ -23,7 +23,7 @@ export function Chat({
   const userContext = useUser();
   const query = useSearchParams().get("query");
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
-  const firstAgentMessage = "Hi Anshul, I am the Imperial College tutor agent! How are you doing? I see you have a big Graphics coursework due soon, how is that going?";
+  const firstAgentMessage = "Hi Anshul, I am the Imperial College tutor agent! How are you doing? Are you looking forward to your exams coming up?";
 
   const [_, setChatUrl] = useChatUrl();
   const { refresh: refreshHistory } = useSessionHistory();
