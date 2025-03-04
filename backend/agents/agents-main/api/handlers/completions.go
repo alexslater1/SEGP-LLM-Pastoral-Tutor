@@ -72,8 +72,7 @@ func ChatCompletionV2(agentProvider *agent.AgentProvider, store storage.Storage,
 			return
 		}
 
-		agents := agentProvider.GetAgents()
-		router := agent.NewLoggingAgent(agent.NewEventStoringAgent(agent.NewRouter(llm, agents, history), store))
+		router := agentProvider.GetRouter()
 
 		go func() {
 			resp, err := router.Run(newCtx, req.Query)

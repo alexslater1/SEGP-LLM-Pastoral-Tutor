@@ -8,7 +8,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/clock"
-	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/email"
 	googleSearch "github.com/segp/agents-main/google_search"
 	"github.com/segp/agents-main/history"
@@ -39,7 +38,7 @@ func TestToolCallChoiceString(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, newLoggingCallback())
 	)
 
 	toolChoicesString, err := agent.toolChoicesString()
@@ -58,7 +57,7 @@ func TestThinkingAndActPromptFirstIteration(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, newLoggingCallback())
 
 		query            = "test query"
 		knowledgeContext = "test knowledge context"
@@ -86,7 +85,7 @@ func TestThinkingAndActPromptSubsequentIteration(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, newLoggingCallback())
 
 		query            = "test query"
 		knowledgeContext = "test knowledge context"
@@ -114,7 +113,7 @@ func TestThinkAndChooseTool(t *testing.T) {
 		llm   = llm.NewMockLLM()
 		clock = clock.NewMockClock()
 		h     = history.NewLocalHistory()
-		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h)
+		agent = newFastAgent("test", "test", "test", toolHandler, llm, knowledge, clock, h, newLoggingCallback())
 
 		query            = "test query"
 		knowledgeContext = "test knowledge context"
@@ -139,45 +138,22 @@ func TestThinkAndChooseTool(t *testing.T) {
 	assert.Equal(t, "test thoughts", *thoughts)
 }
 
-func TestSubscribe(t *testing.T) {
-	clock := clock.NewMockClock()
-	h := history.NewLocalHistory()
-	agent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock, h)
-	ch := agent.Subscribe()
-	agent.publish(NewToolCallChoiceEvent(context.Background(), tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}))
-	event := <-ch
-	assert.Equal(t, AgentEventTypeToolCallChoice, event.Type)
-	assert.Equal(t, "test_request_id", event.RequestID)
-	assert.Equal(t, tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}, event.Data["toolCallChoice"])
-}
+// func TestFastAgentRun(t *testing.T) {
+// 	if os.Getenv("CICD") == "true" {
+// 		t.Skip("skipping test in CI")
+// 	}
 
-func TestUnsubscribe(t *testing.T) {
-	clock := clock.NewMockClock()
-	h := history.NewLocalHistory()
-	agent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock, h)
-	ch := agent.Subscribe()
-	agent.Unsubscribe(ch)
-	agent.publish(NewToolCallChoiceEvent(context.Background(), tools.ToolCall{Name: "test_tool_call", Arguments: `{"x": 1, "y": 2}`}))
-	_, ok := <-ch
-	assert.False(t, ok)
-}
+// 	agent := NewDefaultLoggingUserQueryAgent()
+// 	ctx := context_keys.SetRequestID(context.Background(), "2fea8a5f-b82c-4261-9889-3e42136d9ef0")
 
-func TestFastAgentRun(t *testing.T) {
-	if os.Getenv("CICD") == "true" {
-		t.Skip("skipping test in CI")
-	}
+// 	response, err := agent.Run(ctx, "what about in 3 days?")
+// 	if err != nil {
+// 		t.Fatalf("error running agent: %v", err)
+// 	}
 
-	agent := NewDefaultLoggingUserQueryAgent()
-	ctx := context_keys.SetRequestID(context.Background(), "2fea8a5f-b82c-4261-9889-3e42136d9ef0")
-
-	response, err := agent.Run(ctx, "what about in 3 days?")
-	if err != nil {
-		t.Fatalf("error running agent: %v", err)
-	}
-
-	t.Logf("answer: %s", *response.Answer)
-	t.Logf("reason: %s", *response.Reason)
-}
+// 	t.Logf("answer: %s", *response.Answer)
+// 	t.Logf("reason: %s", *response.Reason)
+// }
 
 func TestFastAgentAskQuestion(t *testing.T) {
 	if os.Getenv("CICD") == "true" {
@@ -186,7 +162,7 @@ func TestFastAgentAskQuestion(t *testing.T) {
 
 	agent := newFastAgent("test", "test", "test", tools.NewToolHandler([]tools.Tool{
 		// tools.NewGoogleSearchFirstResultsPageContentsTool(googleSearch.NewMockGoogleSearchClient(), 3),
-	}), llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set")), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory())
+	}), llm.NewGeminiLLM(context.Background(), utils.Required(os.Getenv("GEMINI_API_KEY"), "GEMINI_API_KEY is not set")), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory(), newLoggingCallback())
 
 	query := "What is the temperature?"
 	response, err := agent.Run(context.Background(), query)
@@ -199,12 +175,12 @@ func TestFastAgentAskQuestion(t *testing.T) {
 }
 
 func TestFastAgentDescription(t *testing.T) {
-	agent := newFastAgent("test", "a description", "a prompt", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory())
+	agent := newFastAgent("test", "a description", "a prompt", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory(), newLoggingCallback())
 	assert.Equal(t, "a description", agent.Description())
 }
 
 func TestFastAgentId(t *testing.T) {
-	agent := newFastAgent("test", "a description", "a prompt", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory())
+	agent := newFastAgent("test", "a description", "a prompt", tools.NewToolHandler([]tools.Tool{}), llm.NewMockLLM(), knowledge.NewLocalKnowledge(), clock.NewMockClock(), history.NewLocalHistory(), newLoggingCallback())
 	assert.Equal(t, "test", agent.Id())
 }
 
@@ -225,7 +201,7 @@ func TestPersonalTutorAgent(t *testing.T) {
 
 		agent = newFastAgent(id, desc, prompt, tools.NewToolHandler([]tools.Tool{
 			tools.NewEmailTool("personal.tutor@imperial.ac.uk", "Personal Tutor", email.NewMockEmailClient(), "To be used to send an email to a personal tutor, in case of a concern."),
-		}), llm, knowledge, clock, h)
+		}), llm, knowledge, clock, h, newLoggingCallback())
 	)
 
 	resp, err := agent.Run(context.Background(), "What's 1 + 1?")

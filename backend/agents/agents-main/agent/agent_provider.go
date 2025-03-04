@@ -76,6 +76,10 @@ func (ap *AgentProvider) GetAgents() []Agent {
 	return ap.currentAgents
 }
 
+func (ap *AgentProvider) GetRouter() *Router {
+	return NewRouter(ap.llm, ap.GetAgents(), ap.history, newEventStoringLoggingCallback(ap.storage))
+}
+
 func (ap *AgentProvider) SetAgentConfigs(configs []AgentProviderAgentConfig) error {
 	agentConfigs := make([]storage.AgentConfig, len(configs))
 	for i, config := range configs {
@@ -96,7 +100,7 @@ func (ap *AgentProvider) SetAgentConfigs(configs []AgentProviderAgentConfig) err
 }
 
 func (ap *AgentProvider) newFastAgentFrom(config storage.AgentConfig) (*FastAgent, error) {
-	return newFastAgent(config.Name, config.Description, config.Prompt, ap.toolHandlerFrom(config), ap.llm, ap.apiKnowledgeFrom(config), ap.clock, ap.history), nil
+	return newFastAgent(config.Name, config.Description, config.Prompt, ap.toolHandlerFrom(config), ap.llm, ap.apiKnowledgeFrom(config), ap.clock, ap.history, newEventStoringLoggingCallback(ap.storage)), nil
 }
 
 func (ap *AgentProvider) toolHandlerFrom(config storage.AgentConfig) *tools.ToolHandler {
