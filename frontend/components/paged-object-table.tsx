@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UseQueryResult } from "@tanstack/react-query";
 import { VoteAndMessage } from "@/lib/supabase/vote";
 import { Markdown } from "@/components/markdown";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ThumbsDown, ThumbsUp } from "lucide-react";
 
 export const ITEMS_PER_PAGE: number = 10;
 
@@ -61,10 +61,12 @@ export function PagedObjectTable<T>({
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h2 className="text-2xl text-primary font-bold tracking-tight">{title}</h2>
-        <p className="text-foreground">{description}</p>
-      </div>
+      {title !== "" && description !== "" && (
+        <div>
+          <h2 className="text-2xl text-primary font-bold tracking-tight">{title}</h2>
+          <p className="text-foreground">{description}</p>
+        </div>
+      )}
       <div>
         <div className="bg-background">
           <div className="rounded-xl border bg-card">
@@ -236,10 +238,10 @@ export function VotesTableContents<T>({data, includeVoteType}: {data: VoteAndMes
       </td>
       {includeVoteType && (
         <td className={cn(
-          "p-4 align-middle text-sm text-foreground",
+          "py-4 px-10 align-middle text-sm text-foreground",
           data.type === "downvote" ? "text-error" : "text-success"
         )}>
-          {data.type}
+          {data.type === "downvote" ? <ThumbsDown size={20} /> : <ThumbsUp size={20} />}
         </td>
       )}
     </>

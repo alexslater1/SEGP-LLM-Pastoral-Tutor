@@ -7,7 +7,7 @@ import { cn, getRelativeTimeString, truncateUrl } from "@/lib/utils";
 import { useRagWebpages, useRagUploadUrl } from "@/hooks/use-rag";
 import { toast } from "sonner";
 
-export default function WebScraperPage() {
+export function WebScraper() {
   const [isDragging, setIsDragging] = useState(false);
   const [url, setUrl] = useState("");
   const { data: webpages } = useRagWebpages(0);

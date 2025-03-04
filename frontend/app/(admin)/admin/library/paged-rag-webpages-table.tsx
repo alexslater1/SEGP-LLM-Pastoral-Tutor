@@ -12,8 +12,8 @@ import { RagWebpage } from "../../actions";
 export function PagedRagWebpagesTable() {
   return (
     <PagedObjectTable
-      title="Webpage Library"
-      description="View all webpages uploaded to the RAG library."
+      title=""
+      description=""
       dataHook={useRagWebpages}
       idField="id"
       TableHeadings={RagWebpagesTableHeadings}

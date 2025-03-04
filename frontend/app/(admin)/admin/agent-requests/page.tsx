@@ -3,7 +3,7 @@
 import { PagedObjectTable } from "@/components/paged-object-table";
 import { useAgentRequests } from "@/hooks/use-agent-data";
 import { AgentRequest } from "../../actions";
-import { getRelativeTimeString } from "@/lib/utils";
+import { getRelativeTimeString, cn } from "@/lib/utils";
 import { Markdown } from "@/components/markdown";
 
 export default function AgentRequestsPage() {
@@ -72,8 +72,11 @@ function AgentRequestsTableContents<T>({data}: {data: AgentRequest}) {
         </span>
       </td>
       <td className="p-4 align-middle">
-        <div className="truncate max-w-[500px]">
-          {data.metadata.query}
+        <div className={cn(
+          "truncate max-w-[500px]",
+          !data.metadata.query && "text-gray-500"
+        )}>
+          {data.metadata.query || "N/A"}
         </div>
       </td>
       <td className="p-4 align-middle text-sm text-foreground">
@@ -87,12 +90,14 @@ function AgentRequestsTableContents<T>({data}: {data: AgentRequest}) {
 function AgentRequestsExpandedTableContents({data}: {data: AgentRequest, index: number}) {
   return (
     <>
-      <div>
-        <h4 className="font-semibold text-primary">Full Query:</h4>
-        <div className="text-foreground mt-1">
-          <Markdown>{data.metadata.query}</Markdown>
+      {data.metadata.query && (
+        <div>
+          <h4 className="font-semibold text-primary">Full Query:</h4>
+          <div className="text-foreground mt-1">
+            <Markdown>{data.metadata.query}</Markdown>
+          </div>
         </div>
-      </div>
+      )}
     </>
   )
 }

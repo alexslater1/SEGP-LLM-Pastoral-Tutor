@@ -4,6 +4,8 @@ import { useState } from "react";
 import { PagedRagDocumentsTable } from "./paged-rag-documents-table";
 import { PagedRagWebpagesTable } from "./paged-rag-webpages-table";
 import { PageSelectionBar } from "@/components/page-selection-bar";
+import { WebScraper } from "./web-scraper";
+import { DocumentUpload } from "./document-upload";
 
 export default function LibraryPage() {
   return <PagedRagSourcesTable />;
@@ -15,7 +17,15 @@ function PagedRagSourcesTable() {
   return (
     <>
       <PageSelectionBar pageNumber={page} setPage={setPage} pageNames={["Documents", "Webpages"]} />
-      {page === 0 ? <PagedRagDocumentsTable /> : <PagedRagWebpagesTable />}
+      {page === 0 ? 
+      <>
+        <DocumentUpload />
+        <PagedRagDocumentsTable />
+      </> : 
+      <>
+        <WebScraper />
+        <PagedRagWebpagesTable />
+      </>}
     </>
   );
 }

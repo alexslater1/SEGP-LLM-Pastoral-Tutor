@@ -18,6 +18,8 @@ export interface AgentEvent {
       arguments: string;
     };
     toolCallResult?: string;
+    query?: string;
+    agentID?: string;
   };
 }
 
@@ -26,7 +28,7 @@ export interface AgentRequest {
   created_at?: string;
   endpoint: string;
   metadata: {
-    query: string;
+    query?: string;
   };
 }
 
@@ -80,6 +82,8 @@ export async function fetchAgentEvents(page: number) {
         reason: event.metadata?.reason,
         toolCallChoice: event.metadata?.toolCallChoice,
         toolCallResult: event.metadata?.toolCallResult,
+        query: event.metadata?.query,
+        agentID: event.metadata?.agentID,
       },
     })) as AgentEvent[],
     totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),

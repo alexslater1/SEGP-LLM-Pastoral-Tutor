@@ -99,6 +99,22 @@ function AgentEventsExpandedTableContents({data, index}: {data: AgentEvent, inde
           </div>
         </div>
       )}
+      {data.metadata.query && (
+        <div>
+          <h4 className="font-semibold text-primary">Query:</h4>
+          <p className="text-foreground mt-1">
+            {data.metadata.query}
+          </p>
+        </div>
+      )}
+      {data.metadata.agentID && (
+        <div>
+          <h4 className="font-semibold text-primary">Agent ID:</h4>
+          <p className="text-foreground mt-1">
+            {data.metadata.agentID}
+          </p>
+        </div>
+      )}
       {data.metadata.toolCallChoice && (
         <div>
           <h4 className="font-semibold text-primary">Tool Call:</h4>

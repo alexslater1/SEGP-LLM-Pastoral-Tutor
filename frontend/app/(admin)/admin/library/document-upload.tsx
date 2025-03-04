@@ -11,7 +11,7 @@ const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
 };
 
-export default function UploadPage() {
+export function DocumentUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const { data: documents } = useRagDocuments(0);
   const uploadMutation = useRagUploadDocs();
