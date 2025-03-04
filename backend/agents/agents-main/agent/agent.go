@@ -25,8 +25,7 @@ type AgentResponse struct {
 
 type Agent interface {
 	Run(ctx context.Context, input string) (*AgentResponse, error)
-	Subscribe() <-chan AgentEvent
-	Unsubscribe(ch <-chan AgentEvent)
+	handleEvent(event AgentEvent)
 
 	Id() string
 	Description() string

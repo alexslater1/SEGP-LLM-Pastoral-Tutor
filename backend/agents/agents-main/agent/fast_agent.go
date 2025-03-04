@@ -41,9 +41,11 @@ type FastAgent struct {
 	History     history.History
 
 	subscribers []chan AgentEvent
+
+	callback func(event AgentEvent)
 }
 
-func newFastAgent(id string, description string, prompt string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History) *FastAgent {
+func newFastAgent(id string, description string, prompt string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History, callback func(event AgentEvent)) *FastAgent {
 	return &FastAgent{
 		ID:     id,
 		Desc:   description,
@@ -56,6 +58,7 @@ func newFastAgent(id string, description string, prompt string, toolHandler *too
 		History:     history,
 
 		subscribers: []chan AgentEvent{},
+		callback:    callback,
 	}
 }
 
@@ -70,46 +73,18 @@ func (a *FastAgent) Description() string {
 func (a *FastAgent) Run(ctx context.Context, query string) (*AgentResponse, error) {
 	ctx = context_keys.SetAgentID(ctx, a.ID)
 
-	a.publish(NewQueryEvent(ctx, query))
+	a.handleEvent(NewQueryEvent(ctx, query))
 	response, err := a.logicLoop(ctx, query)
 	if err != nil {
-		a.publish(NewAnswerErrorEvent(ctx, err.Error()))
+		a.handleEvent(NewAnswerErrorEvent(ctx, err.Error()))
 	}
 
-	a.close()
 	return response, err
 }
 
-func (a *FastAgent) Subscribe() <-chan AgentEvent {
-	ch := make(chan AgentEvent, defaultSubscriberBufferSize)
-	a.subscribers = append(a.subscribers, ch)
-	return ch
-}
-
-func (a *FastAgent) Unsubscribe(ch <-chan AgentEvent) {
-	for i, subscriber := range a.subscribers {
-		if subscriber == ch {
-			close(subscriber)
-			a.subscribers = append(a.subscribers[:i], a.subscribers[i+1:]...)
-			break
-		}
-	}
-}
-
-func (a *FastAgent) close() {
-	for _, subscriber := range a.subscribers {
-		close(subscriber)
-	}
-	a.subscribers = []chan AgentEvent{}
-}
-
-func (a *FastAgent) publish(event AgentEvent) {
-	for _, subscriber := range a.subscribers {
-		select {
-		case subscriber <- event:
-		default:
-			slog.Warn("Subscriber buffer is full, skipping event", "event", event)
-		}
+func (a *FastAgent) handleEvent(event AgentEvent) {
+	if a.callback != nil {
+		a.callback(event)
 	}
 }
 
@@ -118,7 +93,7 @@ func (a *FastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.Tool
 	if err != nil {
 		return nil, err
 	}
-	a.publish(NewAnswerSuccessEvent(ctx, *response, *reason))
+	a.handleEvent(NewAnswerSuccessEvent(ctx, *response, *reason))
 	return &AgentResponse{
 		Answer: response,
 		Reason: reason,
@@ -157,7 +132,7 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse
 		if err != nil {
 			return nil, err
 		}
-		a.publish(NewToolCallResultEvent(ctx, result))
+		a.handleEvent(NewToolCallResultEvent(ctx, result))
 		prevToolCallResult = result
 
 		prevThoughts = thoughts
@@ -218,7 +193,7 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 	}
 
 	if toolCall.Name != "no_tool" {
-		a.publish(NewToolCallChoiceEvent(ctx, *toolCall))
+		a.handleEvent(NewToolCallChoiceEvent(ctx, *toolCall))
 	}
 
 	var parsedArgs map[string]interface{}

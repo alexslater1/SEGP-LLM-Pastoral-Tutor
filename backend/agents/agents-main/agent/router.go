@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"sync"
 
 	"github.com/segp/agents-main/context_keys"
 	"github.com/segp/agents-main/history"
@@ -28,20 +27,15 @@ type Router struct {
 	agents  []Agent
 	history history.History
 
-	subscribersMu sync.RWMutex
-	subscribers   []chan AgentEvent
+	callback func(event AgentEvent)
 }
 
-func NewRouter(llm llm.LLM, agents []Agent, history history.History) *Router {
+func NewRouter(llm llm.LLM, agents []Agent, history history.History, callback func(event AgentEvent)) *Router {
 	r := &Router{
-		llm:         llm,
-		agents:      agents,
-		history:     history,
-		subscribers: []chan AgentEvent{},
-	}
-
-	for _, agent := range agents {
-		go r.forwardEventsLoop(agent.Subscribe())
+		llm:      llm,
+		agents:   agents,
+		history:  history,
+		callback: callback,
 	}
 
 	return r
@@ -51,7 +45,7 @@ func (r *Router) Run(ctx context.Context, query string) (*AgentResponse, error) 
 	ctx = context_keys.SetAgentID(ctx, r.Id())
 
 	slog.Info("Running router", "query", query)
-	r.publish(NewQueryEvent(ctx, query))
+	r.handleEvent(NewQueryEvent(ctx, query))
 	agent, _, err := r.pickAgentForQuery(ctx, query)
 	if err != nil {
 		return nil, err
@@ -68,30 +62,9 @@ func (r *Router) Description() string {
 	return description
 }
 
-func (r *Router) Subscribe() <-chan AgentEvent {
-	ch := make(chan AgentEvent, defaultSubscriberBufferSize)
-	r.subscribersMu.Lock()
-	r.subscribers = append(r.subscribers, ch)
-	r.subscribersMu.Unlock()
-	return ch
-}
-
-func (r *Router) Unsubscribe(ch <-chan AgentEvent) {
-	r.subscribersMu.Lock()
-	defer r.subscribersMu.Unlock()
-
-	for i, subscriber := range r.subscribers {
-		if subscriber == ch {
-			close(subscriber)
-			r.subscribers = append(r.subscribers[:i], r.subscribers[i+1:]...)
-			break
-		}
-	}
-}
-
-func (r *Router) forwardEventsLoop(agentCh <-chan AgentEvent) {
-	for event := range agentCh {
-		r.publish(event)
+func (r *Router) handleEvent(event AgentEvent) {
+	if r.callback != nil {
+		r.callback(event)
 	}
 }
 
@@ -101,19 +74,6 @@ func (r *Router) chatHistory(ctx context.Context) ([]string, error) {
 		return nil, nil
 	}
 	return r.history.GetMessageHistory(sessionId)
-}
-
-func (r *Router) publish(event AgentEvent) {
-	r.subscribersMu.RLock()
-	defer r.subscribersMu.RUnlock()
-
-	for _, subscriber := range r.subscribers {
-		select {
-		case subscriber <- event:
-		default:
-			slog.Warn("Subscriber buffer is full, skipping event", "event", event)
-		}
-	}
 }
 
 func (r *Router) queryAndHistoryStrFrom(ctx context.Context, query string) (string, error) {
@@ -151,7 +111,7 @@ func (r *Router) pickAgentForQuery(ctx context.Context, query string) (Agent, st
 	if !ok {
 		return nil, "", fmt.Errorf("agent not found")
 	}
-	r.publish(NewRouterSelectionEvent(ctx, routerSelection.AgentID, routerSelection.Reason))
+	r.handleEvent(NewRouterSelectionEvent(ctx, routerSelection.AgentID, routerSelection.Reason))
 	return agent, routerSelection.Reason, nil
 }
 
