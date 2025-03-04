@@ -73,19 +73,13 @@ func (a *FastAgent) Description() string {
 func (a *FastAgent) Run(ctx context.Context, query string) (*AgentResponse, error) {
 	ctx = context_keys.SetAgentID(ctx, a.ID)
 
-	a.handleEvent(NewQueryEvent(ctx, query))
+	handleEvent(a.callback, NewQueryEvent(ctx, query))
 	response, err := a.logicLoop(ctx, query)
 	if err != nil {
-		a.handleEvent(NewAnswerErrorEvent(ctx, err.Error()))
+		handleEvent(a.callback, NewAnswerErrorEvent(ctx, err.Error()))
 	}
 
 	return response, err
-}
-
-func (a *FastAgent) handleEvent(event AgentEvent) {
-	if a.callback != nil {
-		a.callback(event)
-	}
 }
 
 func (a *FastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.ToolCall) (*AgentResponse, error) {
@@ -93,7 +87,7 @@ func (a *FastAgent) handleGiveAnswer(ctx context.Context, toolChoice *tools.Tool
 	if err != nil {
 		return nil, err
 	}
-	a.handleEvent(NewAnswerSuccessEvent(ctx, *response, *reason))
+	handleEvent(a.callback, NewAnswerSuccessEvent(ctx, *response, *reason))
 	return &AgentResponse{
 		Answer: response,
 		Reason: reason,
@@ -132,7 +126,7 @@ func (a *FastAgent) logicLoop(ctx context.Context, query string) (*AgentResponse
 		if err != nil {
 			return nil, err
 		}
-		a.handleEvent(NewToolCallResultEvent(ctx, result))
+		handleEvent(a.callback, NewToolCallResultEvent(ctx, result))
 		prevToolCallResult = result
 
 		prevThoughts = thoughts
@@ -193,7 +187,7 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 	}
 
 	if toolCall.Name != "no_tool" {
-		a.handleEvent(NewToolCallChoiceEvent(ctx, *toolCall))
+		handleEvent(a.callback, NewToolCallChoiceEvent(ctx, *toolCall))
 	}
 
 	var parsedArgs map[string]interface{}

@@ -45,7 +45,7 @@ func (r *Router) Run(ctx context.Context, query string) (*AgentResponse, error) 
 	ctx = context_keys.SetAgentID(ctx, r.Id())
 
 	slog.Info("Running router", "query", query)
-	r.handleEvent(NewQueryEvent(ctx, query))
+	handleEvent(r.callback, NewQueryEvent(ctx, query))
 	agent, _, err := r.pickAgentForQuery(ctx, query)
 	if err != nil {
 		return nil, err
@@ -60,12 +60,6 @@ func (r *Router) Id() string {
 
 func (r *Router) Description() string {
 	return description
-}
-
-func (r *Router) handleEvent(event AgentEvent) {
-	if r.callback != nil {
-		r.callback(event)
-	}
 }
 
 func (r *Router) chatHistory(ctx context.Context) ([]string, error) {
@@ -111,7 +105,7 @@ func (r *Router) pickAgentForQuery(ctx context.Context, query string) (Agent, st
 	if !ok {
 		return nil, "", fmt.Errorf("agent not found")
 	}
-	r.handleEvent(NewRouterSelectionEvent(ctx, routerSelection.AgentID, routerSelection.Reason))
+	handleEvent(r.callback, NewRouterSelectionEvent(ctx, routerSelection.AgentID, routerSelection.Reason))
 	return agent, routerSelection.Reason, nil
 }
 
