@@ -35,19 +35,6 @@ func main() {
 
 		llm = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
 
-		// TODO: why does this order matter??? -> does the go routine go out of scope...
-		routerAgent = agent.NewLoggingAgent(agent.NewEventStoringAgent(agent.NewRouter(llm, []agent.Agent{
-			// agent.NewAcadmemicSupportStudyAgent(),
-			// agent.NewAdminUniServicesAgent(),
-			// agent.NewCareerProfessionalDevelopmentAgent(),
-			// agent.NewWellbeingMentalHealthPersonalDevelopmentAgent(),
-			// agent.NewFinancialAccomodationResourceAgent(),
-			// agent.NewCampusLifeSocialAgent(),
-			// agent.NewAccessibilityDisabilityAgent(),
-			// agent.NewTransitionDiversityMiscAgent(),
-			// agent.NewGeneralPurposeAgent(),
-		}, history), store))
-
 		js = []jobs.Job{
 			// jobs.NewChatCheckerJob(store, history, llm, email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),
 		}
@@ -69,7 +56,7 @@ func main() {
 	listenAddr := flag.String("listen", ":"+port, "HTTP server listen address")
 	flag.Parse()
 
-	server := api.NewServer(*listenAddr, store, routerAgent, history, jobManager, llm, agentProvider)
+	server := api.NewServer(*listenAddr, store, history, jobManager, llm, agentProvider)
 	log.Printf("Starting server on http://localhost%s", *listenAddr)
 	log.Fatal(server.Start())
 }
