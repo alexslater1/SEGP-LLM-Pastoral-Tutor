@@ -60,8 +60,8 @@ func TestToolHandlerFrom(t *testing.T) {
 }
 
 func TestAgentSetAgents(t *testing.T) {
+	storage.Store(store, config)
 	ap := NewAgentProvider(store, agentLlm, c, h, googleSearchClient, searchKnowledge, imperialApiHandler)
-	storage.Store(ap.storage, config)
 
 	assert.Equal(t, 1, len(ap.currentAgents))
 

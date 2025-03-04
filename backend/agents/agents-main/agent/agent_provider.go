@@ -45,7 +45,11 @@ type AgentProvider struct {
 
 func NewAgentProvider(storage storage.Storage, llm llm.LLM, clock clock.Clock, history history.History, googleSearchClient googleSearch.GoogleSearchClient, searchKnowledge knowledge.Knowledge, imperialApiHandler *imperial_apis.ImperialApiHandler) *AgentProvider {
 	ap := &AgentProvider{storage: storage, llm: llm, clock: clock, history: history, googleSearchClient: googleSearchClient, imperialApiHandler: imperialApiHandler, searchKnowledge: searchKnowledge}
-	ap.RefreshAgents()
+
+	if err := ap.RefreshAgents(); err != nil {
+		log.Fatalf("Error refreshing agents: %v", err)
+	}
+
 	return ap
 }
 
