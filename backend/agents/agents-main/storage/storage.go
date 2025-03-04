@@ -17,6 +17,8 @@ const (
 	StorageTableNameChatChecks        StorageTableName = "chat_checks"
 	StorageTableNameCompletionResults StorageTableName = "completion_results"
 	StorageTableNameAgentConfigs      StorageTableName = "agent_configs"
+	StorageTableNameUpvotes           StorageTableName = "upvoted_responses"
+	StorageTableNameDownvotes         StorageTableName = "downvoted_responses"
 )
 
 type Storage interface {

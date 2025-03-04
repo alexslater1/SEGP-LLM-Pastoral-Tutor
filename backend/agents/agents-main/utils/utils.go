@@ -49,6 +49,9 @@ func DoAsyncList[T any, U any](items []T, fn func(T) (U, error)) []*Task[U] {
 }
 
 func (task *Task[T]) Get() (T, error) {
+	defer close(task.ch)
+	defer close(task.errorCh)
+
 	var zero T // This will initialize `zero` to the zero value for type T
 	select {
 	case result := <-task.ch:

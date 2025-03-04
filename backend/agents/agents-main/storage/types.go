@@ -74,7 +74,7 @@ type Session struct {
 	CreatedByRequestId string     `json:"created_by_request_id"`
 	Name               *string    `json:"name,omitempty"`
 	UserID             string     `json:"user_id"`
-    Deleted            bool       `json:"deleted"`
+	Deleted            bool       `json:"deleted"`
 }
 
 func (s Session) TableName() StorageTableName {
@@ -178,4 +178,44 @@ func NewAgentConfig(name string, prompt string, description string, tools []stri
 
 func (ac AgentConfig) TableName() StorageTableName {
 	return StorageTableNameAgentConfigs
+}
+
+type UpvotedResponses struct {
+	ID        string     `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UserID    string     `json:"user_id"`
+	RequestID string     `json:"request_id"`
+	Reason    string     `json:"reason"`
+}
+
+func (u UpvotedResponses) TableName() StorageTableName {
+	return StorageTableNameUpvotes
+}
+
+func NewUpvotedResponses(userID string, requestID string, reason string) UpvotedResponses {
+	return UpvotedResponses{
+		UserID:    userID,
+		RequestID: requestID,
+		Reason:    reason,
+	}
+}
+
+type DownvotedResponses struct {
+	ID        string     `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UserID    string     `json:"user_id"`
+	RequestID string     `json:"request_id"`
+	Reason    string     `json:"reason"`
+}
+
+func (d DownvotedResponses) TableName() StorageTableName {
+	return StorageTableNameDownvotes
+}
+
+func NewDownvotedResponses(userID string, requestID string, reason string) DownvotedResponses {
+	return DownvotedResponses{
+		UserID:    userID,
+		RequestID: requestID,
+		Reason:    reason,
+	}
 }
