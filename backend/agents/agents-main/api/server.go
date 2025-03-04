@@ -18,18 +18,16 @@ type Server struct {
 
 	storage       storage.Storage
 	history       history.History
-	agent         agent.Agent
 	jobManager    *jobs.JobManager
 	llm           llm.LLM
 	agentProvider *agent.AgentProvider
 }
 
-func NewServer(listenAddr string, storage storage.Storage, agent agent.Agent, history history.History, jobManager *jobs.JobManager, llm llm.LLM, agentProvider *agent.AgentProvider) *Server {
+func NewServer(listenAddr string, storage storage.Storage, history history.History, jobManager *jobs.JobManager, llm llm.LLM, agentProvider *agent.AgentProvider) *Server {
 	s := &Server{
 		listenAddr:    listenAddr,
 		router:        http.NewServeMux(),
 		storage:       storage,
-		agent:         agent,
 		history:       history,
 		jobManager:    jobManager,
 		llm:           llm,
@@ -47,7 +45,7 @@ func (s *Server) routes() {
 	s.router.HandleFunc("GET /sessions/{session_id}/history", handlers.ChatHistory(s.history))
 	s.router.HandleFunc("GET /sessions", handlers.SessionIdsForLoggedInUser(s.storage))
 	s.router.HandleFunc("GET /sessions/{session_id}", handlers.SessionFromId(s.storage))
- 	s.router.HandleFunc("DELETE /sessions/{session_id}", handlers.SetDeletedSessionFromId(s.storage))
+	s.router.HandleFunc("DELETE /sessions/{session_id}", handlers.SetDeletedSessionFromId(s.storage))
 
 	s.router.HandleFunc("GET /user/{user_id}/sessions", handlers.SessionIdsForDifferentUser(s.storage))
 
