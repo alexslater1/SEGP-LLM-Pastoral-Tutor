@@ -41,7 +41,7 @@ function PagedChatHistoryTable() {
       ExpandedRowContents={() => null}
       rowType={TableRowType.CLICKABLE}
       rowClickHandler={(data: Chat) => {
-        router.push(`/admin/tutee-chat/${data.id}?title=${data.title}&user_id=${user_id}`);
+        router.push(`/admin/user-chat/${data.id}?title=${data.title}&user_id=${user_id}`);
       }}
     />
   )

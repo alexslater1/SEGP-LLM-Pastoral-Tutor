@@ -4,6 +4,8 @@ import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from './ui/button';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { useUser } from '@/providers/user-provider';
+import { UserRoleEnum } from '@/app/(admin)/role-authorization';
 
 export function AdminHeader() {
   const pathname = usePathname();
@@ -21,12 +23,17 @@ export function AdminHeader() {
 function AdditionalAdminHeaderElements({ pathname }: { pathname: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const userContext = useUser();
+  const subordinatesName = userContext.user?.role === UserRoleEnum.TUTOR ? "Tutee" : "User";
 
-  if (pathname.includes('/tutees/')) {
+  if (pathname.includes('/users/')) {
     return (
-      <BackButton text="Back to Tutees" path="/admin/tutees" />
+      <BackButton 
+        text={"Back to " + subordinatesName + "s"}
+        path="/admin/users" 
+      />
     )
-  } else if (pathname.includes('/tutee-chat/')) {
+  } else if (pathname.includes('/user-chat/')) {
     const title = searchParams.get('title');
     const user_id = searchParams.get('user_id');
     return (
@@ -39,9 +46,17 @@ function AdditionalAdminHeaderElements({ pathname }: { pathname: string }) {
           </div>
         </div>
         {user_id ? (
-          <BackButton className="z-20" text="Back to Tutee Chat History" path={`/admin/tutees/${user_id}`} />
+          <BackButton 
+            className="z-20" 
+            text={"Back to " + subordinatesName + " Chat History"} 
+            path={`/admin/users/${user_id}`} 
+          />
         ) : (
-          <BackButton className="z-20" text="Back to Tutees" path="/admin/tutees" />
+          <BackButton 
+            className="z-20" 
+            text={"Back to " + subordinatesName + "s"} 
+            path="/admin/users" 
+          />
         )}
       </>
     )

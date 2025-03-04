@@ -7,7 +7,7 @@ export type User = {
   id: string;
   role: UserRoleEnum;
   firstName: string;
-  lastName: string;
+  lastName?: string;
   email: string;
   superior: string;
 };
@@ -39,7 +39,7 @@ export async function getUserData(id: string): Promise<User> {
     id: data.id,
     role: data.role as UserRoleEnum,
     firstName: data.first_name,
-    lastName: data.last_name,
+    lastName: data.last_name || undefined,
     email: data.email,
     superior: data.superior,
   };
@@ -47,7 +47,10 @@ export async function getUserData(id: string): Promise<User> {
 
 export async function getUserSubordinates(user: User): Promise<User[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("user_data").select("*").eq("superior", user.id);
+  const { data, error } = 
+    user.role === UserRoleEnum.ADMIN ?
+      await supabase.from("user_data").select("*") :
+      await supabase.from("user_data").select("*").eq("superior", user.id);
 
   if (error) {
     console.error("Error fetching user_data:", error.message);

@@ -36,6 +36,7 @@ export function AdminSidebar() {
 
   const adminMenuItems = [
     { href: "/admin", icon: Home, label: "Dashboard" },
+    { href: "/admin/users", icon: UserRound, label: "Users" },
     { href: "/admin/library", icon: Library, label: "RAG Library" },
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
     { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
@@ -45,7 +46,7 @@ export function AdminSidebar() {
 
   const tutorMenuItems = [
     { href: "/admin", icon: Home, label: "Dashboard" },
-    { href: "/admin/tutees", icon: UserRound, label: "Tutees" },
+    { href: "/admin/users", icon: UserRound, label: "Tutees" },
   ];
 
   if (!userContext.user) {

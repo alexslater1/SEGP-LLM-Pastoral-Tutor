@@ -41,7 +41,7 @@ const THEME_COLOR_SCRIPT = `\
 
 export default async function RootLayout({children}: {children: React.ReactNode}) {
   const user = await getUser();
-  const subordinates = user && user.role === UserRoleEnum.TUTOR ? await getUserSubordinates(user) : null;
+  const subordinates = user && await getUserSubordinates(user);
 
   return (
     <html
