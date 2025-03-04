@@ -23,7 +23,7 @@ import { ArrowUpIcon, InfoIcon, XIcon } from 'lucide-react';
 import { cx } from 'class-variance-authority';
 import { Textarea } from './ui/textarea';
 import { cn } from '@/lib/utils';
-import { VoteType } from '@/lib/supabase/vote';
+import { FetchVoteType } from '@/lib/supabase/vote';
 
 export function PureMessageActions({
   chatId,
@@ -63,7 +63,7 @@ export function PureMessageActions({
   if (message.role === 'user') return null;
   if (!chatId) return null;
 
-  const setPopoverState = (type: VoteType, state: boolean) => {
+  const setPopoverState = (type: FetchVoteType, state: boolean) => {
     if (state && !messageDownvoted && type === 'downvote') {
       setIsDownvotePopoverOpen(state);
     } else if (state && !messageUpvoted && type === 'upvote') {
@@ -158,12 +158,12 @@ const capitalize = (str: string) => {
 }
 
 type VotePopoverProps = {
-  type: VoteType,
+  type: FetchVoteType,
   messageVoted: boolean,
   removeVoteMessage: (messageId: string) => Promise<void>,
   voteMessage: (messageId: string, reason?: string) => Promise<void>
   isVotePopoverOpen: boolean,
-  changePopoverState: (type: VoteType, state: boolean) => void,
+  changePopoverState: (type: FetchVoteType, state: boolean) => void,
   isVoteHover: boolean,
   setIsVoteHover: (state: boolean) => void,
   input: string,

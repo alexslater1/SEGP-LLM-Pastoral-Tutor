@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getAllVotes, VoteType } from "@/lib/supabase/vote";
+import { getAllVotes, FetchVoteType } from "@/lib/supabase/vote";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -117,8 +117,16 @@ export async function fetchAgentRequests(page: number) {
   };
 }
 
+export type VoteType = 'downvote' | 'upvote' | 'both'
+
 export async function fetchVotes(type: VoteType, page: number) {
-  const votes = await getAllVotes(type);
+  let votes = []
+  if (type === 'downvote' || type === 'upvote') {
+    votes = await getAllVotes(type);
+  } else {
+    votes = await getAllVotes('downvote');
+    votes.push(...await getAllVotes('upvote'));
+  }
 
   // Sort downvotes by creation date in descending order
   const sortedVotes = votes.sort((a, b) => 
@@ -127,8 +135,6 @@ export async function fetchVotes(type: VoteType, page: number) {
 
   const start = page * ITEMS_PER_PAGE;
   const end = start + ITEMS_PER_PAGE - 1;
-
-  console.log("ITEMS_PER_PAGE", ITEMS_PER_PAGE);
 
   const slicedVotes = sortedVotes.slice(start, end);
 

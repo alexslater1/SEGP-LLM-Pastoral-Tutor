@@ -81,7 +81,7 @@ export function PagedObjectTable<T>({
                 <tbody className="divide-y divide-border">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={5} className="p-0">
+                      <td colSpan={10} className="p-0">
                         <div className="h-[569px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
                           Loading...
                         </div>
@@ -90,7 +90,7 @@ export function PagedObjectTable<T>({
                   ) : !data || data.data.length === 0 ? 
                   (
                     <tr>
-                      <td colSpan={5} className="p-0">
+                      <td colSpan={10} className="p-0">
                         <div className="h-[569px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
                           No table entries found
                         </div>
@@ -134,7 +134,7 @@ export function PagedObjectTable<T>({
                                     : "bg-table-row-even"
                                 )}
                               >
-                                <td colSpan={5} className="p-0">
+                                <td colSpan={10} className="p-0">
                                   <motion.div
                                     initial={{ height: 0 }}
                                     animate={{ height: "auto" }}
@@ -186,7 +186,37 @@ export function PagedObjectTable<T>({
   )
 }
 
-export function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
+export enum VoteHeadingType {
+  UPVOTE = "Upvote",
+  DOWNVOTE = "Downvote",
+  BOTH = "Vote",
+}
+
+export function VotesTableHeadings({headingType}: {headingType: VoteHeadingType}) {
+  return (
+    <>
+      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+        {headingType} ID
+      </th>
+      <th className="h-12 w-[350px] px-4 text-left align-middle font-semibold text-primary">
+        Request ID
+      </th>
+      <th className="h-12 w-[300px] px-4 text-left align-middle font-semibold text-primary">
+        User Email
+      </th>
+      <th className="h-12 w-[150px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
+        Time
+      </th>
+      {headingType === VoteHeadingType.BOTH && (
+        <th className="h-12 w-[150px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
+          Vote Type
+        </th>
+      )}
+    </>
+  )
+}
+
+export function VotesTableContents<T>({data, includeVoteType}: {data: VoteAndMessage, includeVoteType: boolean}) {
   return (
     <>
       <td className="p-4 align-middle font-mono text-sm text-foreground">
@@ -204,6 +234,14 @@ export function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
         {data.createdAt &&
           getRelativeTimeString(new Date(data.createdAt))}
       </td>
+      {includeVoteType && (
+        <td className={cn(
+          "p-4 align-middle text-sm text-foreground",
+          data.type === "downvote" ? "text-error" : "text-success"
+        )}>
+          {data.type}
+        </td>
+      )}
     </>
   )
 }

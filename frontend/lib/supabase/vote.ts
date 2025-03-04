@@ -4,10 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { User } from "@/lib/supabase/user";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-export type VoteType = 'downvote' | 'upvote';
+export type FetchVoteType = 'downvote' | 'upvote'
 
 export type Vote = {
-  type: VoteType;
+  type: FetchVoteType;
   id: string;
   created_at: string;
   request_id: string;
@@ -16,7 +16,7 @@ export type Vote = {
 }
 
 export type VoteAndMessage = {
-  type: VoteType;
+  type: FetchVoteType;
   id: string;
   createdAt: string;
   requestID: string;
@@ -27,7 +27,7 @@ export type VoteAndMessage = {
   answer: string;
 }
 
-export async function vote(type: VoteType, messageId: string, reason: string, user: User): Promise<Vote> {
+export async function vote(type: FetchVoteType, messageId: string, reason: string, user: User): Promise<Vote> {
   const supabase = await createClient();
 
   const { data: existingVote, error: fetchError } = await supabase
@@ -69,7 +69,7 @@ export async function vote(type: VoteType, messageId: string, reason: string, us
   }
 }
 
-export async function removeVote(type: VoteType, messageId: string): Promise<Vote> {
+export async function removeVote(type: FetchVoteType, messageId: string): Promise<Vote> {
   const supabase = await createClient();
 
   const { data: existingVote, error: fetchError } = await supabase
@@ -95,7 +95,7 @@ export async function removeVote(type: VoteType, messageId: string): Promise<Vot
   return { ...existingVote, type: type };
 }
 
-export async function getVotesByChatID(type: VoteType, chatId: string): Promise<Vote[]> {
+export async function getVotesByChatID(type: FetchVoteType, chatId: string): Promise<Vote[]> {
   const supabase = await createClient();
 
   const { data: sessionData, error: sessionError } = await supabase
@@ -121,7 +121,7 @@ export async function getVotesByChatID(type: VoteType, chatId: string): Promise<
   return data.map((vote) => ({ ...vote, type: type }));
 }
 
-export async function getAllVotes(type: VoteType): Promise<VoteAndMessage[]> {
+export async function getAllVotes(type: FetchVoteType): Promise<VoteAndMessage[]> {
   const supabase = await createClient();
   let votesArray: VoteAndMessage[] = [];
 

@@ -18,8 +18,7 @@ import {
   Activity,
   MessageSquare,
   Settings,
-  ThumbsDown,
-  ThumbsUp,
+  Vote,
   UserRound,
 } from "lucide-react";
 import { useUser } from "@/providers/user-provider";
@@ -43,8 +42,7 @@ export function AdminSidebar() {
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
     { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },
-    { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvotes" },
-    { href: "/admin/upvotes", icon: ThumbsUp, label: "Upvotes" },
+    { href: "/admin/votes", icon: Vote, label: "Votes" },
   ];
 
   const tutorMenuItems = [
