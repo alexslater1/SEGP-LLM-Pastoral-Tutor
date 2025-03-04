@@ -90,7 +90,7 @@ func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesA
 
 func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents []storage.AgentEvent, completionResult *storage.CompletionResult) *MessagesAndActions {
 	var (
-		query  *string
+		query  = ""
 		err    string
 		answer string
 	)
@@ -123,10 +123,10 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 
 		case "query":
 			q := event.Metadata.(map[string]interface{})["query"].(string)
-			if query == nil {
+			if query == "" {
 				// we only care about the first agent's query
 				// is a quick fix, realistically would like to get the query from the request table metadata itself
-				query = &q
+				query = q
 			}
 		}
 	}
@@ -149,7 +149,7 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 
 	return &MessagesAndActions{
 		Type:      responseType,
-		Query:     *query,
+		Query:     query,
 		RequestID: requestId,
 		Actions:   actions,
 
