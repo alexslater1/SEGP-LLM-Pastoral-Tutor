@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { User } from "@/lib/supabase/user";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export type VoteType = 'downvote' | 'upvote';
 
@@ -138,42 +139,62 @@ export async function getAllVotes(type: VoteType): Promise<VoteAndMessage[]> {
     throw votesError;
   }
 
-  for (const vote of votes) {
-    const { data: events, error: eventsError } = await supabase
-      .from('agent_events')
-      .select('type, metadata')
-      .eq('request_id', vote.request_id)
-
-    if (eventsError) {
-      console.error('Error fetching events:', eventsError);
-      throw eventsError;
-    }
-
-    const answerEvent = events.find(event => event.type === 'answer_success');
-
-    const { data: user, error: userError } = await supabase
-      .from('user_data')
-      .select('email')
-      .eq('id', vote.user_id)
-      .single();
-      
-    if (userError) {
-      console.error('Error fetching user:', userError);
-      throw userError;
-    }
-
-    votesArray.push({
-      type: type,
-      id: vote.id,
-      createdAt: vote.created_at,
-      requestID: vote.request_id,
-      userEmail: user.email,
-      agent: (answerEvent?.metadata).agentID,
-      reason: vote.reason,
-      query: (vote.agent_requests.metadata).query,
-      answer: (answerEvent?.metadata).answer
-    });
+  try {
+    await Promise.all(votes.map(async (vote) => {
+      const additionalVoteData = await getAdditionalVoteData(vote, supabase);
+      votesArray.push({ 
+        type: type,
+        id: vote.id,
+        createdAt: vote.created_at,
+        requestID: vote.request_id,
+        userEmail: additionalVoteData.userEmail,
+        agent: additionalVoteData.agent,
+        reason: vote.reason,
+        query: (vote.agent_requests.metadata).query,
+        answer: additionalVoteData.answer
+    })}));
+  } catch (error) {
+    console.error('Error fetching additional vote data:', error);
+    throw error;
   }
 
   return votesArray;
+}
+
+type AdditionalVoteData = {
+  userEmail: string;
+  agent: string;
+  answer: string;
+}
+
+async function getAdditionalVoteData(vote: Vote, supabase: SupabaseClient): Promise<AdditionalVoteData> {
+  const [eventsData, userData] = await Promise.all([
+    supabase
+      .from('agent_events')
+      .select('type, metadata')
+      .eq('request_id', vote.request_id),
+    supabase
+      .from('user_data')
+      .select('email')
+      .eq('id', vote.user_id)
+      .single()
+  ])
+
+  if (eventsData.error) {
+    console.error('Error fetching events:', eventsData.error);
+    throw eventsData.error;
+  }
+
+  const answerEvent = eventsData.data.find(event => event.type === 'answer_success');
+
+  if (userData.error) {
+    console.error('Error fetching user:', userData.error);
+    throw userData.error;
+  }
+
+  return {
+    userEmail: userData.data.email,
+    agent: (answerEvent?.metadata).agentID,
+    answer: (answerEvent?.metadata).answer
+  };
 }
