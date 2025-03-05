@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/segp/agents-main/history"
+	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
 	"github.com/segp/agents-main/utils"
 )
@@ -20,10 +21,12 @@ const (
 type AdjustPromptsJob struct {
 	store   storage.Storage
 	history history.History
+
+	llm llm.LLM
 }
 
-func NewAdjustPromptsJob(store storage.Storage, history history.History) *AdjustPromptsJob {
-	return &AdjustPromptsJob{store: store, history: history}
+func NewAdjustPromptsJob(store storage.Storage, history history.History, llm llm.LLM) *AdjustPromptsJob {
+	return &AdjustPromptsJob{store: store, history: history, llm: llm}
 }
 
 func (j *AdjustPromptsJob) Name() string {
@@ -156,4 +159,41 @@ func getFeedback(store storage.Storage) ([]Feedback, error) {
 	}
 
 	return feedback, nil
+}
+
+func promptFrom(enrichedFeedback []EnrichedFeedback, currentPrompt string) string {
+	prompt := fmt.Sprintf(`You are an expert agent LLM prompt finetuner. You are tasked with adjusting the prompt of the following Imperial College London agent: %s. The user interacts with this agent via a chatbot interface. The user sends a message, and the chatbot responds with an answer.
+
+	`, enrichedFeedback[0].AgentID)
+
+	for _, enrichedFeedback := range enrichedFeedback {
+		prompt += specificEnrichedFeedbackPrompt(enrichedFeedback)
+	}
+
+	prompt += fmt.Sprintf(`
+	Here is the current prompt: %s. You are free to adjust this prompt to improve the agent's performance, however you must only make minor changes IF NECESSARY. There is no obligation to make any changes - it is perfectly fine to leave the prompt as is. Respond with the just the new prompt (or the old prompt if you don't want to make any changes), no other text.
+	`, currentPrompt)
+
+	return prompt
+}
+func specificEnrichedFeedbackPrompt(enrichedFeedback EnrichedFeedback) string {
+	return fmt.Sprintf(
+		`The user and agent had this interaction: """%s""". %s. Here are some surrounding messages for context: %+v
+	`, enrichedFeedback.MessageResponse, promptFromFeedback(enrichedFeedback.Feedback), enrichedFeedback.Context)
+}
+
+func promptFromFeedback(feedback Feedback) string {
+	if feedback.reason == "" {
+		if feedback.isUpvote {
+			return "The user liked the response."
+		} else {
+			return "The user disliked the response."
+		}
+	}
+
+	if feedback.isUpvote {
+		return "The user liked the response and left this feedback: " + feedback.reason
+	}
+
+	return "The user disliked the response and left this feedback: " + feedback.reason
 }
