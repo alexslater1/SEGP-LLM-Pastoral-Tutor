@@ -25,13 +25,7 @@ func (h *AgentEventHistory) GetMessageHistory(sessionId string) ([]string, error
 		return nil, err
 	}
 
-	messages := []string{}
-	for _, messageAndAction := range messagesAndActions {
-		message, response := messageAndResponseFrom(messageAndAction)
-		messages = append(messages, fmt.Sprintf("User Message: %s\nAgent Response: %s\n", message, response))
-	}
-
-	return messages, nil
+	return MessagesAndActionsToMessageHistory(messagesAndActions), nil
 }
 
 func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesAndActions, error) {
@@ -147,12 +141,14 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 		}
 	}
 
-	return &MessagesAndActions{
-		Type:      responseType,
-		Query:     query,
-		RequestID: requestId,
-		Actions:   actions,
+	agentID := agentEvents[0].Metadata.(map[string]interface{})["agentID"].(string)
 
+	return &MessagesAndActions{
+		Type:          responseType,
+		Query:         query,
+		RequestID:     requestId,
+		Actions:       actions,
+		AgentID:       agentID,
 		Answer:        answer,
 		Error:         err,
 		CurrentAction: currentAction,
@@ -169,22 +165,4 @@ func responseStatusFrom(completionResult *storage.CompletionResult, error string
 	}
 
 	return StatusResponseTypePending
-}
-
-func messageAndResponseFrom(messageAndAction MessagesAndActions) (string, string) {
-	message := messageAndAction.Query
-
-	if messageAndAction.Type == StatusResponseTypeCompleted {
-		return message, messageAndAction.Answer
-	}
-
-	if messageAndAction.Type == StatusResponseTypePending {
-		return message, "[PENDING]"
-	}
-
-	if messageAndAction.Type == StatusResponseTypeError {
-		return message, "[ERROR]"
-	}
-
-	panic(fmt.Sprintf("unknown status response type: %v", messageAndAction.Type))
 }

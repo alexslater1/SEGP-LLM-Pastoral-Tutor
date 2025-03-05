@@ -181,7 +181,7 @@ func timeAdd(t time.Time, d time.Duration) *time.Time {
 
 func TestGetMessagesAndActions(t *testing.T) {
 	var (
-		sessionID = "7fc63fda-c955-4dd6-bbb8-9166fa95e53a"
+		sessionID = "0091a8a6-e67b-454a-b5ef-c76aedd0076b"
 		store     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 	)
 
@@ -197,7 +197,7 @@ func TestGetMessagesAndActions(t *testing.T) {
 
 func TestMessagesHistory(t *testing.T) {
 	var (
-		sessionID = "7fc63fda-c955-4dd6-bbb8-9166fa95e53a"
+		sessionID = "0091a8a6-e67b-454a-b5ef-c76aedd0076b"
 		store     = storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 	)
 

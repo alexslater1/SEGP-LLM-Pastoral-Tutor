@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -9,14 +10,12 @@ import (
 	"github.com/segp/agents-main/utils"
 )
 
-type Feedback struct {
-	IsUpvote         bool
-	Reason           string
-	CompletionResult string
-	UserID           string
-	RequestID        string
-	SessionID        string
-}
+const (
+	name     = "adjust_prompts"
+	interval = 1 * time.Hour
+
+	numChatsToConsider = 5
+)
 
 type AdjustPromptsJob struct {
 	store   storage.Storage
@@ -27,57 +26,94 @@ func NewAdjustPromptsJob(store storage.Storage, history history.History) *Adjust
 	return &AdjustPromptsJob{store: store, history: history}
 }
 
-func (a *AdjustPromptsJob) Name() string {
-	return "adjust_prompts"
+func (j *AdjustPromptsJob) Name() string {
+	return name
 }
 
-func (a *AdjustPromptsJob) Interval() time.Duration {
-	return 1 * time.Hour
+func (j *AdjustPromptsJob) Interval() time.Duration {
+	return interval
 }
 
-func (a *AdjustPromptsJob) Run() error {
-	feedback, err := a.getFeedbck()
+func (j *AdjustPromptsJob) Run(ctx context.Context) error {
+	feedback, err := getFeedback(j.store)
 	if err != nil {
-		return fmt.Errorf("failed to get feedback: %w", err)
+		return err
 	}
 
-	allSessionIds := make([]string, 0, len(feedback))
-	for _, feedback := range feedback {
-		allSessionIds = append(allSessionIds, feedback.SessionID)
+	enrichedFeedback, err := j.getEnrichedFeedback(feedback)
+	if err != nil {
+		return err
 	}
 
-	chatsForSessionIds, err := a.chatsForSessionIds(allSessionIds)
-	if err != nil {
-		return fmt.Errorf("failed to get surrounding chats: %w", err)
-	}
+	fmt.Println(enrichedFeedback)
 
 	return nil
 }
 
-func (a *AdjustPromptsJob) chatsForSessionIds(sessionIds []string) (map[string][]string, error) {
-	chatHistoryTasks := utils.DoAsyncList(sessionIds, func(sessionId string) ([]string, error) {
-		return a.history.GetMessageHistory(sessionId)
-	})
-
-	chatHistories, err := utils.GetAsyncList(chatHistoryTasks)
-	if err != nil {
-		return nil, err
-	}
-
-	chatHistoriesMap := make(map[string][]string)
-	for i, sessionId := range sessionIds {
-		chatHistoriesMap[sessionId] = chatHistories[i]
-	}
-
-	return chatHistoriesMap, nil
+type Feedback struct {
+	id        string
+	createdAt time.Time
+	requestID string
+	reason    string
+	userID    string
+	isUpvote  bool
 }
 
-func (a *AdjustPromptsJob) getFeedbck() ([]Feedback, error) {
+type EnrichedFeedback struct {
+	Feedback
+	AgentID         string
+	Context         []string
+	MessageResponse string
+}
+
+func (j *AdjustPromptsJob) getEnrichedFeedback(feedback []Feedback) ([]EnrichedFeedback, error) {
+	enrichedFeedbackTasks := utils.DoAsyncList(feedback, func(feedback Feedback) (EnrichedFeedback, error) {
+		return j.getSingleEnrichedFeedbackFrom(feedback)
+	})
+	return utils.GetAsyncList(enrichedFeedbackTasks)
+}
+
+func (j *AdjustPromptsJob) getSingleEnrichedFeedbackFrom(feedback Feedback) (EnrichedFeedback, error) {
+	requestSession, err := storage.Get[storage.RequestSession](j.store, feedback.requestID)
+	if err != nil {
+		return EnrichedFeedback{}, err
+	}
+
+	agentMessagesAndActions, err := j.history.GetMessagesAndActions(requestSession.SessionID)
+	if err != nil {
+		return EnrichedFeedback{}, err
+	}
+
+	index, err := indexOfMatchingRequestID(agentMessagesAndActions, feedback.requestID)
+	if err != nil {
+		return EnrichedFeedback{}, err
+	}
+
+	context := history.MessagesAndActionsToMessageHistory(agentMessagesAndActions[index-numChatsToConsider : index+1])
+
+	return EnrichedFeedback{
+		Feedback:        feedback,
+		AgentID:         agentMessagesAndActions[index].AgentID,
+		Context:         context,
+		MessageResponse: context[len(context)-1],
+	}, nil
+}
+
+func indexOfMatchingRequestID(agentEvents []history.MessagesAndActions, requestID string) (int, error) {
+	for i, event := range agentEvents {
+		if event.RequestID == requestID {
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("request ID not found in agent events: %s", requestID)
+}
+
+func getFeedback(store storage.Storage) ([]Feedback, error) {
 	upvotesTask := utils.DoAsync(func() ([]storage.UpvotedResponses, error) {
-		return storage.GetAll[storage.UpvotedResponses](a.store, nil)
+		return storage.GetAll[storage.UpvotedResponses](store, nil)
 	})
 
-	downvotes, err := storage.GetAll[storage.DownvotedResponses](a.store, nil)
+	downvotes, err := storage.GetAll[storage.DownvotedResponses](store, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -87,104 +123,29 @@ func (a *AdjustPromptsJob) getFeedbck() ([]Feedback, error) {
 		return nil, err
 	}
 
-	upvoteSessionIDsTasks := utils.DoAsyncList(upvotes, func(upvote storage.UpvotedResponses) (string, error) {
-		requestSessions, err := storage.GetAll[storage.RequestSession](a.store, nil)
-		if err != nil {
-			return "", err
-		}
+	feedback := make([]Feedback, 0, len(upvotes)+len(downvotes))
 
-		if len(requestSessions) != 1 {
-			return "", fmt.Errorf("expected 1 request session, got %d", len(requestSessions))
-		}
-
-		return requestSessions[0].SessionID, nil
-	})
-
-	downvoteSessionIDsTasks := utils.DoAsyncList(downvotes, func(downvote storage.DownvotedResponses) (string, error) {
-		requestSessions, err := storage.GetAll[storage.RequestSession](a.store, nil)
-		if err != nil {
-			return "", err
-		}
-
-		if len(requestSessions) != 1 {
-			return "", fmt.Errorf("expected 1 request session, got %d", len(requestSessions))
-		}
-
-		return requestSessions[0].SessionID, nil
-	})
-
-	upvoteCompletionResultTasks := utils.DoAsyncList(upvotes, func(upvote storage.UpvotedResponses) (string, error) {
-		completionResults, err := storage.GetAll[storage.CompletionResult](a.store, storage.NewQueryBuilder().Eq("request_id", upvote.RequestID))
-		if err != nil {
-			return "", err
-		}
-
-		if len(completionResults) != 1 {
-			return "", fmt.Errorf("expected 1 completion result, got %d", len(completionResults))
-		}
-
-		return *completionResults[0].Result, nil
-	})
-
-	downvoteCompletionResultTasks := utils.DoAsyncList(downvotes, func(downvote storage.DownvotedResponses) (string, error) {
-		completionResults, err := storage.GetAll[storage.CompletionResult](a.store, storage.NewQueryBuilder().Eq("request_id", downvote.RequestID))
-		if err != nil {
-			return "", err
-		}
-
-		if len(completionResults) != 1 {
-			return "", fmt.Errorf("expected 1 completion result, got %d", len(completionResults))
-		}
-
-		return *completionResults[0].Result, nil
-	})
-
-	upvoteCompletionResults, err := utils.GetAsyncList(upvoteCompletionResultTasks)
-	if err != nil {
-		return nil, err
+	for _, upvote := range upvotes {
+		feedback = append(feedback, Feedback{
+			id:        upvote.ID,
+			createdAt: *upvote.CreatedAt,
+			requestID: upvote.RequestID,
+			reason:    upvote.Reason,
+			userID:    upvote.UserID,
+			isUpvote:  true,
+		})
 	}
 
-	downvoteCompletionResults, err := utils.GetAsyncList(downvoteCompletionResultTasks)
-	if err != nil {
-		return nil, err
-	}
-
-	upvoteSessionsIds, err := utils.GetAsyncList(upvoteSessionIDsTasks)
-	if err != nil {
-		return nil, err
-	}
-
-	downvoteSessionsIds, err := utils.GetAsyncList(downvoteSessionIDsTasks)
-	if err != nil {
-		return nil, err
-	}
-
-	feedback := make([]Feedback, len(upvotes)+len(downvotes))
-	for i, upvote := range upvotes {
-		feedback[i] = Feedback{
-			IsUpvote:         true,
-			Reason:           upvote.Reason,
-			UserID:           upvote.UserID,
-			RequestID:        upvote.RequestID,
-			SessionID:        upvoteSessionsIds[i],
-			CompletionResult: upvoteCompletionResults[i],
-		}
-	}
-
-	for i, downvote := range downvotes {
-		feedback[i+len(upvotes)] = Feedback{
-			IsUpvote:         false,
-			Reason:           downvote.Reason,
-			UserID:           downvote.UserID,
-			RequestID:        downvote.RequestID,
-			SessionID:        downvoteSessionsIds[i],
-			CompletionResult: downvoteCompletionResults[i],
-		}
+	for _, downvote := range downvotes {
+		feedback = append(feedback, Feedback{
+			id:        downvote.ID,
+			createdAt: *downvote.CreatedAt,
+			requestID: downvote.RequestID,
+			reason:    downvote.Reason,
+			userID:    downvote.UserID,
+			isUpvote:  false,
+		})
 	}
 
 	return feedback, nil
-}
-
-func surroundingChatForFeedbackAndHistory(feedback Feedback, history []string) (string, error) {
-
 }
