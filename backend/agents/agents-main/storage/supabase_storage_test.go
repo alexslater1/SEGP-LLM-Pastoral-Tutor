@@ -181,3 +181,33 @@ func TestSupabaseStorageGetAllChatChecks(t *testing.T) {
 
 	fmt.Printf("Data: %+v\n", data)
 }
+
+func TestSupabaseStorageCreateFeedbackCheck(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := Store(storage, NewFeedbackCheck())
+	if err != nil {
+		t.Error("Error creating item in storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
+
+func TestSupabaseStorageGetFeedbackCheck(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := GetAll[FeedbackCheck](storage, nil)
+	if err != nil {
+		t.Error("Error getting item from storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}

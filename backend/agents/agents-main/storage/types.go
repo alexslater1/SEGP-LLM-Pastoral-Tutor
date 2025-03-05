@@ -219,3 +219,16 @@ func NewDownvotedResponses(userID string, requestID string, reason string) Downv
 		Reason:    reason,
 	}
 }
+
+type FeedbackCheck struct {
+	ID        int        `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+}
+
+func NewFeedbackCheck() FeedbackCheck {
+	return FeedbackCheck{}
+}
+
+func (fc FeedbackCheck) TableName() StorageTableName {
+	return StorageTableNameFeedbackChecks
+}

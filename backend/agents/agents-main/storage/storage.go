@@ -19,6 +19,7 @@ const (
 	StorageTableNameAgentConfigs      StorageTableName = "agent_configs"
 	StorageTableNameUpvotes           StorageTableName = "upvoted_responses"
 	StorageTableNameDownvotes         StorageTableName = "downvoted_responses"
+	StorageTableNameFeedbackChecks    StorageTableName = "feedback_checks"
 )
 
 type Storage interface {
