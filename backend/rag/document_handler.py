@@ -98,3 +98,10 @@ def download_doc(name):
         return response
     except Exception as e:
         print(f"An error occurred downloading the document: {e}")
+
+def delete_id(id):
+    try:
+        response = supabase.table(RAG_SOURCES_TABLE_NAME).delete().eq("id", id).execute()
+
+    except Exception as e:
+        print(f"An error occurred deleting the document: {e}")

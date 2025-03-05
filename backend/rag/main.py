@@ -2,7 +2,7 @@ from io import BytesIO
 from fastapi import FastAPI, File, HTTPException, UploadFile, Form
 from searcher import get_supabase_rag_chunks
 from dotenv import load_dotenv
-from document_handler import upload_doc, delete_doc, fetch_docs, download_doc
+from document_handler import upload_doc, delete_doc, fetch_docs, download_doc, delete_id
 from transformers import AutoTokenizer, AutoModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -220,6 +220,18 @@ async def delete_rag_url(url: str):
         return {"response": "Url deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.delete("/rag-source")
+async def delete_rag_id(id: int):
+    
+    try:    
+        # Embed and upload url chunks to database
+        delete_id(id)
+        return {"response": "Url deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
 
 # For local development
 if __name__ == "__main__":
