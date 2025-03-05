@@ -75,6 +75,18 @@ func ChatCompletionV2(agentProvider *agent.AgentProvider, store storage.Storage,
 		router := agentProvider.GetRouter()
 
 		go func() {
+			// Add panic recovery
+			defer func() {
+				if r := recover(); r != nil {
+					slog.Error("panic recovered in agent goroutine", "panic", r)
+					rr := storage.NewCompletionResult(requestId, nil, nil, fmt.Errorf("internal error: %v", r))
+					_, err := storage.Store(store, rr)
+					if err != nil {
+						slog.Error("error storing request result after panic", "error", err.Error())
+					}
+				}
+			}()
+
 			resp, err := router.Run(newCtx, req.Query)
 			if err != nil {
 				slog.Error("error running agent", "error", err.Error())
