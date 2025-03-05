@@ -12,8 +12,8 @@ import { Markdown } from "@/components/markdown";
 export function PagedRagDocumentsTable() {
   return (
     <PagedObjectTable
-      title="Document Library"
-      description="View and manage uploaded documents."
+      title=""
+      description=""
       dataHook={useRagDocuments}
       idField="id"
       TableHeadings={RagDocumentsTableHeadings}

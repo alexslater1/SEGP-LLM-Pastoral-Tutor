@@ -36,8 +36,8 @@ export function AdminSidebar() {
   const adminMenuItems = [
     { href: "/admin", icon: Home, label: "Dashboard" },
     { href: "/admin/users", icon: UserRound, label: "Users" },
-    { href: "/admin/rag-upload", icon: Upload, label: "RAG Upload" },
-    { href: "/admin/rag-library", icon: Library, label: "RAG Library" },
+    { href: "/admin/rag-upload", icon: Upload, label: "RAG" },
+    // { href: "/admin/rag-library", icon: Library, label: "RAG Library" },
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
     // { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },

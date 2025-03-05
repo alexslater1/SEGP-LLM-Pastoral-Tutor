@@ -224,6 +224,7 @@ export function WebScraper() {
         </div>
       </div>
 
+      {/*
       <div className="mx-6 h-px bg-border mb-6" />
 
       <div className="px-6">
@@ -233,6 +234,7 @@ export function WebScraper() {
           title="Recently Added URLs (last 7 days)"
         />
       </div>
+      */}
     </>
   );
 }

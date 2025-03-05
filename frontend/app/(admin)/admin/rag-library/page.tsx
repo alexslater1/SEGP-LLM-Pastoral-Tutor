@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { FileText, Globe } from "lucide-react";
 import { FilterBar } from "@/components/filter-bar";
-import { PagedRagDocumentsTable } from "./paged-rag-documents-table";
-import { PagedRagWebpagesTable } from "./paged-rag-webpages-table";
+import { PagedRagDocumentsTable } from "../rag-upload/paged-rag-documents-table";
+import { PagedRagWebpagesTable } from "../rag-upload/paged-rag-webpages-table";
 
 type RagFilter = "documents" | "webpages";
 

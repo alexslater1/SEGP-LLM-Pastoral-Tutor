@@ -12,8 +12,8 @@ import { RagWebpage } from "../../actions";
 export function PagedRagWebpagesTable() {
   return (
     <PagedObjectTable
-      title="Webpage Library"
-      description="View and manage scraped webpages."
+      title=""
+      description=""
       dataHook={useRagWebpages}
       idField="id"
       TableHeadings={RagWebpagesTableHeadings}

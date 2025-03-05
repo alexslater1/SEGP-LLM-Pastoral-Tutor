@@ -145,13 +145,13 @@ export function DocumentUpload() {
         </div>
       </div>
 
-      <div className="h-px bg-border" />
+      {/*<div className="h-px bg-border" />
 
       <RecentItemsTable
         items={recentDocuments}
         emptyMessage="No documents uploaded in the last 7 days."
         title="Recently Uploaded Documents (last 7 days)"
-      />
+      />*/}
     </div>
   );
 } 

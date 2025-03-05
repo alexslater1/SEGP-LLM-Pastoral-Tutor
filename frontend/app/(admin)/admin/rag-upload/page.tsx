@@ -5,6 +5,8 @@ import { FileText, Globe } from "lucide-react";
 import { FilterBar } from "@/components/filter-bar";
 import { DocumentUpload } from "./document-upload";
 import { WebScraper } from "./web-scraper";
+import { PagedRagDocumentsTable } from "./paged-rag-documents-table";
+import { PagedRagWebpagesTable } from "./paged-rag-webpages-table";
 
 type RagUploadFilter = "documents" | "webpages";
 
@@ -34,9 +36,15 @@ export default function RagUploadPage() {
         options={ragUploadFilterOptions}
       />
       {filter === "documents" ? (
-        <DocumentUpload />
+        <>
+          <DocumentUpload />
+          <PagedRagDocumentsTable />
+        </>
       ) : (
-        <WebScraper />
+        <>
+          <WebScraper />
+          <PagedRagWebpagesTable />
+        </>
       )}
     </>
   );
