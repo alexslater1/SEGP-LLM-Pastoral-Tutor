@@ -67,6 +67,11 @@ func (j *AdjustPromptsJob) Run() error {
 		return err
 	}
 
+	if len(feedback) == 0 {
+		log.Println("No feedback found: skipping")
+		return nil
+	}
+
 	// fmt.Printf("Feedback: %+v\n", feedback)
 
 	enrichedFeedback, err := j.getEnrichedFeedback(feedback)
@@ -105,8 +110,7 @@ func (j *AdjustPromptsJob) Run() error {
 	fmt.Printf("%+v\n", updatingAgentPrompts)
 
 	storage.Store(j.store, storage.NewFeedbackCheck())
-	return nil
-	// return j.agentProvider.UpdatePrompts(updatingAgentPrompts)
+	return j.agentProvider.UpdatePrompts(updatingAgentPrompts)
 }
 
 type Feedback struct {
