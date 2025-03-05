@@ -30,9 +30,9 @@ type StructuredOutput struct {
 }
 
 type FastAgent struct {
-	ID     string
-	Desc   string
-	Prompt string
+	ID           string
+	Desc         string
+	CustomPrompt string
 
 	ToolHandler *tools.ToolHandler
 	LLM         llm.LLM
@@ -47,9 +47,9 @@ type FastAgent struct {
 
 func newFastAgent(id string, description string, prompt string, toolHandler *tools.ToolHandler, llm llm.LLM, knowledge knowledge.Knowledge, clock clock.Clock, history history.History, callback func(event AgentEvent)) *FastAgent {
 	return &FastAgent{
-		ID:     id,
-		Desc:   description,
-		Prompt: prompt,
+		ID:           id,
+		Desc:         description,
+		CustomPrompt: prompt,
 
 		ToolHandler: toolHandler,
 		LLM:         llm,
@@ -68,6 +68,10 @@ func (a *FastAgent) Id() string {
 
 func (a *FastAgent) Description() string {
 	return a.Desc
+}
+
+func (a *FastAgent) Prompt() string {
+	return a.CustomPrompt
 }
 
 func (a *FastAgent) Run(ctx context.Context, query string) (*AgentResponse, error) {
@@ -217,9 +221,9 @@ func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, que
 	}
 
 	if iteration == 0 {
-		prompt = fmt.Sprintf("(%s). Here are the messags from the user, and your responses, up to this point: %+v. The most recent thing the user has now just said is: `%s`. Here is some data to do with the user: %+v", a.Prompt, chatHistory, query, *knowledgeContext)
+		prompt = fmt.Sprintf("(%s). Here are the messags from the user, and your responses, up to this point: %+v. The most recent thing the user has now just said is: `%s`. Here is some data to do with the user: %+v", a.CustomPrompt, chatHistory, query, *knowledgeContext)
 	} else {
-		prompt = fmt.Sprintf("Remember, (%s). This is the current state of the conversation so far: %+v, with the user most recently saying: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool were `%s`.", a.Prompt, chatHistory, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
+		prompt = fmt.Sprintf("Remember, (%s). This is the current state of the conversation so far: %+v, with the user most recently saying: `%s`. In the previous iteration, you thought `%s` and then called the tool `%s`. The results of this tool were `%s`.", a.CustomPrompt, chatHistory, query, *prevThoughts, *prevToolCall, *prevToolCallResult)
 	}
 
 	prompt += "Now, give some thoughts about what you already know, and then generate a plan (based on what you may need to find out), of how to respond to the user."

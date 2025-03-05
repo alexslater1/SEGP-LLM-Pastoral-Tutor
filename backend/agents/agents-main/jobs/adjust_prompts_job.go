@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/segp/agents-main/agent"
 	"github.com/segp/agents-main/history"
 	"github.com/segp/agents-main/llm"
 	"github.com/segp/agents-main/storage"
@@ -19,10 +20,10 @@ const (
 )
 
 type AdjustPromptsJob struct {
-	store   storage.Storage
-	history history.History
-
-	llm llm.LLM
+	store         storage.Storage
+	history       history.History
+	agentProvider *agent.AgentProvider
+	llm           llm.LLM
 }
 
 func NewAdjustPromptsJob(store storage.Storage, history history.History, llm llm.LLM) *AdjustPromptsJob {
@@ -48,9 +49,23 @@ func (j *AdjustPromptsJob) Run(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Println(enrichedFeedback)
+	groupedByAgentFeedback := groupByAgentID(enrichedFeedback)
 
-	return nil
+	updatingAgentPrompts := make(map[string]string)
+
+	agents := j.agentProvider.GetAgents()
+	for _, agent := range agents {
+		agentID := agent.Id()
+		feedback, ok := groupedByAgentFeedback[agentID]
+		if !ok {
+			continue
+		}
+
+		prompt := promptFrom(feedback, agent.Prompt())
+		updatingAgentPrompts[agentID] = prompt
+	}
+
+	return j.agentProvider.UpdatePrompts(updatingAgentPrompts)
 }
 
 type Feedback struct {
@@ -196,4 +211,12 @@ func promptFromFeedback(feedback Feedback) string {
 	}
 
 	return "The user disliked the response and left this feedback: " + feedback.reason
+}
+
+func groupByAgentID(enrichedFeedback []EnrichedFeedback) map[string][]EnrichedFeedback {
+	agentFeedback := make(map[string][]EnrichedFeedback)
+	for _, feedback := range enrichedFeedback {
+		agentFeedback[feedback.AgentID] = append(agentFeedback[feedback.AgentID], feedback)
+	}
+	return agentFeedback
 }

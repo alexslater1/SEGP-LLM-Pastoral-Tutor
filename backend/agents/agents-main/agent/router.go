@@ -62,6 +62,10 @@ func (r *Router) Description() string {
 	return description
 }
 
+func (r *Router) Prompt() string {
+	panic("not implemented")
+}
+
 func (r *Router) chatHistory(ctx context.Context) ([]string, error) {
 	sessionId, ok := context_keys.GetSessionID(ctx)
 	if !ok {

@@ -19,6 +19,7 @@ type Agent interface {
 
 	Id() string
 	Description() string
+	Prompt() string
 }
 
 func handleEvent(callback func(event AgentEvent), event AgentEvent) {

@@ -90,3 +90,12 @@ func TestAgentSetAgents(t *testing.T) {
 	ap.RefreshAgents()
 	assert.Equal(t, 2, len(ap.currentAgents))
 }
+
+func TestUpdatePrompts(t *testing.T) {
+	ap := NewAgentProvider(store, agentLlm, c, h, googleSearchClient, searchKnowledge, imperialApiHandler)
+	storage.Store(store, config)
+	ap.RefreshAgents()
+
+	ap.UpdatePrompts(map[string]string{"test": "new prompt"})
+	assert.Equal(t, "new prompt", ap.currentAgents[0].Prompt())
+}

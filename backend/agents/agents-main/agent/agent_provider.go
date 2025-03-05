@@ -103,6 +103,41 @@ func (ap *AgentProvider) SetAgentConfigs(configs []AgentProviderAgentConfig) err
 	return ap.RefreshAgents()
 }
 
+func (ap *AgentProvider) UpdatePrompts(prompts map[string]string) error {
+	ap.currentAgentsMu.Lock()
+
+	currentConfigs, err := storage.GetAll[storage.AgentConfig](ap.storage, nil)
+	if err != nil {
+		ap.currentAgentsMu.Unlock()
+		return err
+	}
+
+	updatedConfigs := make([]storage.AgentConfig, len(currentConfigs))
+	for i, config := range currentConfigs {
+		newPrompt, ok := prompts[config.Name]
+		if !ok {
+			newPrompt = config.Prompt
+		}
+
+		updatedConfigs[i] = storage.NewAgentConfig(config.Name, newPrompt, config.Description, config.Tools, config.Apis.AbcApis, config.Apis.EmarkingApis)
+	}
+
+	if _, err := storage.DeleteAll[storage.AgentConfig](ap.storage, nil); err != nil {
+		ap.currentAgentsMu.Unlock()
+		return err
+	}
+
+	if _, err := storage.StoreAll(ap.storage, updatedConfigs...); err != nil {
+		ap.currentAgentsMu.Unlock()
+		return err
+	}
+
+	ap.currentAgentsMu.Unlock()
+
+	// TODO: this is a race condition
+	return ap.RefreshAgents()
+}
+
 func (ap *AgentProvider) newFastAgentFrom(config storage.AgentConfig) (*FastAgent, error) {
 	return newFastAgent(config.Name, config.Description, config.Prompt, ap.toolHandlerFrom(config), ap.llm, ap.apiKnowledgeFrom(config), ap.clock, ap.history, newEventStoringLoggingCallback(ap.storage)), nil
 }
