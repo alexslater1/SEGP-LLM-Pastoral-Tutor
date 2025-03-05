@@ -84,3 +84,56 @@ func SetConfigs(agentProvider *agent.AgentProvider) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+type SetAutoUpdatePromptsRequst struct {
+	Enabled *bool `json:"enabled"`
+}
+
+type SetAutoUpdatePromptsResponse struct {
+	Enabled bool `json:"enabled"`
+}
+
+func SetAutoUpdatePrompts(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req SetAutoUpdatePromptsRequst
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to decode request: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		if req.Enabled == nil {
+			http.Error(w, "enabled is required", http.StatusBadRequest)
+			return
+		}
+
+		data, err := storage.Store(store, storage.NewFeedbackChecksEnabled(*req.Enabled))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to set auto update prompts: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(SetAutoUpdatePromptsResponse{Enabled: data.Enabled})
+	}
+}
+
+type GetAutoUpdatePromptsResponse struct {
+	Enabled bool `json:"enabled"`
+}
+
+func GetAutoUpdatePrompts(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data, err := storage.GetAll[storage.FeedbackChecksEnabled](store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to get auto update prompts: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		if len(data) == 0 {
+			json.NewEncoder(w).Encode(GetAutoUpdatePromptsResponse{Enabled: false})
+			return
+		}
+
+		json.NewEncoder(w).Encode(GetAutoUpdatePromptsResponse{Enabled: data[0].Enabled})
+	}
+}

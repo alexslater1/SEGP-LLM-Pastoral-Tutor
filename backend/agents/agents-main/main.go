@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/segp/agents-main/agent"
@@ -35,17 +36,17 @@ func main() {
 
 		llm = llm.NewGeminiLLM(context.TODO(), os.Getenv("GEMINI_API_KEY"))
 
-		js = []jobs.Job{
-			// jobs.NewChatCheckerJob(store, history, llm, email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),
-		}
-
 		googleSearchClient = googleSearch.NewRodClient()
 		searchKnowledge    = knowledge.NewRAGKnowledge(os.Getenv("RAG_BASE_URL"))
 
 		imperialApiHandler = imperial_apis.NewDefaultImperialApiHandler()
 
-		jobManager    = jobs.NewJobManager(js)
 		agentProvider = agent.NewAgentProvider(store, llm, clock.NewRealClock(), history, googleSearchClient, searchKnowledge, imperialApiHandler)
+		js            = []jobs.Job{
+			// jobs.NewChatCheckerJob(store, history, llm, email.NewResendClient(utils.Required(os.Getenv("RESEND_API_KEY"), "RESEND_API_KEY")), 10*time.Second),
+			jobs.NewAdjustPromptsJob(store, history, llm, agentProvider, 10*time.Second),
+		}
+		jobManager = jobs.NewJobManager(js)
 	)
 
 	port := os.Getenv("PORT")

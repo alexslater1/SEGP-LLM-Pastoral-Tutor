@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	name     = "adjust_prompts"
-	interval = 1 * time.Hour
+	name = "adjust_prompts"
 
 	numChatsToConsider = 5
 )
@@ -25,10 +24,11 @@ type AdjustPromptsJob struct {
 	history       history.History
 	agentProvider *agent.AgentProvider
 	llm           llm.LLM
+	interval      time.Duration
 }
 
-func NewAdjustPromptsJob(store storage.Storage, history history.History, llm llm.LLM, agentProvider *agent.AgentProvider) *AdjustPromptsJob {
-	return &AdjustPromptsJob{store: store, history: history, llm: llm, agentProvider: agentProvider}
+func NewAdjustPromptsJob(store storage.Storage, history history.History, llm llm.LLM, agentProvider *agent.AgentProvider, interval time.Duration) *AdjustPromptsJob {
+	return &AdjustPromptsJob{store: store, history: history, llm: llm, agentProvider: agentProvider, interval: interval}
 }
 
 func (j *AdjustPromptsJob) Name() string {
@@ -36,10 +36,10 @@ func (j *AdjustPromptsJob) Name() string {
 }
 
 func (j *AdjustPromptsJob) Interval() time.Duration {
-	return interval
+	return j.interval
 }
 
-func (j *AdjustPromptsJob) Run(ctx context.Context) error {
+func (j *AdjustPromptsJob) Run() error {
 	feedbackChecksEnabled, err := storage.GetAll[storage.FeedbackChecksEnabled](j.store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1))
 	if err != nil {
 		return fmt.Errorf("error getting feedback checks enabled: %v", err)
@@ -52,7 +52,7 @@ func (j *AdjustPromptsJob) Run(ctx context.Context) error {
 
 	log.Println("Executing chat checker job")
 
-	lastJob, err := storage.GetAll[storage.FeedbackCheck](j.store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1).Gt("created_at", time.Now().Add(-interval)))
+	lastJob, err := storage.GetAll[storage.FeedbackCheck](j.store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1))
 	if err != nil {
 		return err
 	}

@@ -52,6 +52,8 @@ func (s *Server) routes() {
 	s.router.HandleFunc("GET /agents", handlers.GetAllAgents(s.storage))
 	s.router.HandleFunc("GET /agents/config", handlers.GetConfigOptions())
 	s.router.HandleFunc("POST /agents", handlers.SetConfigs(s.agentProvider))
+	s.router.HandleFunc("POST /agents/auto-update-prompts", handlers.SetAutoUpdatePrompts(s.storage))
+	s.router.HandleFunc("GET /agents/auto-update-prompts", handlers.GetAutoUpdatePrompts(s.storage))
 }
 
 func (s *Server) Start() error {

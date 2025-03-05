@@ -50,7 +50,7 @@ func TestGetSingleEnrichedFeedbackFrom(t *testing.T) {
 
 	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	job := NewAdjustPromptsJob(store, history.NewAgentEventHistory(store), nil, nil)
+	job := NewAdjustPromptsJob(store, history.NewAgentEventHistory(store), nil, nil, 10*time.Second)
 
 	feedback, err := getFeedback(store, time.Now().Add(-999999*time.Hour))
 	assert.NoError(t, err)
@@ -68,7 +68,7 @@ func TestGetEnrichedFeedbackFrom(t *testing.T) {
 
 	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	job := NewAdjustPromptsJob(store, history.NewAgentEventHistory(store), nil, nil)
+	job := NewAdjustPromptsJob(store, history.NewAgentEventHistory(store), nil, nil, 10*time.Second)
 	feedback, err := getFeedback(store, time.Now().Add(-99*time.Hour))
 	assert.NoError(t, err)
 
@@ -85,7 +85,7 @@ func TestPromptFrom(t *testing.T) {
 
 	store := storage.NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	job := NewAdjustPromptsJob(store, history.NewAgentEventHistory(store), nil, nil)
+	job := NewAdjustPromptsJob(store, history.NewAgentEventHistory(store), nil, nil, 10*time.Second)
 
 	feedback, err := getFeedback(store, time.Now().Add(-999999*time.Hour))
 	assert.NoError(t, err)
@@ -113,9 +113,9 @@ func TestUpdatePromptsJob(t *testing.T) {
 		agentProvider = agent.NewAgentProvider(store, llm, clock.NewRealClock(), history, googleSearchClient, searchKnowledge, imperialApiHandler)
 	)
 
-	job := NewAdjustPromptsJob(store, history, llm, agentProvider)
+	job := NewAdjustPromptsJob(store, history, llm, agentProvider, 10*time.Second)
 
-	err := job.Run(context.TODO())
+	err := job.Run()
 	assert.NoError(t, err)
 
 	fmt.Println("Doneeeeeeees")
