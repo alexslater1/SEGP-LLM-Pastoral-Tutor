@@ -18,7 +18,7 @@ import {
   PopoverClose,
   PopoverArrow,
 } from './ui/popover';
-import { memo, useContext, useState } from 'react';
+import { memo, useState } from 'react';
 import { ArrowUpIcon, InfoIcon, XIcon } from 'lucide-react';
 import { cx } from 'class-variance-authority';
 import { Textarea } from './ui/textarea';
@@ -108,20 +108,6 @@ export function PureMessageActions({
             </Tooltip>
 
             <VotePopover
-              type="downvote"
-              messageVoted={messageDownvoted}
-              removeVoteMessage={removeDownvoteMessage}
-              voteMessage={downvoteMessage}
-              isVotePopoverOpen={isDownvotePopoverOpen}
-              changePopoverState={setPopoverState}
-              isVoteHover={isDownvoteHover}
-              setIsVoteHover={setIsDownvoteHover}
-              input={input}
-              setInput={setInput}
-              message={message}
-            />
-
-            <VotePopover
               type="upvote"
               messageVoted={messageUpvoted}
               removeVoteMessage={removeUpvoteMessage}
@@ -130,6 +116,20 @@ export function PureMessageActions({
               changePopoverState={setPopoverState}
               isVoteHover={isUpvoteHover}
               setIsVoteHover={setIsUpvoteHover}
+              input={input}
+              setInput={setInput}
+              message={message}
+            />
+
+            <VotePopover
+              type="downvote"
+              messageVoted={messageDownvoted}
+              removeVoteMessage={removeDownvoteMessage}
+              voteMessage={downvoteMessage}
+              isVotePopoverOpen={isDownvotePopoverOpen}
+              changePopoverState={setPopoverState}
+              isVoteHover={isDownvoteHover}
+              setIsVoteHover={setIsDownvoteHover}
               input={input}
               setInput={setInput}
               message={message}

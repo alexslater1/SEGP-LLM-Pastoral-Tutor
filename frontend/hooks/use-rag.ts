@@ -7,8 +7,35 @@ import {
   deleteRagDocument,
   fetchRagWebpages,
   uploadRagUrl,
-  deleteRagUrl
+  deleteRagUrl,
+  fetchRagDocumentsCount,
+  fetchRagWebpagesCount,
+  fetchAgentRequestsCount,
+  fetchAgentEventsCount,
+  fetchDownvotesCount,
+  fetchUpvotesCount
 } from "@/app/(admin)/actions";
+
+type CountType = 
+  | "rag-documents"
+  | "rag-webpages"
+  | "agent-requests"
+  | "agent-events";
+
+const countFunctions = {
+  "rag-documents": fetchRagDocumentsCount,
+  "rag-webpages": fetchRagWebpagesCount,
+  "agent-requests": fetchAgentRequestsCount,
+  "agent-events": fetchAgentEventsCount,
+} as const;
+
+export function useCount(type: CountType, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: [`${type}-count`],
+    queryFn: countFunctions[type],
+    ...options
+  });
+}
 
 export function useRagDocuments(page: number) {
   return useQuery({
@@ -23,6 +50,38 @@ export function useRagWebpages(page: number) {
     queryFn: () => fetchRagWebpages(page)
   });
 };
+
+export function useRagDocumentsCount(options?: { enabled?: boolean }) {
+  return useCount("rag-documents", options);
+}
+
+export function useRagWebpagesCount(options?: { enabled?: boolean }) {
+  return useCount("rag-webpages", options);
+}
+
+export function useAgentRequestsCount(options?: { enabled?: boolean }) {
+  return useCount("agent-requests", options);
+}
+
+export function useAgentEventsCount(options?: { enabled?: boolean }) {
+  return useCount("agent-events", options);
+}
+
+export function useDownvotesCount(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["downvotes-count"],
+    queryFn: () => fetchDownvotesCount(),
+    ...options
+  });
+}
+
+export function useUpvotesCount(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["upvotes-count"],
+    queryFn: () => fetchUpvotesCount(),
+    ...options
+  });
+}
 
 export function useDownloadRagDoc() {
   return useMutation({

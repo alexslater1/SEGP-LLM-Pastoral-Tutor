@@ -43,8 +43,8 @@ export function AdminSidebar() {
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
     { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },
-    { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvotes" },
     { href: "/admin/upvotes", icon: ThumbsUp, label: "Upvotes" },
+    { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvotes" },
   ];
 
   const tutorMenuItems = [
@@ -58,7 +58,9 @@ export function AdminSidebar() {
         <SidebarHeader>
           <SidebarMenu>
             <div className="flex flex-row justify-between items-center">
-              <span className="text-lg text-primary font-semibold px-2">Admin Dashboard</span>
+              <span className="text-lg text-primary font-semibold px-2">
+                Dashboard
+              </span>
             </div>
           </SidebarMenu>
         </SidebarHeader>
@@ -78,7 +80,9 @@ export function AdminSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <div className="flex flex-row justify-between items-center">
-            <span className="text-lg text-primary font-semibold px-2">Admin Dashboard</span>
+            <span className="text-lg text-primary font-semibold px-2">
+              {userContext.user.role === UserRoleEnum.ADMIN ? "Admin Dashboard" : "Tutor Dashboard"}
+            </span>
           </div>
         </SidebarMenu>
       </SidebarHeader>

@@ -1,9 +1,9 @@
 import { useDeleteRagUrl, useRagWebpages } from "@/hooks/use-rag";
-import { PagedObjectTable } from "@/components/paged-object-table";
+import { PagedObjectTable, formatDate } from "@/components/paged-object-table";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getRelativeTimeString, truncateUrl } from "@/lib/utils";
+import { truncateUrl } from "@/lib/utils";
 import { Link, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { Markdown } from "@/components/markdown";
@@ -59,7 +59,7 @@ function RagWebpagesTableContents({data}: {data: RagWebpage}) {
       console.error("Delete error:", error);
     }
   };
-
+    
   return (
     <>
       <td className="p-4 align-middle">
@@ -68,7 +68,7 @@ function RagWebpagesTableContents({data}: {data: RagWebpage}) {
         </div>
       </td>
       <td className="p-4 align-middle">
-        {data.date_uploaded && getRelativeTimeString(new Date(data.date_uploaded))}
+        {data.date_uploaded && formatDate(data.date_uploaded)}
       </td>
       <td className="p-4 align-middle text-right">
         <div className="flex justify-end gap-2">

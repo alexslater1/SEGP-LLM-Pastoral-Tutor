@@ -386,7 +386,7 @@ const AgentConfigPage = () => {
   // Show loading state
   if (agentsLoading || optionsLoading) {
     return (
-      <div className="flex items-center justify-center h-screen font-bold text-5xl text-primary">
+      <div className="flex items-center justify-center h-screen font-bold text-5xl text-primary animate-pulse">
         Loading agent configuration...
       </div>
     );

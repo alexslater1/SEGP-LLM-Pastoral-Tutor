@@ -1,9 +1,9 @@
 "use client";
 
 import { useAgentEvents } from "@/hooks/use-agent-data";
-import { PagedObjectTable } from "@/components/paged-object-table";
+import { PagedObjectTable, formatDate } from "@/components/paged-object-table";
 import { AgentEvent } from "../../actions";
-import { cn, getRelativeTimeString } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/markdown";
 
 export default function AgentEventsPage() {
@@ -71,10 +71,7 @@ function AgentEventsTableContents<T>({data}: {data: AgentEvent}) {
         {data.request_id}
       </td>
       <td className="p-4 align-middle text-sm text-foreground">
-        {data.created_at &&
-          getRelativeTimeString(
-            new Date(data.created_at)
-          )}
+        {data.created_at && formatDate(data.created_at)}
       </td>
     </>
   )

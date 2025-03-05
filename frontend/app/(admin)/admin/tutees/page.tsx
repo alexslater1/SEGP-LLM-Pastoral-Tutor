@@ -37,7 +37,9 @@ export default function TuteesPage() {
                     <tr>
                       <td colSpan={5} className="p-0">
                         <div className="h-[569px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
-                          Loading...
+                          <div className="animate-pulse">
+                            Loading...
+                          </div>
                         </div>
                       </td>
                     </tr>

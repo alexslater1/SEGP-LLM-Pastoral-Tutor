@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { File, CloudUpload } from "lucide-react";
+import { CloudUpload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { cn, getRelativeTimeString, humanReadableSize } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useRagDocuments, useRagUploadDocs } from "@/hooks/use-rag";
+import { RecentItemsTable, getRecentItems } from "@/components/recent-items-table";
 
 const getFileExtension = (filename: string) => {
   return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
@@ -16,19 +17,10 @@ export default function UploadPage() {
   const { data: documents } = useRagDocuments(0);
   const uploadMutation = useRagUploadDocs();
 
-  const getRecentDocuments = () => {
-    if (!documents?.data) return [];
-    
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    return documents.data
-      .filter(doc => new Date(doc.date_uploaded) > sevenDaysAgo)
-      .sort((a, b) => new Date(b.date_uploaded).getTime() - new Date(a.date_uploaded).getTime())
-      .slice(0, 10); // Cap at 10 documents
-  };
-
-  const recentDocuments = getRecentDocuments();
+  const recentDocuments = getRecentItems(documents?.data).map(doc => ({
+    ...doc,
+    type: 'document' as const
+  }));
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -151,48 +143,13 @@ export default function UploadPage() {
         </div>
       </div>
 
-      <div className="border rounded-xl bg-card">
-        <div className="overflow-hidden rounded-xl">
-          <div className="border-b bg-table-header">
-            <h3 className="p-4 font-semibold text-primary">
-              Recently Uploaded Documents (last 7 days)
-            </h3>
-          </div>
+      <div className="h-px bg-border" />
 
-          <div className="divide-y divide-border">
-            {recentDocuments.length === 0 ? (
-              <div className="p-4 text-center bg-table-row-odd text-foreground">
-                No documents uploaded in the last 7 days.
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {recentDocuments.map((doc, index) => (
-                  <div
-                    key={doc.id}
-                    className={cn(
-                      "p-4 flex items-center transition-colors",
-                      index % 2 === 0 
-                        ? "bg-table-row-odd" 
-                        : "bg-table-row-even",
-                      "hover:bg-muted/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <File className="size-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium text-foreground">{doc.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {humanReadableSize(doc.document_size)} • {getRelativeTimeString(new Date(doc.date_uploaded))}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <RecentItemsTable
+        items={recentDocuments}
+        emptyMessage="No documents uploaded in the last 7 days."
+        title="Recently Uploaded Documents (last 7 days)"
+      />
     </div>
   );
 } 

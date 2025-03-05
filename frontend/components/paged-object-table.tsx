@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { cn, getRelativeTimeString } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { UseQueryResult } from "@tanstack/react-query";
 import { VoteAndMessage } from "@/lib/supabase/vote";
 import { Markdown } from "@/components/markdown";
 import { ChevronRight } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const ITEMS_PER_PAGE: number = 10;
 
@@ -42,8 +43,36 @@ export function PagedObjectTable<T>({
   rowClickHandler = () => {},
 }: props<T>) {
   const [page, setPage] = useState(0);
+  const [pageInput, setPageInput] = useState("1");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const { data, error, isLoading } = dataHook(page);
+
+  const handlePageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPageInput(e.target.value);
+  };
+
+  const handlePageInputBlur = () => {
+    const newPage = parseInt(pageInput) - 1;
+    if (
+      !isNaN(newPage) && 
+      newPage >= 0 && 
+      (!data?.totalPages || newPage < data.totalPages)
+    ) {
+      setPage(newPage);
+    } else {
+      setPageInput((page + 1).toString());
+    }
+  };
+
+  const handlePageInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
+  };
+
+  useEffect(() => {
+    setPageInput((page + 1).toString());
+  }, [page]);
 
   const toggleRow = (id: string) => {
     const newExpandedRows = new Set(expandedRows);
@@ -83,7 +112,9 @@ export function PagedObjectTable<T>({
                     <tr>
                       <td colSpan={5} className="p-0">
                         <div className="h-[569px] flex items-center justify-center bg-secondary/50 dark:bg-muted/90 font-bold text-5xl text-primary">
-                          Loading...
+                          <div className="animate-pulse">
+                            Loading...
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -158,8 +189,28 @@ export function PagedObjectTable<T>({
               </table>
 
               <div className="flex items-center justify-between p-4 border-t bg-table-footer rounded-b-xl">
-                <div className="flex-1 text-sm text-foreground">
-                  Page {page + 1} of {data?.totalPages || "..."}
+                <div className="flex-1 text-sm text-foreground flex items-center gap-1">
+                  Page 
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <input
+                          type="text"
+                          value={pageInput}
+                          onChange={handlePageInputChange}
+                          onBlur={handlePageInputBlur}
+                          onKeyDown={handlePageInputKeyDown}
+                          className="w-auto px-2 py-1 text-center rounded border bg-background"
+                          style={{ width: `${Math.max(48, String(data?.totalPages || "").length * 12)}px` }}
+                          aria-label="Page number"
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Press Enter to go to page
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  of {data?.totalPages || "..."}
                 </div>
                 <div className="flex space-x-2">
                   <button
@@ -201,8 +252,7 @@ export function VotesTableContents<T>({data}: {data: VoteAndMessage}) {
         </div>
       </td>
       <td className="p-4 align-middle text-sm text-foreground">
-        {data.createdAt &&
-          getRelativeTimeString(new Date(data.createdAt))}
+        {data.createdAt && formatDate(data.createdAt)}
       </td>
     </>
   )
@@ -239,5 +289,22 @@ export function VotesExpandedTableContents({data}: {data: VoteAndMessage}) {
         </p>
       </div>
     </>
+  )
+}
+
+export function formatDate(date: string) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span>
+            {getRelativeTimeString(new Date(date))}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          {new Date(date).toLocaleString()}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }

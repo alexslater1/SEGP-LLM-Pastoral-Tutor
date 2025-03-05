@@ -1,10 +1,10 @@
-import { PagedObjectTable } from "@/components/paged-object-table";
+import { formatDate, PagedObjectTable } from "@/components/paged-object-table";
 import { useDeleteRagDoc, useDownloadRagDoc, useRagDocuments } from "@/hooks/use-rag";
 import { useState } from "react";
 import { RagDocument } from "../../actions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { humanReadableSize, getRelativeTimeString } from "@/lib/utils";
+import { humanReadableSize } from "@/lib/utils";
 import { Download, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { Markdown } from "@/components/markdown";
@@ -91,7 +91,7 @@ function RagDocumentsTableContents({data}: {data: RagDocument}) {
         {data.document_size && humanReadableSize(data.document_size)}
       </td>
       <td className="p-4 align-middle">
-        {data.date_uploaded && getRelativeTimeString(new Date(data.date_uploaded))}
+        {data.date_uploaded && formatDate(data.date_uploaded)}
       </td>
       <td className="p-4 align-middle text-right">
         <div className="flex justify-end gap-2">

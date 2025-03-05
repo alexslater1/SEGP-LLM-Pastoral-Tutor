@@ -138,7 +138,7 @@ export async function fetchVotes(type: VoteType, page: number) {
   }
 }
 
-export async function fetchRagSources(page: number, type: string) {
+async function fetchRagSources(page: number, type: string) {
   const supabase = await createClient();
 
   const start = page * ITEMS_PER_PAGE;
@@ -301,4 +301,52 @@ export async function deleteRagUrl(url: string) {
     console.error("Delete error details:", error);
     throw error;
   }
+}
+
+async function fetchTableCount(table: string, typeFilter?: { column: string, value: string }) {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from(table)
+    .select("*", { count: "exact", head: true });
+
+  if (typeFilter) {
+    query = query.eq(typeFilter.column, typeFilter.value);
+  }
+
+  const { count, error } = await query;
+
+  if (error) throw error;
+
+  return count || 0;
+}
+
+export async function fetchRagSourcesCount(type: "DOCUMENT" | "WEBSITE") {
+  return fetchTableCount("rag_sources", { column: "type", value: type });
+}
+
+export async function fetchAgentRequestsCount() {
+  return fetchTableCount("agent_requests");
+}
+
+export async function fetchAgentEventsCount() {
+  return fetchTableCount("agent_events");
+}
+
+export async function fetchRagDocumentsCount() {
+  return fetchRagSourcesCount("DOCUMENT");
+}
+
+export async function fetchRagWebpagesCount() {
+  return fetchRagSourcesCount("WEBSITE");
+}
+
+export async function fetchDownvotesCount() {
+  const votes = await getAllVotes("downvote");
+  return votes.length;
+}
+
+export async function fetchUpvotesCount() {
+  const votes = await getAllVotes("upvote");
+  return votes.length;
 }

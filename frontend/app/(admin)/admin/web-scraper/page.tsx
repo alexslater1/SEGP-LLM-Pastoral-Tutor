@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Link, CloudUpload, Globe, Download } from "lucide-react";
+import { Link, CloudUpload, Download } from "lucide-react";
 import { useState } from "react";
-import { cn, getRelativeTimeString, truncateUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useRagWebpages, useRagUploadUrl } from "@/hooks/use-rag";
 import { toast } from "sonner";
+import { RecentItemsTable, getRecentItems } from "@/components/recent-items-table";
 
 export default function WebScraperPage() {
   const [isDragging, setIsDragging] = useState(false);
@@ -13,19 +14,10 @@ export default function WebScraperPage() {
   const { data: webpages } = useRagWebpages(0);
   const uploadUrlMutation = useRagUploadUrl();
 
-  const getRecentWebpages = () => {
-    if (!webpages?.data) return [];
-    
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    return webpages.data
-      .filter(webpage => new Date(webpage.date_uploaded) > sevenDaysAgo)
-      .sort((a, b) => new Date(b.date_uploaded).getTime() - new Date(a.date_uploaded).getTime())
-      .slice(0, 10); // Cap at 10 webpages
-  };
-
-  const recentWebpages = getRecentWebpages();
+  const recentWebpages = getRecentItems(webpages?.data).map(webpage => ({
+    ...webpage,
+    type: 'webpage' as const
+  }));
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -173,6 +165,8 @@ export default function WebScraperPage() {
         </div>
       </div>
 
+      <div className="mx-6 h-px bg-border" />
+
       <div className="p-6">
         <div className="flex justify-between items-center mb-1">
           <h3 className="text-lg font-semibold text-primary">Bulk URL Upload</h3>
@@ -228,49 +222,14 @@ export default function WebScraperPage() {
         </div>
       </div>
 
-      <div className="px-6">
-        <div className="border rounded-xl bg-card">
-          <div className="overflow-hidden rounded-xl">
-            <div className="border-b bg-table-header">
-              <h3 className="p-4 font-semibold text-primary">
-                Recently Added URLs (last 7 days)
-              </h3>
-            </div>
+      <div className="mx-6 h-px bg-border mb-6" />
 
-            <div className="divide-y divide-border">
-              {recentWebpages.length === 0 ? (
-                <div className="p-4 text-center bg-table-row-odd text-foreground">
-                  No URLs added in the last 7 days.
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {recentWebpages.map((webpage, index) => (
-                    <div
-                      key={webpage.id}
-                      className={cn(
-                        "p-4 flex items-center transition-colors",
-                        index % 2 === 0 
-                          ? "bg-table-row-odd" 
-                          : "bg-table-row-even",
-                        "hover:bg-muted/50"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Globe className="size-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium text-foreground font-mono">{truncateUrl(webpage.url)}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {getRelativeTimeString(new Date(webpage.date_uploaded))}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      <div className="px-6">
+        <RecentItemsTable
+          items={recentWebpages}
+          emptyMessage="No URLs added in the last 7 days."
+          title="Recently Added URLs (last 7 days)"
+        />
       </div>
     </>
   );
