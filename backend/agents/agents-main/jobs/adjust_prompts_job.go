@@ -104,7 +104,7 @@ func (j *AdjustPromptsJob) Run() error {
 
 	fmt.Printf("%+v\n", updatingAgentPrompts)
 
-	storage.StoreAll(j.store, storage.NewFeedbackCheck())
+	storage.Store(j.store, storage.NewFeedbackCheck())
 	return nil
 	// return j.agentProvider.UpdatePrompts(updatingAgentPrompts)
 }
