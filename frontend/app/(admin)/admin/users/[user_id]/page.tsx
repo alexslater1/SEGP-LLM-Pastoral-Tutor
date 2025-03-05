@@ -7,11 +7,20 @@ import { User } from "@/lib/supabase/user";
 import { useUserChatHistory } from "@/hooks/use-user-chat-history-adapter";
 import { Chat } from "@/hooks/use-chat-history";
 import { getRelativeTimeString } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { ArrowRight } from "lucide-react";
 
-export default function TuteeChatHistoryPage() {
+export default function ChatHistoryPage() {
   return (
     <PagedChatHistoryTable />
   )
+}
+
+function redirectToChatMessages(user_id: string, router: AppRouterInstance) {
+  return (data: Chat) => {
+    router.push(`/admin/user-chat/${data.id}?title=${data.title}&user_id=${user_id}`);
+  }
 }
 
 function UsePartiallyApplliedUserChatHistory(page: number) {
@@ -30,6 +39,35 @@ function PagedChatHistoryTable() {
 
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
 
+  const ChatHistoryTableContents = ({data}: {data: Chat}) => {
+    return (
+      <>
+        <td className="p-4 align-middle font-mono text-sm text-foreground">
+          {data.id}
+        </td>
+        <td className="p-4 align-middle text-sm text-foreground">
+          {data.title}
+        </td>
+        <td className="p-4 align-middle text-sm text-foreground">
+          {data.createdAt &&
+            getRelativeTimeString(new Date(data.createdAt))}
+        </td>
+        <td className="p-4 align-middle text-sm text-foreground">
+          <div className="flex justify-center">
+            <Button 
+              className="px-3 py-2 text-sm w-min font-medium rounded-md border bg-button text-button-foreground hover:bg-button/50 disabled:opacity-50 disabled:cursor-not-allowed" 
+              variant="outline"
+              size="icon"
+              onClick={() => redirectToChatMessages(typeof(user_id) === "string" ? user_id : "", router)}
+            >
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </td>
+      </>
+    )
+  }
+
   return (
     <PagedObjectTable
       title="Chat History"
@@ -40,9 +78,7 @@ function PagedChatHistoryTable() {
       RowContents={ChatHistoryTableContents}
       ExpandedRowContents={() => null}
       rowType={TableRowType.CLICKABLE}
-      rowClickHandler={(data: Chat) => {
-        router.push(`/admin/user-chat/${data.id}?title=${data.title}&user_id=${user_id}`);
-      }}
+      rowClickHandler={redirectToChatMessages(typeof(user_id) === "string" ? user_id : "", router)}
     />
   )
 }
@@ -59,23 +95,7 @@ function ChatHistoryTableHeadings() {
       <th className="h-12 w-[200px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl">
         Time
       </th>
-    </>
-  )
-}
-
-function ChatHistoryTableContents<T>({data}: {data: Chat}) {
-  return (
-    <>
-      <td className="p-4 align-middle font-mono text-sm text-foreground">
-        {data.id}
-      </td>
-      <td className="p-4 align-middle text-sm text-foreground">
-        {data.title}
-      </td>
-      <td className="p-4 align-middle text-sm text-foreground">
-        {data.createdAt &&
-          getRelativeTimeString(new Date(data.createdAt))}
-      </td>
+      <th className="h-12 w-[150px] px-4 text-left align-middle font-semibold text-primary last:rounded-tr-xl"></th>
     </>
   )
 }

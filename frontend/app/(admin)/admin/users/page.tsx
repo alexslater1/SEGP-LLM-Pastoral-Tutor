@@ -5,6 +5,8 @@ import { useUser } from "@/providers/user-provider";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { UserRoleEnum } from "@/app/(admin)/role-authorization";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export default function UsersPage() {
   const userContext = useUser();
@@ -15,6 +17,8 @@ export default function UsersPage() {
   }
 
   const capitalize = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
+
+  const redirectToChatHistory = (user: User) => router.push(`/admin/users/${user.id}`)
 
   return (
     <div className="space-y-6 p-6">
@@ -37,9 +41,10 @@ export default function UsersPage() {
                     {userContext.user.role === UserRoleEnum.ADMIN && (
                       <>
                         <th className="h-12 px-4 text-left align-middle font-semibold text-primary">Role</th>
-                        <th className="h-12 px-4 text-left align-middle font-semibold text-primary">Superior</th>
+                        <th className="h-12 w-24 px-4 text-left align-middle font-semibold text-primary">Superior</th>
                       </>
                     )}
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-primary"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -61,7 +66,7 @@ export default function UsersPage() {
                             ? "bg-table-row-odd" 
                             : "bg-table-row-even"
                         )}
-                        onClick={() => router.push(`/admin/users/${user.id}`)}
+                        onClick={() => redirectToChatHistory(user)}
                       >
                         <td className="p-4 align-middle text-foreground">
                           {capitalize(user.firstName)} {capitalize(user.lastName || "")} {user.id === userContext.user?.id && "(You)"}
@@ -79,6 +84,18 @@ export default function UsersPage() {
                             </td>
                           </>
                         )}
+                        <td className="p-4 align-middle text-foreground">
+                          <div className="flex justify-center">
+                            <Button 
+                              className="px-3 py-2 text-sm w-min font-medium rounded-md border bg-button text-button-foreground hover:bg-button/50 disabled:opacity-50 disabled:cursor-not-allowed" 
+                              variant="outline"
+                              size="icon"
+                              onClick={() => redirectToChatHistory(user)}
+                            >
+                              <ArrowRight className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
