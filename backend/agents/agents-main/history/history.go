@@ -15,7 +15,7 @@ type MessagesAndActions struct {
 	Query     string             `json:"query"`
 	RequestID string             `json:"request_id"`
 	Actions   []string           `json:"actions"`
-	AgentID   string             `json:"agent_id"`
+	AgentIDs  []string           `json:"agent_ids"`
 
 	Answer        string `json:"answer,omitempty"`
 	Error         string `json:"error,omitempty"`

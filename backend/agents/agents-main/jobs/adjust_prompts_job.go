@@ -74,26 +74,34 @@ func (j *AdjustPromptsJob) getEnrichedFeedback(feedback []Feedback) ([]EnrichedF
 }
 
 func (j *AdjustPromptsJob) getSingleEnrichedFeedbackFrom(feedback Feedback) (EnrichedFeedback, error) {
-	requestSession, err := storage.Get[storage.RequestSession](j.store, feedback.requestID)
+	requestSessions, err := storage.GetAll[storage.RequestSession](j.store, storage.NewQueryBuilder().Eq("request_id", feedback.requestID))
 	if err != nil {
-		return EnrichedFeedback{}, err
+		return EnrichedFeedback{}, fmt.Errorf("failed to get request session for request ID %s: %w", feedback.requestID, err)
 	}
+
+	if len(requestSessions) != 1 {
+		return EnrichedFeedback{}, fmt.Errorf("expected 1 request session for request ID %s, got %d", feedback.requestID, len(requestSessions))
+	}
+
+	requestSession := requestSessions[0]
 
 	agentMessagesAndActions, err := j.history.GetMessagesAndActions(requestSession.SessionID)
 	if err != nil {
-		return EnrichedFeedback{}, err
+		return EnrichedFeedback{}, fmt.Errorf("failed to get agent messages and actions for request session session ID %s: %w", requestSession.SessionID, err)
 	}
 
 	index, err := indexOfMatchingRequestID(agentMessagesAndActions, feedback.requestID)
 	if err != nil {
-		return EnrichedFeedback{}, err
+		return EnrichedFeedback{}, fmt.Errorf("failed to get index of matching request ID %s: %w", feedback.requestID, err)
 	}
 
-	context := history.MessagesAndActionsToMessageHistory(agentMessagesAndActions[index-numChatsToConsider : index+1])
+	context := history.MessagesAndActionsToMessageHistory(agentMessagesAndActions[max(0, index-numChatsToConsider) : index+1])
+
+	relevantAgentId := agentMessagesAndActions[index].AgentIDs[len(agentMessagesAndActions[index].AgentIDs)-1]
 
 	return EnrichedFeedback{
 		Feedback:        feedback,
-		AgentID:         agentMessagesAndActions[index].AgentID,
+		AgentID:         relevantAgentId,
 		Context:         context,
 		MessageResponse: context[len(context)-1],
 	}, nil

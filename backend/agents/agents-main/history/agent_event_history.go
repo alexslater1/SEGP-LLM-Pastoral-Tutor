@@ -84,15 +84,19 @@ func (h *AgentEventHistory) GetMessagesAndActions(sessionId string) ([]MessagesA
 
 func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents []storage.AgentEvent, completionResult *storage.CompletionResult) *MessagesAndActions {
 	var (
-		query  = ""
-		err    string
-		answer string
+		query    = ""
+		err      string
+		answer   string
+		agentIDs []string
 	)
 
 	actions := []string{}
 	mostRecentAction := ""
 
 	for _, event := range agentEvents {
+		agentID := event.Metadata.(map[string]interface{})["agentID"].(string)
+		agentIDs = append(agentIDs, agentID)
+
 		switch event.Type {
 		case "tool_call_choice":
 			toolCallChoice := event.Metadata.(map[string]interface{})["toolCallChoice"].(map[string]interface{})
@@ -141,14 +145,12 @@ func (h *AgentEventHistory) messagesAndActionsFrom(requestId string, agentEvents
 		}
 	}
 
-	agentID := agentEvents[0].Metadata.(map[string]interface{})["agentID"].(string)
-
 	return &MessagesAndActions{
 		Type:          responseType,
 		Query:         query,
 		RequestID:     requestId,
 		Actions:       actions,
-		AgentID:       agentID,
+		AgentIDs:      agentIDs,
 		Answer:        answer,
 		Error:         err,
 		CurrentAction: currentAction,
