@@ -29,10 +29,10 @@ export default function AdminPage() {
 
   const allStats = [
     {
-      name: "Active Tutees",
+      name: `Active ${isAdmin ? "Users" : "Tutees"}`,
       value: userContext.subordinates?.length || 0,
       icon: Users,
-      description: "Total number of tutees being managed",
+      description: `Total number of ${isAdmin ? "users" : "tutees"} being managed`,
       isLoading: false
     },
     {

@@ -12,14 +12,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Home,
-  FileUp,
+  Upload,
   Library,
-  Globe,
   Activity,
   MessageSquare,
   Settings,
-  ThumbsDown,
-  ThumbsUp,
+  Vote,
   UserRound,
 } from "lucide-react";
 import { useUser } from "@/providers/user-provider";
@@ -37,19 +35,18 @@ export function AdminSidebar() {
 
   const adminMenuItems = [
     { href: "/admin", icon: Home, label: "Dashboard" },
-    { href: "/admin/upload", icon: FileUp, label: "Document Upload" },
-    { href: "/admin/web-scraper", icon: Globe, label: "Web Scraper" },
-    { href: "/admin/library", icon: Library, label: "RAG Library" },
+    { href: "/admin/users", icon: UserRound, label: "Users" },
+    { href: "/admin/rag-upload", icon: Upload, label: "RAG Upload" },
+    { href: "/admin/rag-library", icon: Library, label: "RAG Library" },
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
     { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },
-    { href: "/admin/upvotes", icon: ThumbsUp, label: "Upvotes" },
-    { href: "/admin/downvotes", icon: ThumbsDown, label: "Downvotes" },
+    { href: "/admin/votes", icon: Vote, label: "Votes" },
   ];
 
   const tutorMenuItems = [
     { href: "/admin", icon: Home, label: "Dashboard" },
-    { href: "/admin/tutees", icon: UserRound, label: "Tutees" },
+    { href: "/admin/users", icon: UserRound, label: "Tutees" },
   ];
 
   if (!userContext.user) {

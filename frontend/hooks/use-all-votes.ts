@@ -15,3 +15,9 @@ export function useAllUpvotes(page: number) {
   });
 }
 
+export function useAllVotes(page: number) {
+  return useQuery({
+    queryKey: ['votes', page],
+    queryFn: () => fetchVotes('both', page),
+  });
+}

@@ -13,7 +13,7 @@ export function PagedRagDocumentsTable() {
   return (
     <PagedObjectTable
       title="Document Library"
-      description="View all RAG documents uploaded to the library."
+      description="View and manage uploaded documents."
       dataHook={useRagDocuments}
       idField="id"
       TableHeadings={RagDocumentsTableHeadings}

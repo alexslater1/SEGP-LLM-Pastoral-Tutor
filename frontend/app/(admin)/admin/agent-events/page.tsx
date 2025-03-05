@@ -14,7 +14,7 @@ function PagedAgentEventsTable() {
   return (
     <PagedObjectTable
       title="Agent Events"
-      description="View agent events."
+      description="View all agent events."
       dataHook={useAgentEvents}
       idField="id"
       TableHeadings={AgentEventsTableHeadings}
@@ -94,6 +94,22 @@ function AgentEventsExpandedTableContents({data, index}: {data: AgentEvent, inde
           <div className="text-foreground mt-1">
             <Markdown>{data.metadata.reason}</Markdown>
           </div>
+        </div>
+      )}
+      {data.metadata.query && (
+        <div>
+          <h4 className="font-semibold text-primary">Query:</h4>
+          <p className="text-foreground mt-1">
+            {data.metadata.query}
+          </p>
+        </div>
+      )}
+      {data.metadata.agentID && (
+        <div>
+          <h4 className="font-semibold text-primary">Agent ID:</h4>
+          <p className="text-foreground mt-1">
+            {data.metadata.agentID}
+          </p>
         </div>
       )}
       {data.metadata.toolCallChoice && (

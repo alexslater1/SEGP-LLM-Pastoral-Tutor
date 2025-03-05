@@ -8,7 +8,7 @@ import { useRagWebpages, useRagUploadUrl } from "@/hooks/use-rag";
 import { toast } from "sonner";
 import { RecentItemsTable, getRecentItems } from "@/components/recent-items-table";
 
-export default function WebScraperPage() {
+export function WebScraper() {
   const [isDragging, setIsDragging] = useState(false);
   const [url, setUrl] = useState("");
   const { data: webpages } = useRagWebpages(0);
@@ -141,6 +141,8 @@ export default function WebScraperPage() {
             Scrape webpages for the AI tutor to use as extra knowledge.
           </p>
         </div>
+
+        <div className="h-px bg-border" />
 
         <div className="flex gap-2">
           <div className="flex-1 relative group">

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getAllVotes, VoteType } from "@/lib/supabase/vote";
+import { getAllVotes, FetchVoteType } from "@/lib/supabase/vote";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -18,6 +18,8 @@ export interface AgentEvent {
       arguments: string;
     };
     toolCallResult?: string;
+    query?: string;
+    agentID?: string;
   };
 }
 
@@ -26,7 +28,7 @@ export interface AgentRequest {
   created_at?: string;
   endpoint: string;
   metadata: {
-    query: string;
+    query?: string;
   };
 }
 
@@ -80,6 +82,8 @@ export async function fetchAgentEvents(page: number) {
         reason: event.metadata?.reason,
         toolCallChoice: event.metadata?.toolCallChoice,
         toolCallResult: event.metadata?.toolCallResult,
+        query: event.metadata?.query,
+        agentID: event.metadata?.agentID,
       },
     })) as AgentEvent[],
     totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
@@ -117,8 +121,16 @@ export async function fetchAgentRequests(page: number) {
   };
 }
 
+export type VoteType = 'downvote' | 'upvote' | 'both'
+
 export async function fetchVotes(type: VoteType, page: number) {
-  const votes = await getAllVotes(type);
+  let votes = []
+  if (type === 'downvote' || type === 'upvote') {
+    votes = await getAllVotes(type);
+  } else {
+    votes = await getAllVotes('downvote');
+    votes.push(...await getAllVotes('upvote'));
+  }
 
   // Sort downvotes by creation date in descending order
   const sortedVotes = votes.sort((a, b) => 
@@ -127,8 +139,6 @@ export async function fetchVotes(type: VoteType, page: number) {
 
   const start = page * ITEMS_PER_PAGE;
   const end = start + ITEMS_PER_PAGE - 1;
-
-  console.log("ITEMS_PER_PAGE", ITEMS_PER_PAGE);
 
   const slicedVotes = sortedVotes.slice(start, end);
 

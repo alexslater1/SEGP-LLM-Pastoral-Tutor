@@ -13,7 +13,7 @@ export function PagedRagWebpagesTable() {
   return (
     <PagedObjectTable
       title="Webpage Library"
-      description="View all webpages uploaded to the RAG library."
+      description="View and manage scraped webpages."
       dataHook={useRagWebpages}
       idField="id"
       TableHeadings={RagWebpagesTableHeadings}
