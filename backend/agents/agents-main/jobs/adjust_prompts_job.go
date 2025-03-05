@@ -3,6 +3,7 @@ package jobs
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/segp/agents-main/agent"
@@ -26,8 +27,8 @@ type AdjustPromptsJob struct {
 	llm           llm.LLM
 }
 
-func NewAdjustPromptsJob(store storage.Storage, history history.History, llm llm.LLM) *AdjustPromptsJob {
-	return &AdjustPromptsJob{store: store, history: history, llm: llm}
+func NewAdjustPromptsJob(store storage.Storage, history history.History, llm llm.LLM, agentProvider *agent.AgentProvider) *AdjustPromptsJob {
+	return &AdjustPromptsJob{store: store, history: history, llm: llm, agentProvider: agentProvider}
 }
 
 func (j *AdjustPromptsJob) Name() string {
@@ -39,7 +40,17 @@ func (j *AdjustPromptsJob) Interval() time.Duration {
 }
 
 func (j *AdjustPromptsJob) Run(ctx context.Context) error {
-	feedback, err := getFeedback(j.store)
+	lastJob, err := storage.GetAll[storage.FeedbackCheck](j.store, storage.NewQueryBuilder().Gt("created_at", time.Now().Add(-interval)))
+	if err != nil {
+		return err
+	}
+
+	since := time.Now().Add(-999999 * time.Hour)
+	if len(lastJob) > 0 {
+		since = *lastJob[0].CreatedAt
+	}
+
+	feedback, err := getFeedback(j.store, since)
 	if err != nil {
 		return err
 	}
@@ -51,19 +62,35 @@ func (j *AdjustPromptsJob) Run(ctx context.Context) error {
 
 	groupedByAgentFeedback := groupByAgentID(enrichedFeedback)
 
-	updatingAgentPrompts := make(map[string]string)
-
 	agents := j.agentProvider.GetAgents()
-	for _, agent := range agents {
+	newAgentPromptsTasks := utils.DoAsyncList(agents, func(agent agent.Agent) (*string, error) {
 		agentID := agent.Id()
 		feedback, ok := groupedByAgentFeedback[agentID]
 		if !ok {
-			continue
+			return nil, nil
 		}
 
+		log.Printf("Adjusting prompt for agent %s", agentID)
 		prompt := promptFrom(feedback, agent.Prompt())
-		updatingAgentPrompts[agentID] = prompt
+		return j.llm.ChatCompletion(context.TODO(), prompt)
+	})
+
+	ps, err := utils.GetAsyncList(newAgentPromptsTasks)
+	if err != nil {
+		return err
 	}
+
+	updatingAgentPrompts := make(map[string]string)
+	for i, prompt := range ps {
+		if prompt == nil {
+			continue
+		}
+		updatingAgentPrompts[agents[i].Id()] = *prompt
+	}
+
+	fmt.Printf("%+v\n", updatingAgentPrompts)
+
+	storage.StoreAll(j.store, storage.NewFeedbackCheck())
 
 	return j.agentProvider.UpdatePrompts(updatingAgentPrompts)
 }
@@ -134,12 +161,12 @@ func indexOfMatchingRequestID(agentEvents []history.MessagesAndActions, requestI
 	return -1, fmt.Errorf("request ID not found in agent events: %s", requestID)
 }
 
-func getFeedback(store storage.Storage) ([]Feedback, error) {
+func getFeedback(store storage.Storage, since time.Time) ([]Feedback, error) {
 	upvotesTask := utils.DoAsync(func() ([]storage.UpvotedResponses, error) {
-		return storage.GetAll[storage.UpvotedResponses](store, nil)
+		return storage.GetAll[storage.UpvotedResponses](store, storage.NewQueryBuilder().Gt("created_at", since))
 	})
 
-	downvotes, err := storage.GetAll[storage.DownvotedResponses](store, nil)
+	downvotes, err := storage.GetAll[storage.DownvotedResponses](store, storage.NewQueryBuilder().Gt("created_at", since))
 	if err != nil {
 		return nil, err
 	}
