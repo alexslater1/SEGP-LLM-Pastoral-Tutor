@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 	"time"
 
@@ -173,43 +174,62 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 		kc = *knowledgeContext
 	}
 
-	prompt, err := a.thinkingAndActPrompt(ctx, iteration, query, &kc, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls)
-	if err != nil {
-		return nil, nil, err
+	var pa map[string]interface{}
+	var tc *tools.ToolCall
+
+	for i := 1; i <= 3; i++ {
+		prompt, err := a.thinkingAndActPrompt(ctx, iteration, query, &kc, prevThoughts, prevToolCall, prevToolCallResult, prevToolCalls)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		slog.Info("Thinking and acting prompt", "prompt", *prompt)
+
+		structuredCompletion, err := a.LLM.StructuredOutputCompletion(context.TODO(), *prompt, StructuredOutput{})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		toolCall := fastAgentStructuredOutputToToolCall(structuredCompletion)
+		if toolCall == nil {
+			return nil, nil, fmt.Errorf("failed to parse tool call from structured output")
+		}
+
+		if toolCall.Name != "no_tool" {
+			handleEvent(a.callback, NewToolCallChoiceEvent(ctx, *toolCall))
+		}
+
+		var parsedArgs map[string]interface{}
+		err = json.Unmarshal([]byte(toolCall.Arguments), &parsedArgs)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if toolCall.Name == "no_tool" && (parsedArgs["reason"] == nil || parsedArgs["response"] == nil) {
+			log.Printf("Parsed args: %+v", parsedArgs)
+			log.Printf("Blank reason or answer for no tool, retrying. (Attempt %v)", i)
+			continue
+		}
+
+		tc = toolCall
+		pa = parsedArgs
+		break
 	}
 
-	slog.Info("Thinking and acting prompt", "prompt", *prompt)
-
-	structuredCompletion, err := a.LLM.StructuredOutputCompletion(context.TODO(), *prompt, StructuredOutput{})
-	if err != nil {
-		return nil, nil, err
+	if tc == nil {
+		return nil, nil, fmt.Errorf("failed to get valid tool call answer after 3 iterations")
 	}
 
-	toolCall := fastAgentStructuredOutputToToolCall(structuredCompletion)
-	if toolCall == nil {
-		return nil, nil, fmt.Errorf("failed to parse tool call from structured output")
-	}
-
-	if toolCall.Name != "no_tool" {
-		handleEvent(a.callback, NewToolCallChoiceEvent(ctx, *toolCall))
-	}
-
-	var parsedArgs map[string]interface{}
-	err = json.Unmarshal([]byte(toolCall.Arguments), &parsedArgs)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if parsedArgs["_thoughts"] == nil {
+	if pa["_thoughts"] == nil {
 		return nil, nil, fmt.Errorf("thoughts field is required")
 	}
 
-	thoughts, ok := parsedArgs["_thoughts"].(string)
+	thoughts, ok := pa["_thoughts"].(string)
 	if !ok {
 		return nil, nil, fmt.Errorf("conversion of thoughts field to string failed")
 	}
 
-	return &thoughts, toolCall, nil
+	return &thoughts, tc, nil
 }
 
 func (a *FastAgent) thinkingAndActPrompt(ctx context.Context, iteration int, query string, knowledgeContext *string, prevThoughts *string, prevToolCall *tools.ToolCall, prevToolCallResult *string, prevToolCalls []tools.ToolCall) (*string, error) {

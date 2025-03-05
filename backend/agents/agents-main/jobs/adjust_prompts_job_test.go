@@ -118,5 +118,5 @@ func TestUpdatePromptsJob(t *testing.T) {
 	err := job.Run(context.TODO())
 	assert.NoError(t, err)
 
-	fmt.Println("Doneeeeee")
+	fmt.Println("Doneeeeeeee")
 }
