@@ -13,14 +13,16 @@ type queryBuilderOrderBy struct {
 }
 
 type QueryBuilder struct {
-	limit          *int
-	orderBy        *queryBuilderOrderBy
-	matchingFields map[string]string
+	limit             *int
+	orderBy           *queryBuilderOrderBy
+	matchingFields    map[string]string
+	greaterThanFields map[string]interface{}
 }
 
 func NewQueryBuilder() *QueryBuilder {
 	return &QueryBuilder{
-		matchingFields: make(map[string]string),
+		matchingFields:    make(map[string]string),
+		greaterThanFields: make(map[string]interface{}),
 	}
 }
 
@@ -36,5 +38,10 @@ func (q *QueryBuilder) Limit(limit int) *QueryBuilder {
 
 func (q *QueryBuilder) Eq(column string, value string) *QueryBuilder {
 	q.matchingFields[column] = value
+	return q
+}
+
+func (q *QueryBuilder) Gt(column string, value interface{}) *QueryBuilder {
+	q.greaterThanFields[column] = value
 	return q
 }

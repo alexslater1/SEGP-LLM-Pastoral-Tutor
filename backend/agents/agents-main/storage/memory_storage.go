@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -119,7 +120,6 @@ func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]i
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-
 	var result []interface{}
 	for _, item := range s.data[table] {
 		// Convert item to map[string]interface{}
@@ -149,7 +149,6 @@ func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]i
 				}
 			}
 		}
-		
 
 		if matches {
 			result = append(result, item)
@@ -163,16 +162,21 @@ func (s *MemoryStorage) getAll(table StorageTableName, query *QueryBuilder) ([]i
 			item2, _ := result[j].(map[string]interface{})
 			if query.orderBy.order == OrderByAsc {
 				return item1[query.orderBy.column].(string) < item2[query.orderBy.column].(string)
-			} 
+			}
 			return item1[query.orderBy.column].(string) > item2[query.orderBy.column].(string)
 		})
 	}
 
-	if query != nil && query.limit != nil {
-		return result[:*query.limit], nil
+	r := result
+	for field, value := range query.greaterThanFields {
+		r = filterGt(r, field, value)
 	}
 
-	return result, nil
+	if query != nil && query.limit != nil {
+		return r[:*query.limit], nil
+	}
+
+	return r, nil
 }
 
 // Helper function to check original ID type
@@ -248,10 +252,46 @@ func (s *MemoryStorage) deleteAll(table StorageTableName, query *QueryBuilder) (
 		if !ok {
 			return nil, fmt.Errorf("error casting type to map string interface")
 		}
-		
-		s.delete(table, itemMap["id"].(string))	
+
+		s.delete(table, itemMap["id"].(string))
 	}
 
 	return toDelete, err
 }
 
+func filterGt(result []interface{}, fieldName string, value interface{}) []interface{} {
+	filteredResult := []interface{}{}
+
+	for _, item := range result {
+		itemMap, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		itemValue, ok := itemMap[fieldName]
+		if !ok {
+			continue
+		}
+
+		switch itemValue.(type) {
+		case string:
+			if itemValue.(string) > value.(string) {
+				filteredResult = append(filteredResult, item)
+			}
+		case int:
+			if itemValue.(int) > value.(int) {
+				filteredResult = append(filteredResult, item)
+			}
+		case float64:
+			if itemValue.(float64) > value.(float64) {
+				filteredResult = append(filteredResult, item)
+			}
+		case time.Time:
+			if itemValue.(time.Time).After(value.(time.Time)) {
+				filteredResult = append(filteredResult, item)
+			}
+		}
+	}
+
+	return filteredResult
+}

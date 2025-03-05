@@ -2,6 +2,8 @@ package storage
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	supa "github.com/nedpals/supabase-go"
 	postgrest_go "github.com/nedpals/supabase-go/postgrest/pkg"
@@ -133,6 +135,10 @@ func (s *SupabaseStorage) handleSelectQuery(requestBuilder *postgrest_go.Request
 		selectRequest.Filter(k, "eq", v)
 	}
 
+	for k, v := range query.greaterThanFields {
+		selectRequest.Filter(k, "gt", toString(v))
+	}
+
 	if query.orderBy != nil {
 		selectRequest.OrderBy(query.orderBy.column, string(query.orderBy.order))
 	}
@@ -159,6 +165,10 @@ func (s *SupabaseStorage) handleDeleteQuery(requestBuilder *postgrest_go.Request
 		deleteRequest.Filter(k, "eq", v)
 	}
 
+	for k, v := range query.greaterThanFields {
+		deleteRequest.Filter(k, "gt", toString(v))
+	}
+
 	err := deleteRequest.Execute(&results)
 
 	if err != nil {
@@ -166,4 +176,12 @@ func (s *SupabaseStorage) handleDeleteQuery(requestBuilder *postgrest_go.Request
 	}
 
 	return results, nil
+}
+
+func toString(value interface{}) string {
+	switch v := value.(type) {
+	case time.Time:
+		return fmt.Sprintf("%+v", v.Format(time.RFC3339))
+	}
+	return fmt.Sprintf("%+v", value)
 }

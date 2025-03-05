@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -204,7 +205,7 @@ func TestSupabaseStorageGetFeedbackCheck(t *testing.T) {
 
 	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
 
-	data, err := GetAll[FeedbackCheck](storage, nil)
+	data, err := GetAll[FeedbackCheck](storage, NewQueryBuilder().Gt("created_at", time.Now()))
 	if err != nil {
 		t.Error("Error getting item from storage", err)
 	}

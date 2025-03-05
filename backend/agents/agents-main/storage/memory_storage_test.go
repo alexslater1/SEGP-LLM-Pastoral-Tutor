@@ -340,3 +340,30 @@ func TestMemoryStorage_DeleteAll(t *testing.T) {
 	})
 }
 
+func TestMemoryStorage_FilterGt(t *testing.T) {
+	results := []interface{}{
+		map[string]interface{}{"id": 1, "value": "a"},
+		map[string]interface{}{"id": 2, "value": "b"},
+		map[string]interface{}{"id": 3, "value": "c"},
+	}
+
+	filtered := filterGt(results, "value", "b")
+	assert.Len(t, filtered, 1)
+	assert.Equal(t, "c", filtered[0].(map[string]interface{})["value"])
+}
+
+func TestMemoryStorage_FilterGtQuery(t *testing.T) {
+	storage := NewMemoryStorage()
+	results := []interface{}{
+		map[string]interface{}{"id": 1, "value": "a"},
+		map[string]interface{}{"id": 2, "value": "b"},
+		map[string]interface{}{"id": 3, "value": "c"},
+	}
+
+	storage.storeAll(StorageTableNameAgentRequests, results)
+
+	results, err := storage.getAll(StorageTableNameAgentRequests, NewQueryBuilder().Gt("value", "b"))
+	assert.NoError(t, err)
+	assert.Len(t, results, 1)
+	assert.Equal(t, "c", results[0].(map[string]interface{})["value"])
+}
