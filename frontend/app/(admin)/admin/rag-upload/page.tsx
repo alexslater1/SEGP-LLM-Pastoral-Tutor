@@ -1,17 +1,43 @@
-'use client';
+"use client";
 
 import { useState } from "react";
-import { PageSelectionBar } from "@/components/page-selection-bar";
-import { WebScraper } from "./web-scraper";
+import { FileText, Globe } from "lucide-react";
+import { FilterBar } from "@/components/filter-bar";
 import { DocumentUpload } from "./document-upload";
+import { WebScraper } from "./web-scraper";
+
+type RagUploadFilter = "documents" | "webpages";
+
+const ragUploadFilterOptions = [
+  {
+    id: "documents",
+    label: "Upload Documents",
+    icon: FileText,
+    theme: "default" as const
+  },
+  {
+    id: "webpages",
+    label: "Upload Webpages",
+    icon: Globe,
+    theme: "default" as const
+  }
+];
 
 export default function RagUploadPage() {
-  const [page, setPage] = useState(0);
+  const [filter, setFilter] = useState<RagUploadFilter>("documents");
 
   return (
     <>
-      <PageSelectionBar pageNumber={page} setPage={setPage} pageNames={["Documents", "Webpages"]} />
-      {page === 0 ? <DocumentUpload /> : <WebScraper />}
+      <FilterBar
+        filter={filter}
+        setFilter={setFilter}
+        options={ragUploadFilterOptions}
+      />
+      {filter === "documents" ? (
+        <DocumentUpload />
+      ) : (
+        <WebScraper />
+      )}
     </>
   );
 } 

@@ -10,16 +10,42 @@ import {
 } from "@/components/paged-object-table";
 import { useState } from "react";
 import { VoteAndMessage } from "@/lib/supabase/vote";
-import { VoteFilterBar } from "@/components/vote-filter-bar";
+import { FilterBar } from "@/components/filter-bar";
+import { ThumbsDown, ThumbsUp, Vote } from "lucide-react";
 
 type VoteFilter = "downvotes" | "upvotes" | "all";
+
+const voteFilterOptions = [
+  {
+    id: "upvotes",
+    label: "Upvotes",
+    icon: ThumbsUp,
+    theme: "success" as const
+  },
+  {
+    id: "downvotes",
+    label: "Downvotes",
+    icon: ThumbsDown,
+    theme: "destructive" as const
+  },
+  {
+    id: "all",
+    label: "All Votes",
+    icon: Vote,
+    theme: "default" as const
+  }
+];
 
 export default function VotesPage() {
   const [filter, setFilter] = useState<VoteFilter>("downvotes");
 
   return (
     <>
-      <VoteFilterBar filter={filter} setFilter={setFilter} />
+      <FilterBar
+        filter={filter}
+        setFilter={setFilter}
+        options={voteFilterOptions}
+      />
       {filter === "all" ? (
         <PagedVotesTable />
       ) : filter === "downvotes" ? (
