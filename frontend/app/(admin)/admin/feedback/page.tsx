@@ -18,6 +18,7 @@ import { FilterBar } from "@/components/filter-bar";
 import { ThumbsDown, ThumbsUp, Vote } from "lucide-react";
 import { SwitchCard } from "@/components/switch-card";
 import { useAutoUpdatePrompts } from "@/hooks/use-auto-update-prompts";
+import { Separator } from "@/components/ui/separator";
 
 type VoteFilter = "downvotes" | "upvotes" | "all";
 
@@ -48,16 +49,21 @@ export default function VotesPage() {
 
   return (
     <>
-      <div className="absolute right-[26rem] top-20 p-1 shadow-sm">
-        <SwitchCard 
-          titleText="Toggle Auto-Feedback Processing" 
-          descriptionText={"When enabled, " +
-            "all feedback will be automatically processed in regular internvals and will be used to adjust the agent prompts."} 
-          enabled={enabled} 
-          setEnabled={setEnabled} 
-          loading={loading} 
-          error={error} 
-        />
+      <div className="absolute right-[24.5rem] top-20 p-1 shadow-sm">
+        <div className="flex flex-row items-center gap-2">
+          <SwitchCard 
+            titleText="Toggle Auto-Feedback Processing" 
+            descriptionText={"When enabled, " +
+              "all feedback will be automatically processed in regular internvals and will be used to adjust the agent prompts."} 
+            enabled={enabled} 
+            setEnabled={setEnabled} 
+            loading={loading} 
+            error={error} 
+          />
+          <div className="relative h-[30px] px-5">
+            <Separator orientation="vertical" />
+          </div>
+        </div>
       </div>
       <FilterBar
         filter={filter}
