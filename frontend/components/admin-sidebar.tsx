@@ -39,7 +39,7 @@ export function AdminSidebar() {
     { href: "/admin/rag-upload", icon: Upload, label: "RAG Upload" },
     { href: "/admin/rag-library", icon: Library, label: "RAG Library" },
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
-    { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
+    // { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },
     { href: "/admin/votes", icon: Vote, label: "Votes" },
   ];
