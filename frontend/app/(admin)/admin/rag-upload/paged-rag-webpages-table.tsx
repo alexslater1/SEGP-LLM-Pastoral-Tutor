@@ -1,11 +1,17 @@
-import { useDeleteRagUrl, useRagWebpages } from "@/hooks/use-rag";
+import { useDeleteRagSource, useRagWebpages } from "@/hooks/use-rag";
 import { PagedObjectTable, formatDate } from "@/components/paged-object-table";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { truncateUrl } from "@/lib/utils";
 import { Link, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Markdown } from "@/components/markdown";
 import { RagWebpage } from "../../actions";
 
@@ -20,7 +26,7 @@ export function PagedRagWebpagesTable() {
       RowContents={RagWebpagesTableContents}
       ExpandedRowContents={RagWebpagesExpandedTableContents}
     />
-  )
+  );
 }
 
 function RagWebpagesTableHeadings() {
@@ -39,27 +45,27 @@ function RagWebpagesTableHeadings() {
   );
 }
 
-function RagWebpagesTableContents({data}: {data: RagWebpage}) {
+function RagWebpagesTableContents({ data }: { data: RagWebpage }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const deleteMutation = useDeleteRagUrl();
+  const deleteMutation = useDeleteRagSource();
 
-  const handleDelete = async(webpage: RagWebpage) => {
+  const handleDelete = async (webpage: RagWebpage) => {
     try {
       setIsDialogOpen(false);
-      toast.promise(deleteMutation.mutateAsync(webpage.url), {
+      toast.promise(deleteMutation.mutateAsync(webpage.id), {
         loading: `Deleting ${truncateUrl(webpage.url)}...`,
         success: () => {
           return `Deleted ${truncateUrl(webpage.url)}`;
         },
         error: () => {
           return "Failed to delete URL";
-        }
+        },
       });
     } catch (error) {
       console.error("Delete error:", error);
     }
   };
-    
+
   return (
     <>
       <td className="p-4 align-middle">
@@ -110,9 +116,7 @@ function RagWebpagesTableContents({data}: {data: RagWebpage}) {
               <div className="mt-2 font-mono break-all bg-muted/25 p-2 rounded-md">
                 {data.url}
               </div>
-              <div className="mt-2">
-                This action cannot be undone.
-              </div>
+              <div className="mt-2">This action cannot be undone.</div>
             </div>
             <div className="flex justify-end gap-2">
               <Button
@@ -120,7 +124,7 @@ function RagWebpagesTableContents({data}: {data: RagWebpage}) {
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsDialogOpen(false)
+                  setIsDialogOpen(false);
                 }}
               >
                 Cancel
@@ -143,7 +147,7 @@ function RagWebpagesTableContents({data}: {data: RagWebpage}) {
   );
 }
 
-function RagWebpagesExpandedTableContents({data}: {data: RagWebpage}) {
+function RagWebpagesExpandedTableContents({ data }: { data: RagWebpage }) {
   return (
     <>
       <div>
@@ -153,5 +157,5 @@ function RagWebpagesExpandedTableContents({data}: {data: RagWebpage}) {
         </div>
       </div>
     </>
-  )
+  );
 }

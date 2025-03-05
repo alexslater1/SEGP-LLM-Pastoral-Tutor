@@ -121,20 +121,20 @@ export async function fetchAgentRequests(page: number) {
   };
 }
 
-export type VoteType = 'downvote' | 'upvote' | 'both'
+export type VoteType = "downvote" | "upvote" | "both";
 
 export async function fetchVotes(type: VoteType, page: number) {
-  let votes = []
-  if (type === 'downvote' || type === 'upvote') {
+  let votes = [];
+  if (type === "downvote" || type === "upvote") {
     votes = await getAllVotes(type);
   } else {
-    votes = await getAllVotes('downvote');
-    votes.push(...await getAllVotes('upvote'));
+    votes = await getAllVotes("downvote");
+    votes.push(...(await getAllVotes("upvote")));
   }
 
   // Sort downvotes by creation date in descending order
-  const sortedVotes = votes.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const sortedVotes = votes.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   const start = page * ITEMS_PER_PAGE;
@@ -145,7 +145,7 @@ export async function fetchVotes(type: VoteType, page: number) {
   return {
     data: slicedVotes,
     totalPages: Math.ceil((votes.length || 0) / ITEMS_PER_PAGE),
-  }
+  };
 }
 
 async function fetchRagSources(page: number, type: string) {
@@ -168,56 +168,70 @@ async function fetchRagSources(page: number, type: string) {
 
   if (error) throw error;
 
-  return type === "DOCUMENT" ? {
-    data: data.map((source: any) => ({
-      id: source.id,
-      url: source.url,
-      name: source.name,
-      date_uploaded: source.date_uploaded,
-      document_size: source.document_size,
-      document_type: source.document_type,
-      user_id: source.user_id,
-      backend_source_id: source.backend_source_id,
-    })) as RagDocument[],
-    totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
-  } : {
-    data: data.map((source: any) => ({
-      id: source.id,
-      url: source.url,
-      date_uploaded: source.date_uploaded,
-    })) as RagWebpage[],
-    totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
-  };
+  return type === "DOCUMENT"
+    ? {
+        data: data.map((source: any) => ({
+          id: source.id,
+          url: source.url,
+          name: source.name,
+          date_uploaded: source.date_uploaded,
+          document_size: source.document_size,
+          document_type: source.document_type,
+          user_id: source.user_id,
+          backend_source_id: source.backend_source_id,
+        })) as RagDocument[],
+        totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
+      }
+    : {
+        data: data.map((source: any) => ({
+          id: source.id,
+          url: source.url,
+          date_uploaded: source.date_uploaded,
+        })) as RagWebpage[],
+        totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
+      };
 }
 
-export async function fetchRagDocuments(page: number){
-  return fetchRagSources(page, "DOCUMENT") as Promise<{ data: RagDocument[], totalPages: number }>;
+export async function fetchRagDocuments(page: number) {
+  return fetchRagSources(page, "DOCUMENT") as Promise<{
+    data: RagDocument[];
+    totalPages: number;
+  }>;
 }
 
 export async function fetchRagWebpages(page: number) {
-  return fetchRagSources(page, "WEBSITE") as Promise<{ data: RagWebpage[], totalPages: number }>;
+  return fetchRagSources(page, "WEBSITE") as Promise<{
+    data: RagWebpage[];
+    totalPages: number;
+  }>;
 }
 
 export async function downloadRagDocument(name: string) {
-  try { 
+  try {
     console.log("Starting download for:", name);
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_RAG_URL}/rag-doc/download?name=${encodeURIComponent(name)}`, {
-      method: "GET",
-      credentials: "include",
-    });
+
+    const response = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_BACKEND_RAG_URL
+      }/rag-doc/download?name=${encodeURIComponent(name)}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Download failed with status: ${response.status}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get("content-type") || "application/octet-stream";
+    const contentType =
+      response.headers.get("content-type") || "application/octet-stream";
 
-    return { 
-      data: arrayBuffer, 
+    return {
+      data: arrayBuffer,
       contentType,
-      fileName: name 
+      fileName: name,
     };
   } catch (error) {
     console.error("Download error details:", error);
@@ -230,12 +244,15 @@ export async function uploadRagDocument(file: File) {
     console.log("Starting upload for:", file.name);
     const formData = new FormData();
     formData.append("file", file);
-    
-    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_RAG_URL + "/rag-doc", {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-    });
+
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_RAG_URL + "/rag-doc",
+      {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Upload failed with status: ${response.status}`);
@@ -248,17 +265,18 @@ export async function uploadRagDocument(file: File) {
     console.error("Upload error details:", error);
     throw error;
   }
-};
+}
 
-export async function deleteRagDocument(name: string) {
+export async function deleteRagSource(id: string) {
   try {
-    console.log("Starting delete for:", name);
-    
-    const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_RAG_URL + `/rag-doc?name=${encodeURIComponent(name)}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-
+    console.log("Starting delete for id:", id);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_RAG_URL}/rag-source?id=${id}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Delete failed with status: ${response.status}`);
@@ -267,16 +285,43 @@ export async function deleteRagDocument(name: string) {
     console.error("Delete error details:", error);
     throw error;
   }
-};
+}
+
+export async function deleteRagDocument(name: string) {
+  try {
+    console.log("Starting delete for:", name);
+
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_RAG_URL +
+        `/rag-doc?name=${encodeURIComponent(name)}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Delete failed with status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Delete error details:", error);
+    throw error;
+  }
+}
 
 export async function uploadRagUrl(url: string) {
   try {
     console.log("Starting URL upload for:", url);
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_RAG_URL}/rag-url?url=${encodeURIComponent(url)}`, {
-      method: "POST",
-      credentials: "include",
-    });
+
+    const response = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_BACKEND_RAG_URL
+      }/rag-url?url=${encodeURIComponent(url)}`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Upload failed with status: ${response.status}`);
@@ -294,11 +339,16 @@ export async function uploadRagUrl(url: string) {
 export async function deleteRagUrl(url: string) {
   try {
     console.log("Starting URL delete for:", url);
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_RAG_URL}/rag-url?url=${encodeURIComponent(url)}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+
+    const response = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_BACKEND_RAG_URL
+      }/rag-url?url=${encodeURIComponent(url)}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Delete failed with status: ${response.status}`);
@@ -313,12 +363,13 @@ export async function deleteRagUrl(url: string) {
   }
 }
 
-async function fetchTableCount(table: string, typeFilter?: { column: string, value: string }) {
+async function fetchTableCount(
+  table: string,
+  typeFilter?: { column: string; value: string }
+) {
   const supabase = await createClient();
 
-  let query = supabase
-    .from(table)
-    .select("*", { count: "exact", head: true });
+  let query = supabase.from(table).select("*", { count: "exact", head: true });
 
   if (typeFilter) {
     query = query.eq(typeFilter.column, typeFilter.value);
