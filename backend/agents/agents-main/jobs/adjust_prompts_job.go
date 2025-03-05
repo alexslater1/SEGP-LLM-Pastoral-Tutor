@@ -40,7 +40,7 @@ func (j *AdjustPromptsJob) Interval() time.Duration {
 }
 
 func (j *AdjustPromptsJob) Run(ctx context.Context) error {
-	lastJob, err := storage.GetAll[storage.FeedbackCheck](j.store, storage.NewQueryBuilder().Gt("created_at", time.Now().Add(-interval)))
+	lastJob, err := storage.GetAll[storage.FeedbackCheck](j.store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1).Gt("created_at", time.Now().Add(-interval)))
 	if err != nil {
 		return err
 	}
@@ -54,6 +54,8 @@ func (j *AdjustPromptsJob) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	// fmt.Printf("Feedback: %+v\n", feedback)
 
 	enrichedFeedback, err := j.getEnrichedFeedback(feedback)
 	if err != nil {
@@ -91,8 +93,8 @@ func (j *AdjustPromptsJob) Run(ctx context.Context) error {
 	fmt.Printf("%+v\n", updatingAgentPrompts)
 
 	storage.StoreAll(j.store, storage.NewFeedbackCheck())
-
-	return j.agentProvider.UpdatePrompts(updatingAgentPrompts)
+	return nil
+	// return j.agentProvider.UpdatePrompts(updatingAgentPrompts)
 }
 
 type Feedback struct {
