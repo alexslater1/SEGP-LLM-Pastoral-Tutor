@@ -232,3 +232,19 @@ func NewFeedbackCheck() FeedbackCheck {
 func (fc FeedbackCheck) TableName() StorageTableName {
 	return StorageTableNameFeedbackChecks
 }
+
+type FeedbackChecksEnabled struct {
+	ID        int        `json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	Enabled   bool       `json:"enabled"`
+}
+
+func NewFeedbackChecksEnabled(enabled bool) FeedbackChecksEnabled {
+	return FeedbackChecksEnabled{
+		Enabled: enabled,
+	}
+}
+
+func (f FeedbackChecksEnabled) TableName() StorageTableName {
+	return StorageTableNameFeedbackChecksEnabled
+}

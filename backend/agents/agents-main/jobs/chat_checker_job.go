@@ -32,7 +32,6 @@ const (
 	-	The response must be in html format (so structure it correctly)
 	-	After signing off, you must include the exact sent from the user and the agent in a structured manner
 	-	If the conversation does not meet the criteria for flagging, do not generate an email.`
-
 )
 
 type ChatCheckerJob struct {

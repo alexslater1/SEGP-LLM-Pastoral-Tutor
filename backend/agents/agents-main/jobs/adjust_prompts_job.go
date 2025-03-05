@@ -40,6 +40,18 @@ func (j *AdjustPromptsJob) Interval() time.Duration {
 }
 
 func (j *AdjustPromptsJob) Run(ctx context.Context) error {
+	feedbackChecksEnabled, err := storage.GetAll[storage.FeedbackChecksEnabled](j.store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1))
+	if err != nil {
+		return fmt.Errorf("error getting feedback checks enabled: %v", err)
+	}
+
+	if len(feedbackChecksEnabled) == 0 || !feedbackChecksEnabled[0].Enabled {
+		log.Println("Feedback checks are not enabled: skipping")
+		return nil
+	}
+
+	log.Println("Executing chat checker job")
+
 	lastJob, err := storage.GetAll[storage.FeedbackCheck](j.store, storage.NewQueryBuilder().OrderBy("created_at", storage.OrderByDesc).Limit(1).Gt("created_at", time.Now().Add(-interval)))
 	if err != nil {
 		return err

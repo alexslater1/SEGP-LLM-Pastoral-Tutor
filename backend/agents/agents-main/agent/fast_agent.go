@@ -205,6 +205,7 @@ func (a *FastAgent) thinkAndChooseTool(ctx context.Context, iteration int, query
 			return nil, nil, err
 		}
 
+		// For some reason, sometimes LLM would respond with empty vals for these fields (hence the retry)
 		if toolCall.Name == "no_tool" && (parsedArgs["reason"] == nil || parsedArgs["response"] == nil) {
 			log.Printf("Parsed args: %+v", parsedArgs)
 			log.Printf("Blank reason or answer for no tool, retrying. (Attempt %v)", i)

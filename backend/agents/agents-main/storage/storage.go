@@ -9,17 +9,18 @@ import (
 type StorageTableName string
 
 const (
-	StorageTableNameAgentRequests     StorageTableName = "agent_requests"
-	StorageTableNameAgentEvents       StorageTableName = "agent_events"
-	StorageTableNameChats             StorageTableName = "Chat"
-	StorageTableNameSessions          StorageTableName = "sessions"
-	StorageTableNameRequestSessions   StorageTableName = "request_sessions"
-	StorageTableNameChatChecks        StorageTableName = "chat_checks"
-	StorageTableNameCompletionResults StorageTableName = "completion_results"
-	StorageTableNameAgentConfigs      StorageTableName = "agent_configs"
-	StorageTableNameUpvotes           StorageTableName = "upvoted_responses"
-	StorageTableNameDownvotes         StorageTableName = "downvoted_responses"
-	StorageTableNameFeedbackChecks    StorageTableName = "feedback_checks"
+	StorageTableNameAgentRequests         StorageTableName = "agent_requests"
+	StorageTableNameAgentEvents           StorageTableName = "agent_events"
+	StorageTableNameChats                 StorageTableName = "Chat"
+	StorageTableNameSessions              StorageTableName = "sessions"
+	StorageTableNameRequestSessions       StorageTableName = "request_sessions"
+	StorageTableNameChatChecks            StorageTableName = "chat_checks"
+	StorageTableNameCompletionResults     StorageTableName = "completion_results"
+	StorageTableNameAgentConfigs          StorageTableName = "agent_configs"
+	StorageTableNameUpvotes               StorageTableName = "upvoted_responses"
+	StorageTableNameDownvotes             StorageTableName = "downvoted_responses"
+	StorageTableNameFeedbackChecks        StorageTableName = "feedback_checks"
+	StorageTableNameFeedbackChecksEnabled StorageTableName = "feedback_checks_enabled"
 )
 
 type Storage interface {

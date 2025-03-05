@@ -212,3 +212,33 @@ func TestSupabaseStorageGetFeedbackCheck(t *testing.T) {
 
 	fmt.Printf("Data: %+v\n", data)
 }
+
+func TestSupabaseStorageCreateFeedbackChecksEnabled(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := Store(storage, NewFeedbackChecksEnabled(true))
+	if err != nil {
+		t.Error("Error creating item in storagesss ", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
+
+func TestSupabaseStorageGetFeedbackChecksEnabled(t *testing.T) {
+	if os.Getenv("CICD") == "true" {
+		t.Skip("Skipping test in CI/CD")
+	}
+
+	storage := NewSupabaseStorage(os.Getenv("SUPABASE_URL"), os.Getenv("SUPABASE_SERVICE_KEY"))
+
+	data, err := GetAll[FeedbackChecksEnabled](storage, NewQueryBuilder().OrderBy("created_at", OrderByDesc).Limit(1))
+	if err != nil {
+		t.Error("Error getting item from storage", err)
+	}
+
+	fmt.Printf("Data: %+v\n", data)
+}
