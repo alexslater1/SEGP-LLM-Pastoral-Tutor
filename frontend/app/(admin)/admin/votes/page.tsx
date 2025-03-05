@@ -12,6 +12,8 @@ import { useState } from "react";
 import { VoteAndMessage } from "@/lib/supabase/vote";
 import { FilterBar } from "@/components/filter-bar";
 import { ThumbsDown, ThumbsUp, Vote } from "lucide-react";
+import { SwitchCard } from "@/components/switch-card";
+import { useAutoUpdatePrompts } from "@/hooks/use-auto-update-prompts";
 
 type VoteFilter = "downvotes" | "upvotes" | "all";
 
@@ -37,10 +39,22 @@ const voteFilterOptions = [
 ];
 
 export default function VotesPage() {
-  const [filter, setFilter] = useState<VoteFilter>("downvotes");
+  const [filter, setFilter] = useState<VoteFilter>("all");
+  const { enabled, setEnabled, loading, error } = useAutoUpdatePrompts();
 
   return (
     <>
+      <div className="absolute right-[26rem] top-20 p-1 shadow-sm">
+        <SwitchCard 
+          titleText="Toggle Auto-Feedback Processing" 
+          descriptionText={"When enabled, " +
+            "all feedback will be automatically processed in regular internvals and will be used to adjust the agent prompts."} 
+          enabled={enabled} 
+          setEnabled={setEnabled} 
+          loading={loading} 
+          error={error} 
+        />
+      </div>
       <FilterBar
         filter={filter}
         setFilter={setFilter}

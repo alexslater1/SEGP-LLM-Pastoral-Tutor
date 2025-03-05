@@ -37,8 +37,6 @@ export function useChat({
   const [chatSessionID, setChatSessionID] = useState<string | null>(id);
 
   const {
-    data: allMessages,
-    isPending: isAllMessagesPending,
     error: allMessagesError,
     fetchStatus: allMessagesFetchStatus,
   } = useQuery({
