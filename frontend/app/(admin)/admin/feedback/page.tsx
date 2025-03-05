@@ -1,12 +1,16 @@
 "use client";
 
-import { useAllDownvotes, useAllUpvotes, useAllVotes } from "@/hooks/use-all-votes";
-import { 
-  PagedObjectTable, 
-  VotesTableContents, 
-  VotesExpandedTableContents, 
+import {
+  useAllDownvotes,
+  useAllUpvotes,
+  useAllVotes,
+} from "@/hooks/use-all-votes";
+import {
+  PagedObjectTable,
+  VotesTableContents,
+  VotesExpandedTableContents,
   VoteHeadingType,
-  VotesTableHeadings 
+  VotesTableHeadings,
 } from "@/components/paged-object-table";
 import { useState } from "react";
 import { VoteAndMessage } from "@/lib/supabase/vote";
@@ -20,22 +24,22 @@ type VoteFilter = "downvotes" | "upvotes" | "all";
 const voteFilterOptions = [
   {
     id: "upvotes",
-    label: "Upvotes",
+    label: "Likes",
     icon: ThumbsUp,
-    theme: "success" as const
+    theme: "success" as const,
   },
   {
     id: "downvotes",
-    label: "Downvotes",
+    label: "Dislikes",
     icon: ThumbsDown,
-    theme: "destructive" as const
+    theme: "destructive" as const,
   },
   {
     id: "all",
-    label: "All Votes",
+    label: "All Feedback",
     icon: Vote,
-    theme: "default" as const
-  }
+    theme: "default" as const,
+  },
 ];
 
 export default function VotesPage() {
@@ -71,22 +75,20 @@ export default function VotesPage() {
   );
 }
 
-function UpAndDownvotesTableContentsInstance({data}: {data: VoteAndMessage}) {
-  return (
-    <VotesTableContents includeVoteType={false} data={data} />
-  )
+function UpAndDownvotesTableContentsInstance({
+  data,
+}: {
+  data: VoteAndMessage;
+}) {
+  return <VotesTableContents includeVoteType={false} data={data} />;
 }
 
-function BothVotesTableContentsInstance({data}: {data: VoteAndMessage}) {
-  return (
-    <VotesTableContents includeVoteType={true} data={data} />
-  )
+function BothVotesTableContentsInstance({ data }: { data: VoteAndMessage }) {
+  return <VotesTableContents includeVoteType={true} data={data} />;
 }
 
 function DownvotesTableHeadings() {
-  return (
-    <VotesTableHeadings headingType={VoteHeadingType.DOWNVOTE} />
-  )
+  return <VotesTableHeadings headingType={VoteHeadingType.DOWNVOTE} />;
 }
 
 function PagedDownvotesTable() {
@@ -100,13 +102,11 @@ function PagedDownvotesTable() {
       RowContents={UpAndDownvotesTableContentsInstance}
       ExpandedRowContents={VotesExpandedTableContents}
     />
-  )
+  );
 }
 
 function UpvotesTableHeadings() {
-  return (
-    <VotesTableHeadings headingType={VoteHeadingType.UPVOTE} />
-  )
+  return <VotesTableHeadings headingType={VoteHeadingType.UPVOTE} />;
 }
 
 function PagedUpvotesTable() {
@@ -120,13 +120,11 @@ function PagedUpvotesTable() {
       RowContents={UpAndDownvotesTableContentsInstance}
       ExpandedRowContents={VotesExpandedTableContents}
     />
-  )
+  );
 }
 
 function VotesTableHeadingsInstance() {
-  return (
-    <VotesTableHeadings headingType={VoteHeadingType.BOTH} />
-  )
+  return <VotesTableHeadings headingType={VoteHeadingType.BOTH} />;
 }
 
 function PagedVotesTable() {
@@ -140,5 +138,5 @@ function PagedVotesTable() {
       RowContents={BothVotesTableContentsInstance}
       ExpandedRowContents={VotesExpandedTableContents}
     />
-  )
+  );
 }

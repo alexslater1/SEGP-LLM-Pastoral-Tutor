@@ -33,7 +33,7 @@ interface AgentEditSheetProps {
   };
   isSubmitting?: boolean;
   isDeleting?: boolean;
-  mode?: 'create' | 'edit';
+  mode?: "create" | "edit";
 }
 
 const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
@@ -46,7 +46,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
   availableApis,
   isSubmitting = false,
   isDeleting = false,
-  mode = 'edit',
+  mode = "edit",
 }) => {
   const [editedAgent, setEditedAgent] = useState<AgentsResponse | null>(null);
   const [validationErrors, setValidationErrors] = useState<{
@@ -140,13 +140,13 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
     if (editedAgent) {
       if (!validateForm()) {
         toast.error("Missing Required Fields", {
-          description: "Please fill in all required fields marked with *"
+          description: "Please fill in all required fields marked with *",
         });
         return;
       }
       onSave(editedAgent);
       toast.success("Changes Saved", {
-        description: "Agent configuration has been updated successfully"
+        description: "Agent configuration has been updated successfully",
       });
     }
   };
@@ -163,13 +163,24 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="text-2xl font-bold text-primary">
-            {mode === 'create' ? 'Create Agent' : 'Edit Agent'}
+          <SheetTitle className="text-2xl font-bold text-primary flex items-center justify-between">
+            {mode === "create" ? "Create Agent" : "Edit Agent"}
+            {mode === "edit" && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isSubmitting || isDeleting}
+                size="sm"
+                className="ml-8"
+              >
+                {isDeleting ? "Deleting..." : "Delete Agent"}
+              </Button>
+            )}
           </SheetTitle>
           <SheetDescription className="text-foreground">
-            {mode === 'create' 
-              ? 'Set up the configuration for a new agent.'
-              : 'Modify the agent\'s configuration.'}
+            {mode === "create"
+              ? "Set up the configuration for a new agent."
+              : "Modify the agent's configuration."}
             <br />
             <span className="text-error">*</span> Indicates a required field
           </SheetDescription>
@@ -178,7 +189,10 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
         <div className="py-4">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="agentName" className="text-md font-bold text-primary flex items-center gap-1">
+              <label
+                htmlFor="agentName"
+                className="text-md font-bold text-primary flex items-center gap-1"
+              >
                 <span className="text-error">*</span>
                 Agent Name
               </label>
@@ -209,8 +223,8 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs font-normal text-foreground">
-                        This is the description of the agent which the router LLM
-                        uses to decide who to route the request to
+                        This is the description of the agent which the router
+                        LLM uses to decide who to route the request to
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -222,15 +236,22 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                   validationErrors.description ? "border-error" : "border-input"
                 }`}
                 value={editedAgent.description || ""}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
               />
               {validationErrors.description && (
-                <p className="text-sm text-error">{validationErrors.description}</p>
+                <p className="text-sm text-error">
+                  {validationErrors.description}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="agentPrompt" className="text-md font-bold text-primary flex items-center gap-1">
+              <label
+                htmlFor="agentPrompt"
+                className="text-md font-bold text-primary flex items-center gap-1"
+              >
                 <span className="text-error">*</span>
                 Agent Prompt
               </label>
@@ -348,7 +369,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
           </div>
 
           <div className="flex w-full gap-2 pt-10">
-            {mode === 'create' ? (
+            {mode === "create" ? (
               <>
                 <div className="flex-1">
                   <Button
@@ -391,7 +412,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                     {isSubmitting ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
-                <div className="flex-1">
+                {/* <div className="flex-1">
                   <Button
                     variant="destructive"
                     onClick={handleDelete}
@@ -400,7 +421,7 @@ const AgentEditSheet: React.FC<AgentEditSheetProps> = ({
                   >
                     {isDeleting ? "Deleting..." : "Delete Agent"}
                   </Button>
-                </div>
+                </div> */}
               </>
             )}
           </div>

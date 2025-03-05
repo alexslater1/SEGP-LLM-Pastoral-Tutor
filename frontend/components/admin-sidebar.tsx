@@ -39,9 +39,9 @@ export function AdminSidebar() {
     { href: "/admin/rag-upload", icon: Upload, label: "RAG Upload" },
     { href: "/admin/rag-library", icon: Library, label: "RAG Library" },
     { href: "/admin/agent-events", icon: Activity, label: "Agent Events" },
-    { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
+    // { href: "/admin/agent-requests", icon: MessageSquare, label: "Agent Requests" },
     { href: "/admin/agent-config", icon: Settings, label: "Agent Config" },
-    { href: "/admin/votes", icon: Vote, label: "Votes" },
+    { href: "/admin/feedback", icon: Vote, label: "Feedback" },
   ];
 
   const tutorMenuItems = [
@@ -70,7 +70,10 @@ export function AdminSidebar() {
     );
   }
 
-  const menuItems = userContext.user.role === UserRoleEnum.ADMIN ? adminMenuItems : tutorMenuItems;
+  const menuItems =
+    userContext.user.role === UserRoleEnum.ADMIN
+      ? adminMenuItems
+      : tutorMenuItems;
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -78,7 +81,9 @@ export function AdminSidebar() {
         <SidebarMenu>
           <div className="flex flex-row justify-between items-center">
             <span className="text-lg text-primary font-semibold px-2">
-              {userContext.user.role === UserRoleEnum.ADMIN ? "Admin Dashboard" : "Tutor Dashboard"}
+              {userContext.user.role === UserRoleEnum.ADMIN
+                ? "Admin Dashboard"
+                : "Tutor Dashboard"}
             </span>
           </div>
         </SidebarMenu>
@@ -98,7 +103,9 @@ export function AdminSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        {userContext.user && <SidebarUserNav user={userContext.user} adminPage />}
+        {userContext.user && (
+          <SidebarUserNav user={userContext.user} adminPage />
+        )}
       </SidebarFooter>
     </Sidebar>
   );
