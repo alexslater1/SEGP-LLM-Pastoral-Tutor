@@ -22,13 +22,13 @@ type VoteFilter = "downvotes" | "upvotes" | "all";
 const voteFilterOptions = [
   {
     id: "upvotes",
-    label: "Upvotes",
+    label: "Likes",
     icon: ThumbsUp,
     theme: "success" as const,
   },
   {
     id: "downvotes",
-    label: "Downvotes",
+    label: "Dislikes",
     icon: ThumbsDown,
     theme: "destructive" as const,
   },
