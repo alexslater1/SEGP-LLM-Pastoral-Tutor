@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { getUserSession } from "@/lib/supabase/client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 type AutoUpdateItems = {
   enabled: boolean;
@@ -11,24 +16,7 @@ type AutoUpdateItems = {
 };
 
 export function useAutoUpdatePrompts(): AutoUpdateItems {
-  const [autoUpdatePrompts, setAutoUpdatePrompts] = useState(false);
-
-  const {isLoading: isAutoUpdateStatusLoading, error: autoUpdateStatusError } = useQuery({
-    queryKey: ["autoUpdateStatus"],
-    queryFn: async () => {
-      const autoUpdateStatus = await getAutoUpdateStatus();
-      setAutoUpdatePrompts(autoUpdateStatus);
-      return autoUpdateStatus;
-    },
-    staleTime: Infinity,
-  });
-
-  const { mutate: mutateAutoUpdateStatus, isPending: isUpdatingAutoUpdateStatus, error: updateAutoUpdateStatusError } = useMutation({
-    mutationFn: async (enabled: boolean) => updateAutoUpdateStatus(enabled),
-    onSuccess: (_, enabled) => {
-      setAutoUpdatePrompts(enabled);
-    },
-  });
+  const queryClient = useQueryClient();
 
   const getAutoUpdateStatus = async () => {
     const login_session = await getUserSession();
@@ -46,23 +34,47 @@ export function useAutoUpdatePrompts(): AutoUpdateItems {
     }
   };
 
+  const {
+    isLoading: isAutoUpdateStatusLoading,
+    error: autoUpdateStatusError,
+    data,
+  } = useQuery({
+    queryKey: ["autoUpdateStatus"],
+    queryFn: getAutoUpdateStatus,
+    staleTime: Infinity,
+  });
+
+  const {
+    mutate: mutateAutoUpdateStatus,
+    isPending: isUpdatingAutoUpdateStatus,
+    error: updateAutoUpdateStatusError,
+  } = useMutation({
+    mutationFn: async (enabled: boolean) => updateAutoUpdateStatus(enabled),
+    onSuccess: (_, enabled) => {
+      queryClient.invalidateQueries({ queryKey: ["autoUpdateStatus"] });
+    },
+  });
+
   const updateAutoUpdateStatus = async (enabled: boolean) => {
     const login_session = await getUserSession();
     if (!login_session) {
       throw new Error("User not logged in");
     } else {
-      const { error: updateError } = await postAutoUpdateStatus(login_session, enabled);
+      const { error: updateError } = await postAutoUpdateStatus(
+        login_session,
+        enabled
+      );
       if (updateError) {
         throw new Error(updateError);
       }
     }
   };
 
-  return { 
-    enabled: autoUpdatePrompts, 
+  return {
+    enabled: data ?? false,
     setEnabled: mutateAutoUpdateStatus,
-    loading: (isAutoUpdateStatusLoading || isUpdatingAutoUpdateStatus),
-    error: (autoUpdateStatusError || updateAutoUpdateStatusError)
+    loading: isAutoUpdateStatusLoading || isUpdatingAutoUpdateStatus,
+    error: autoUpdateStatusError || updateAutoUpdateStatusError,
   };
 }
 
@@ -90,12 +102,14 @@ async function fetchAutoUpdateStatus(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    let backendResponse =
-      (await response.json()) as { enabled: boolean };
+    let backendResponse = (await response.json()) as { enabled: boolean };
 
     return { enabled: backendResponse.enabled, error: null };
   } catch (currentError) {
-    console.error("Error fetching auto update status:", (currentError as Error).message);
+    console.error(
+      "Error fetching auto update status:",
+      (currentError as Error).message
+    );
     return { enabled: false, error: (currentError as Error).message };
   }
 }
@@ -121,13 +135,14 @@ async function postAutoUpdateStatus(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    let backendResponse =
-      (await response.json()) as { enabled: boolean };
+    let backendResponse = (await response.json()) as { enabled: boolean };
 
     return { error: null };
   } catch (currentError) {
-    console.error("Error updating auto update status:", (currentError as Error).message);
+    console.error(
+      "Error updating auto update status:",
+      (currentError as Error).message
+    );
     return { error: (currentError as Error).message };
   }
 }
-
