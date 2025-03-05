@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, RefreshCw } from "lucide-react";
+import { Separator } from "./ui/separator";
 
 type FilterOption = {
   id: string;
@@ -32,6 +33,21 @@ export function FilterBar<T extends string>({
   return (
     <div className="absolute right-6 top-20">
       <div className="relative flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm">
+             { filter === "webpages" && (
+              <>
+                <Button 
+                variant="outline"
+                className="hover:text-primary"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <RefreshCw className="size-4" />
+                Rescrape All Webpages
+              </Button>
+              <div className="relative h-[30px] px-5">
+                  <Separator orientation="vertical" />
+          </div>
+          </>
+        )}
         {options.map((option) => (
           <Button
             key={option.id}

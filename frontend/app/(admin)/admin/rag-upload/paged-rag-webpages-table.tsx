@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { truncateUrl } from "@/lib/utils";
-import { Link, Trash2 } from "lucide-react";
+import { Link, Trash2, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -78,6 +78,14 @@ function RagWebpagesTableContents({ data }: { data: RagWebpage }) {
       </td>
       <td className="p-4 align-middle text-right">
         <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 hover:text-primary"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <RefreshCw className="size-4" />
+          </Button>
           <a
             href={data.url}
             target="_blank"
