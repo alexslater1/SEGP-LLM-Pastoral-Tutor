@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { User } from "@/lib/supabase/user";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
 export type FetchVoteType = 'downvote' | 'upvote'
 
@@ -30,17 +31,6 @@ export type VoteAndMessage = {
 export async function vote(type: FetchVoteType, messageId: string, reason: string, user: User): Promise<Vote> {
   const supabase = await createClient();
 
-  const { data: existingVote, error: fetchError } = await supabase
-    .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
-    .select('*')
-    .eq('request_id', messageId)
-
-  if (existingVote?.length && existingVote.length > 0) {
-    throw new Error('Message already ' + (type === 'downvote' ? 'downvoted' : 'upvoted'));
-  } else if (fetchError) {
-    console.error('Error fetching ' + (type === 'downvote' ? 'downvoted' : 'upvoted') + ' message:', fetchError);
-    throw fetchError;
-  }
 
   const { data, error } = await supabase
     .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
@@ -54,18 +44,8 @@ export async function vote(type: FetchVoteType, messageId: string, reason: strin
     console.error('Error ' + (type === 'downvote' ? 'downvoting' : 'upvoting') + ' message:', error);
     throw error;
   } else {
-    const { data: voteData, error: voteError } = await supabase
-      .from(type === 'downvote' ? 'downvoted_responses' : 'upvoted_responses')
-      .select('*')
-      .eq('request_id', messageId)
-      .single();
 
-    if (voteError) {
-      console.error('Error fetching ' + (type === 'downvote' ? 'downvoted' : 'upvoted') + ' message:', voteError);
-      throw voteError;
-    }
-
-    return { ...voteData, type: type };
+    return { type: type, id:randomUUID(), created_at: new Date().toISOString(), request_id: messageId, user_id: user.id, reason: reason };
   }
 }
 
