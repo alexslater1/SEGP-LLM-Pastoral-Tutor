@@ -1,12 +1,11 @@
 "use client";
 
-import { PagedObjectTable, TableRowType } from "@/components/paged-object-table";
+import { formatDate, PagedObjectTable, TableRowType } from "@/components/paged-object-table";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@/providers/user-provider";
 import { User } from "@/lib/supabase/user";
 import { useUserChatHistory } from "@/hooks/use-user-chat-history-adapter";
 import { Chat } from "@/hooks/use-chat-history";
-import { getRelativeTimeString } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { ArrowRight } from "lucide-react";
@@ -50,7 +49,7 @@ function PagedChatHistoryTable() {
         </td>
         <td className="p-4 align-middle text-sm text-foreground">
           {data.createdAt &&
-            getRelativeTimeString(new Date(data.createdAt))}
+            formatDate(data.createdAt.toISOString())}
         </td>
         <td className="p-4 align-middle text-sm text-foreground text-right">
           <Button

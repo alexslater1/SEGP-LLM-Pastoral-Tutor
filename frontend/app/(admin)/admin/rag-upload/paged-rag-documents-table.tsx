@@ -1,12 +1,23 @@
 import { formatDate, PagedObjectTable } from "@/components/paged-object-table";
-import { useDeleteRagDoc, useDownloadRagDoc, useRagDocuments } from "@/hooks/use-rag";
+import {
+  useDeleteRagSource,
+  useDownloadRagDoc,
+  useRagDocuments,
+} from "@/hooks/use-rag";
 import { useState } from "react";
 import { RagDocument } from "../../actions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { humanReadableSize } from "@/lib/utils";
 import { Download, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Markdown } from "@/components/markdown";
 
 export function PagedRagDocumentsTable() {
@@ -20,7 +31,7 @@ export function PagedRagDocumentsTable() {
       RowContents={RagDocumentsTableContents}
       ExpandedRowContents={RagDocumentsExpandedTableContents}
     />
-  )
+  );
 }
 
 function RagDocumentsTableHeadings() {
@@ -39,13 +50,13 @@ function RagDocumentsTableHeadings() {
         Actions
       </th>
     </>
-  )
+  );
 }
 
-function RagDocumentsTableContents({data}: {data: RagDocument}) {
+function RagDocumentsTableContents({ data }: { data: RagDocument }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const downloadMutation = useDownloadRagDoc();
-  const deleteMutation = useDeleteRagDoc();
+  const deleteMutation = useDeleteRagSource();
 
   const handleDownload = async (doc: RagDocument) => {
     try {
@@ -56,24 +67,24 @@ function RagDocumentsTableContents({data}: {data: RagDocument}) {
         },
         error: () => {
           return "Failed to download file";
-        }
+        },
       });
     } catch (error) {
       console.error("Download error:", error);
     }
   };
 
-  const handleDelete = async(doc: RagDocument) => {
+  const handleDelete = async (doc: RagDocument) => {
     try {
       setIsDialogOpen(false);
-      toast.promise(deleteMutation.mutateAsync(doc.name), {
+      toast.promise(deleteMutation.mutateAsync(doc.id), {
         loading: `Deleting ${doc.name}...`,
         success: () => {
           return `Deleted ${doc.name}`;
         },
         error: () => {
           return "Failed to delete file";
-        }
+        },
       });
     } catch (error) {
       console.error("Delete error:", error);
@@ -124,9 +135,12 @@ function RagDocumentsTableContents({data}: {data: RagDocument}) {
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
-            <DialogTitle className="text-destructive">Delete Document</DialogTitle>
+            <DialogTitle className="text-destructive">
+              Delete Document
+            </DialogTitle>
             <DialogDescription className="text-foreground">
-              Are you sure you want to delete &quot;{data.name}&quot;? This action cannot be undone.
+              Are you sure you want to delete &quot;{data.name}&quot;? This
+              action cannot be undone.
             </DialogDescription>
             <div className="flex justify-end gap-2">
               <Button
@@ -134,7 +148,7 @@ function RagDocumentsTableContents({data}: {data: RagDocument}) {
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsDialogOpen(false)
+                  setIsDialogOpen(false);
                 }}
               >
                 Cancel
@@ -154,10 +168,10 @@ function RagDocumentsTableContents({data}: {data: RagDocument}) {
         </DialogPortal>
       </Dialog>
     </>
-  )
+  );
 }
 
-function RagDocumentsExpandedTableContents({data}: {data: RagDocument}) {
+function RagDocumentsExpandedTableContents({ data }: { data: RagDocument }) {
   return (
     <>
       <div>
@@ -173,5 +187,5 @@ function RagDocumentsExpandedTableContents({data}: {data: RagDocument}) {
         </div>
       </div>
     </>
-  )
+  );
 }
