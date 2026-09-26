@@ -1,0 +1,238 @@
+import { useEffect, useRef, useState } from "react";
+import { Session } from "@supabase/supabase-js";
+import { getUserSession } from "@/lib/supabase/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+export type ChatVisibility = "public" | "private";
+
+const STATUS_QUERY_INTERVAL_SECONDS = 1;
+const MAX_FETCH_ATTEMPTS = 3;
+
+export type SessionNameFetchStatus = "success" | "error";
+
+export type Chat = {
+  id: string;
+  title: string;
+  sessionNameFetchStatus: SessionNameFetchStatus;
+  createdAt: Date;
+  userId: string;
+  visibility: ChatVisibility;
+  deleted: boolean;
+};
+
+export type ChatHistoryItem = {
+  history: Chat[];
+  isLoading: boolean;
+  refresh: () => void;
+  error: string | null;
+  deleteChat: (chatID: string) => Promise<void>;
+};
+
+// if userID is not provided and undefined, we will fetch the chat history for the current user
+// if userID is provided and null, we have an error
+// if userID is provided and a string, we will fetch the chat history for the user with the given ID
+export function useChatSessionHistory(userID?: string | null): ChatHistoryItem {
+  const queryClient = useQueryClient();
+  const [history, setHistory] = useState<Chat[]>([]);
+  const chatIDPollingKeys = useRef<{id: string, fetchAttempt: number}[]>([]);
+
+  const { isPending, error, fetchStatus } = useQuery({
+    queryKey: ["chat-history", userID],
+    queryFn: async () => {
+      const history = await fetchUIChatHistory(userID);
+      setHistory(history);
+      chatIDPollingKeys.current = getSessionsWithNoNames(history);
+      return history;
+    },
+    staleTime: Infinity,
+  });
+
+  useEffect(() => {
+    return () => {
+      queryClient.invalidateQueries({ queryKey: ["chat-history"] });
+    };
+  }, []);
+
+  const {
+    isPending: isSessionStatusPending,
+    error: sessionStatusError,
+  } = useQuery({
+    queryKey: ["session-status", chatIDPollingKeys],
+    queryFn: async () => {
+      let newSessionNames: {id: string, name: string, type: SessionNameFetchStatus}[] = []
+      for (let chatIDPollingKey of chatIDPollingKeys.current) {
+        let sessionName = await fetchUIChatName(chatIDPollingKey.id);
+        if (sessionName) {
+          newSessionNames.push({id: chatIDPollingKey.id, name: sessionName, type: "success"});
+          chatIDPollingKeys.current = chatIDPollingKeys.current.filter(key => key.id !== chatIDPollingKey.id);
+        } else if (chatIDPollingKey.fetchAttempt >= MAX_FETCH_ATTEMPTS) {
+          newSessionNames.push({id: chatIDPollingKey.id, name: "Failed to fetch title", type: "error"});
+          chatIDPollingKeys.current = chatIDPollingKeys.current.filter(key => key.id !== chatIDPollingKey.id);
+        } else {
+          chatIDPollingKeys.current = 
+            chatIDPollingKeys.current.map(key => key.id === chatIDPollingKey.id ? {...key, fetchAttempt: key.fetchAttempt + 1} : key);
+        }
+      }
+      setSessionIDNames(newSessionNames);
+
+      // Return something so TanStack doesn't complain
+      return newSessionNames;
+    },
+    enabled: chatIDPollingKeys.current.length !== 0,
+    refetchInterval: chatIDPollingKeys
+      ? STATUS_QUERY_INTERVAL_SECONDS * 1000
+      : false,
+    refetchIntervalInBackground: false,
+  });
+
+  const setSessionIDNames = (sessionNames: {id: string, name: string, type: SessionNameFetchStatus}[]) => {
+    setHistory(prev => prev.map(chat => {
+      const session = sessionNames.find(sessionName => sessionName.id === chat.id)
+      return session ? {...chat, title: session.name, sessionNameFetchStatus: session.type} : chat;
+    }));
+  }
+
+  const getSessionsWithNoNames = (history: Chat[]) => {
+    return history.filter(chat => chat.title === "Loading...").map(chat => ({id: chat.id, fetchAttempt: 0}));
+  }
+
+  const fetchUIChatHistory = async (userID?: string | null) => {
+    const login_session = await getUserSession();
+    if (!login_session) {
+      return [];
+    }
+
+    const chatHistory = await fetchChatHistory(login_session, userID);
+    const history = chatHistory.map((session) => {
+      return {
+        id: session.id,
+        title: session.name ?? "Loading...",
+        createdAt: new Date(session.created_at),
+        userId: session.user_id,
+        visibility: "public", // TODO: Add visibility
+        deleted: session.deleted,
+      } as Chat;
+    });
+    return history.filter(chat => !chat.deleted).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  };
+
+  const fetchUIChatName = async (chatSessionID: string) => {
+    const login_session = await getUserSession();
+    if (!login_session) {
+      throw new Error("No login session found");
+    }
+
+    const sessionStatus = await fetchSessionName(login_session, chatSessionID);
+    return sessionStatus?.name ?? null;
+  };
+
+  const deleteChat = async (chatID: string) => {
+    const loginSession = await getUserSession();
+    if (!loginSession) {
+      throw new Error("No login session found");
+    }
+
+    try {
+      await deleteChatFetch(loginSession, chatID);
+    } catch (error) {
+      console.error("Delete Chat Error:", error);
+      throw error;
+    }
+
+    setHistory(prev => prev.filter(chat => chat.id !== chatID));
+  }
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["chat-history"] });
+  };
+
+  return {
+    history: history,
+    isLoading: isPending || (isSessionStatusPending && fetchStatus !== "idle"),
+    refresh: refresh,
+    error: error?.message ?? sessionStatusError?.message ?? null,
+    deleteChat: deleteChat,
+  };
+}
+
+type BackendUserSession = {
+  id: string;
+  created_at: string;
+  created_by_request_id: string;
+  user_id: string;
+  name?: string;
+  deleted: boolean;
+};
+
+type BackendUserSessions = BackendUserSession[];
+
+async function fetchChatHistory(session: Session, userID?: string | null): Promise<BackendUserSessions> {
+  try {
+    if (userID === null) {
+      throw new Error("User ID is null");
+    }
+
+    const completionEndpoint = userID ? "/user/" + userID + "/sessions" : "/sessions";
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + completionEndpoint,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return (await response.json()) as BackendUserSessions;
+  } catch (currentError) {
+    console.error("Fetch Chat History Error:", currentError);
+    throw currentError;
+  }
+}
+
+const fetchSessionName = async (loginSession: Session, chatSessionID: string) => {
+  try {
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + "/sessions/" + chatSessionID,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${loginSession.access_token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as BackendUserSession;
+  } catch (currentError) {
+    console.error("Fetch Session Name Error:", currentError);
+    return null;
+  }
+};
+
+const deleteChatFetch = async (loginSession: Session, chatSessionID: string): Promise<void> => {
+  try {
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_BACKEND_AGENT_URL + "/sessions/" + chatSessionID,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${loginSession.access_token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Delete chat HTTP error! status: ${response.status}`);
+    }
+  } catch (currentError) {
+    console.error("Delete Chat Error:", currentError);
+    throw currentError;
+  }
+};

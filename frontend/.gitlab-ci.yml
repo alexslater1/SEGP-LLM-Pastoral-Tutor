@@ -1,0 +1,26 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+    VERCEL_ORG_ID: $VERCEL_ORG_ID
+    VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID
+    SHELL: "bash"
+
+build-and-deploy-project:
+  stage: deploy
+  image: docker.io/node:latest
+  script:
+    - curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=10.0.0 sh -
+    - source /root/.bashrc
+    - pnpm install
+    - npx vercel env pull .env.local --yes --environment=production --token=$VERCEL_TOKEN
+    - npx vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+    - npx vercel build --prod --token=$VERCEL_TOKEN
+    - npx vercel deploy --prod --prebuilt --token=$VERCEL_TOKEN
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'master'
+  tags:
+    - shared
+
